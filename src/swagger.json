@@ -1,0 +1,702 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Template",
+    "description": "Backend API",
+    "version": "0.1"
+  },
+  "basePath": "/",
+  "servers": [
+    {
+      "url": "https://api.dev.template.cinnamon.services/"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Auth",
+      "description": "Authentication related routes"
+    },
+    {
+      "name": "Profile",
+      "description": "Profile related routes"
+    },
+    {
+      "name": "Messages",
+      "description": "Dynamic message related routes"
+    },
+    {
+      "name": "Settings",
+      "description": "Settings related routes designated for user"
+    }
+  ],
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "description": "Login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/auth_login_body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully logged in",
+            "content": {
+              "schema": {
+                "$ref": "#/definitions/auth_login_response"
+              }
+            }
+          },
+          "404": {
+            "description": "Given email is not linked to a user or password is incorrect",
+            "content": {
+              "schema": {
+                "$ref": "#/definitions/auth_login_response_404"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "tags": ["Auth"],
+        "description": "User registration",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/auth_register_body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User successfully created",
+            "content": {
+              "schema": {
+                "$ref": "#/definitions/20000_response"
+              }
+            }
+          },
+          "400": {
+            "description": "Given email already linked to user",
+            "content": {
+              "schema": {
+                "$ref": "#/definitions/auth_register_response_400"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/register/resend": {
+      "post": {
+        "tags": ["Auth"],
+        "description": "Resend registration verification email",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/auth_resend_email_body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sent registration verification email",
+            "content": {
+              "schema": {
+                "$ref": "#/definitions/20000_response"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/register/verify": {
+      "post": {
+        "tags": ["Auth"],
+        "description": "Verify UID for registration",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/auth_verify_registration_body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Registration verified",
+            "content": {
+              "schema": {
+                "$ref": "#/definitions/auth_verify_registration_response"
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid UID",
+            "content": {
+              "schema": {
+                "$ref": "#/definitions/auth_UID_401_response"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "tags": ["Auth"],
+        "description": "Refresh access token",
+        "responses": {
+          "200": {
+            "description": "Successfully refreshed access token",
+            "content": {
+              "schema": {
+                "$ref": "#/definitions/refresh_token_response"
+              }
+            }
+          },
+          "401:40101": {
+            "description": "Invalid token",
+            "content": {
+              "schema": {
+                "$ref": "#/definitions/401_response"
+              }
+            }
+          },
+          "401:40102": {
+            "description": "Expired token",
+            "content": {
+              "schema": {
+                "$ref": "#/definitions/auth_expired_token_response"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": ["Auth"],
+        "description": "Logout user",
+        "responses": {
+          "200": {
+            "description": "Successfully logged out user",
+            "content": {
+              "schema": {
+                "$ref": "#/definitions/20000_response"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/reset/resend": {
+      "post": {
+        "tags": ["Auth"],
+        "description": "Send reset password email",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/auth_resend_email_body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sent reset password email",
+            "content": {
+              "schema": {
+                "$ref": "#/definitions/20000_response"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/reset": {
+      "post": {
+        "tags": ["Auth"],
+        "description": "Reset password",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/auth_reset_password_body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset",
+            "content": {
+              "schema": {
+                "$ref": "#/definitions/20000_response"
+              }
+            }
+          },
+          "401:40104": {
+            "description": "Invalid UID",
+            "content": {
+              "schema": {
+                "$ref": "#/definitions/auth_UID_401_response"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/password": {
+      "post": {
+        "tags": ["Auth"],
+        "description": "Change password",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/auth_change_password_body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password changed",
+            "content": {
+              "schema": {
+                "$ref": "#/definitions/20000_response"
+              }
+            }
+          },
+          "400:40003": {
+            "description": "Incorrect password",
+            "content": {
+              "schema": {
+                "$ref": "#/definitions/auth_change_password_40003_response"
+              }
+            }
+          }
+        }
+      }
+    },
+    "auth/delete": {
+      "delete": {
+        "tags": ["Auth"],
+        "description": "Delete your account",
+        "responses": {
+          "200": {
+            "description": "Account deleted",
+            "content": {
+              "schema": {
+                "$ref": "#/definitions/20000_response"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/messages/{slug}": {
+      "get": {
+        "summary": "Gets dynamic message by slug",
+        "tags": ["Messages"],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "description": "Message Slug",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns dashboard message",
+            "content": {
+              "schema": {
+                "$ref": "#/definitions/dynamic_message_response"
+              }
+            }
+          }
+        },
+        "produces": ["application/json"]
+      }
+    },
+    "/profile": {
+      "get": {
+        "tags": ["Profile"],
+        "description": "Get profile",
+        "responses": {
+          "200": {
+            "description": "Successfully got profile",
+            "content": {
+              "schema": {
+                "$ref": "#/definitions/get_profile_response"
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Profile"],
+        "description": "Edit profile",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/edit_profile_body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated successfully",
+            "content": {
+              "schema": {
+                "$ref": "#/definitions/get_profile_response"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profile/:id": {
+      "get": {
+        "tags": ["Profile"],
+        "description": "Get profile",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "User id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully got profile",
+            "content": {
+              "schema": {
+                "$ref": "#/definitions/get_profile_response"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profile/image": {
+      "patch": {
+        "tags": ["Profile"],
+        "description": "Change profile image<br /><br /> Allowed file extensions are:<br /><br /> - jpg <br /><br /> - jpeg <br /><br /> - png",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string",
+                    "example": "file"
+                  },
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "pattern": ".*\\.(jpg|png|jpeg)$"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile image updated successfully",
+            "content": {
+              "schema": {
+                "$ref": "#/definitions/get_profile_response"
+              }
+            }
+          },
+          "404": {
+            "description": "File not found",
+            "content": {
+              "schema": {
+                "$ref": "#/definitions/file_not_found_response"
+              }
+            }
+          },
+          "400:40003": {
+            "description": "File too large",
+            "content": {
+              "schema": {
+                "$ref": "#/definitions/file_too_large_response"
+              }
+            }
+          },
+          "415": {
+            "description": "Wrong input file type",
+            "content": {
+              "schema": {
+                "$ref": "#/definitions/wrong_input_file_type_response"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/settings/profile-picture/delete": {
+      "delete": {
+        "tags": ["Settings"],
+        "description": "Delete user profile picture",
+        "responses": {
+          "200": {
+            "description": "User profile picture successfully deleted",
+            "content": {
+              "schema": {
+                "$ref": "#/definitions/20000_response"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "auth_login_response": {
+      "example": {
+        "data": {
+          "user": {
+            "id": 1,
+            "firstName": "John",
+            "lastName": "Doe",
+            "email": "john.doe@cinnamon.agency",
+            "accessTokenExpires": "2023-02-23T14:07:34.743Z",
+            "rating": 46.75,
+            "reviews": 2
+          },
+          "accessToken": "",
+          "refreshToken": ""
+        },
+        "code": 20000,
+        "message": "OK"
+      }
+    },
+    "auth_login_response_404": {
+      "example": {
+        "data": null,
+        "code": 40402,
+        "message": "Wrong email or password"
+      }
+    },
+    "auth_register_response": {
+      "example": {
+        "data": {
+          "id": 1,
+          "firstName": "John",
+          "lastName": "Doe",
+          "email": "john.doe@cinnamon.agency",
+          "onboardingStatus": "none"
+        },
+        "code": 20000,
+        "message": "OK"
+      }
+    },
+    "auth_register_response_400": {
+      "example": {
+        "data": null,
+        "code": 40001,
+        "message": "Email is already in use"
+      }
+    },
+    "auth_resend_email_body": {
+      "example": {
+        "email": "john.doe@cinnamon.agency"
+      }
+    },
+    "auth_reset_password_body": {
+      "example": {
+        "email": "john.doe@cinnamon.agency",
+        "password": "********",
+        "UID": "uuid"
+      }
+    },
+    "auth_change_password_body": {
+      "example": {
+        "currentPassword": "*********",
+        "newPassword": "*********"
+      }
+    },
+    "auth_verify_registration_body": {
+      "example": {
+        "email": "john.doe@cinnamon.agency",
+        "UID": "uuid"
+      }
+    },
+    "auth_verify_registration_response": {
+      "example": {
+        "data": null,
+        "code": 20000,
+        "message": "OK"
+      }
+    },
+    "auth_UID_401_response": {
+      "example": {
+        "data": null,
+        "code": 40104,
+        "message": "Invalid or expired UID"
+      }
+    },
+    "auth_change_password_40003_response": {
+      "example": {
+        "data": null,
+        "code": 40003,
+        "message": "Incorrect password"
+      }
+    },
+    "invitation_404_response": {
+      "example": {
+        "data": null,
+        "code": 40404,
+        "message": "Invalid or nonexistent invitation"
+      }
+    },
+    "20000_response": {
+      "example": {
+        "data": null,
+        "code": 20000,
+        "message": "OK"
+      }
+    },
+    "auth_login_body": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "example": "john.doe@cinnamon.agency"
+        },
+        "password": {
+          "type": "string",
+          "example": "*******"
+        }
+      },
+      "required": ["email", "password"]
+    },
+    "auth_register_body": {
+      "example": {
+        "firstName": "John",
+        "lastName": "Doe",
+        "email": "john.doe@cinnamon.agency",
+        "password": "********"
+      }
+    },
+    "edit_profile_body": {
+      "example": {
+        "firstName": "John",
+        "lastName": "Doe"
+      }
+    },
+    "auth_401_response": {
+      "example": {
+        "data": null,
+        "code": 40103,
+        "message": "The email associated with this account is already used for a different sign in method"
+      }
+    },
+    "auth_expired_token_response": {
+      "example": {
+        "data": null,
+        "code": 40102,
+        "message": "Session expired"
+      }
+    },
+    "401_response": {
+      "example": {
+        "data": null,
+        "code": 40101,
+        "message": "Invalid token"
+      }
+    },
+    "404_response": {
+      "example": {
+        "data": null,
+        "code": 40400,
+        "message": "Resource not found"
+      }
+    },
+    "file_too_large_response": {
+      "example": {
+        "data": null,
+        "code": 40003,
+        "message": "File too large"
+      }
+    },
+    "wrong_input_file_type_response": {
+      "example": {
+        "data": null,
+        "code": 41501,
+        "message": "Only .png, .jpg and .jpeg image format allowed"
+      }
+    },
+    "file_not_found_response": {
+      "example": {
+        "data": null,
+        "code": 40402,
+        "message": "File not found"
+      }
+    },
+    "refresh_token_response": {
+      "example": {
+        "data": {
+          "accessToken": ""
+        },
+        "code": 20000,
+        "message": "OK"
+      }
+    },
+    "dynamic_message_response": {
+      "example": {
+        "data": {
+          "slug": "successful-registration",
+          "title": "Success",
+          "message": "Successfully registered",
+          "redirectURL": "https://dev.template.cinnamon.services/login",
+          "type": "success"
+        },
+        "code": 20000,
+        "message": "OK"
+      }
+    },
+    "40300_response": {
+      "example": {
+        "data": null,
+        "code": 40300,
+        "message": "Forbidden"
+      }
+    },
+    "get_profile_response": {
+      "example": {
+        "data": {
+          "id": 1,
+          "firstName": "John",
+          "lastName": "Doe",
+          "profileImage": ""
+        },
+        "code": 20000,
+        "message": "OK"
+      }
+    }
+  }
+}
