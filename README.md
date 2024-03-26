@@ -9,16 +9,15 @@
 *  [Project structure overview](#structure)
 *  [Database and data structure](#database)
 *  [Authentication and authorization](#auth)
+*  [Documenting](#docs) - TO DO
+*  [Unit testing](#tests) - TO DO
 *  [Communication protocols](#protocol)
 *  [Conclusion](#conclusion)
 ----
 
-## **Info** <a name="info"></a>
-This repository contains a Node.js project template used by [Cinnamon Agency](https://cinnamon.agency) when starting a new project from scratch.
-
 ## **Running the app** <a name="running"></a>
 
-First you need to provide enviromental variables. You copy/paste variable names from <em>./.env.example</em> file and provide your variables.
+First you need to provide enviromental variables. You copy/paste variable names from **<em>./.env.example</em>** file and provide your variables.
 
 Installation is easy and can be done in seconds! Clone this project, make sure you're on the latest Node.js version, open the newly cloned project and run the following commands:
 
@@ -33,7 +32,11 @@ Run the app:
 ```bash
 npm run start
 ```
-After you started the app, you can visit to http://localost:<<PORT>>/api-docs you will find yourself on Swagger page.
+After you started the app, you can visit to http://localost:3000/api-docs you will find yourself on Swagger page.
+
+###### ** We are using port 3000, but you can set up your env variables as you like and use any other port.
+
+There you can test our template.
 
 ## **About project** <a name="about"></a>
 
@@ -64,8 +67,3 @@ In our application, we've seamlessly integrated both HTTP and WebSocket protocol
 ## **Conclusion** <a name="conclusion"></a>
 
 While we have chosen specific tools for implementation, it's essential to highlight that our team remains highly adaptable and flexible to accommodate your unique requirements. Our expertise extends beyond the selected tools, allowing us to seamlessly integrate alternative solutions as needed. With a focus on collaboration and client satisfaction, we prioritize understanding your needs and tailoring our approach to deliver optimal results. Rest assured, our commitment to flexibility ensures that we can effectively adapt to any changes or preferences, ensuring a smooth and successful project collaboration.
-
-*** TODO 
-UNIT TESTING PARAGRAPHG AND DOCUMENTATION PARAGRAPH
-ADD INT TESTING CONFIG AND  ADD TYPEORM IN CODE
-ESLINT AND PRETTIER DESCIRPTION
