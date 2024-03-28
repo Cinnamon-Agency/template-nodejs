@@ -9,8 +9,7 @@
 *  [Project structure overview](#structure)
 *  [Database and data structure](#database)
 *  [Authentication and authorization](#auth)
-*  [Documenting](#docs) - TO DO
-*  [Unit testing](#tests) - TO DO
+*  [Documenting](#docs)
 *  [Communication protocols](#protocol)
 *  [Conclusion](#conclusion)
 ----
@@ -46,6 +45,16 @@ This adapted template is designed to align with the latest trends and best pract
 
 Given that our codebase is written in TypeScript, we've adopted the "package-by-feature" structure as our preferred method. This approach not only maximizes our utilization of TypeScript's robust features but also facilitates seamless migration to a microservices architecture, should the need arise. By organizing our code in this manner, we enhance readability, maintainability, and scalability, ensuring that our development process remains efficient and adaptable to evolving requirements.
 
+Within the */src* directory, we house the definitions of Express routes, business logic, middleware functions, and configurations for third-party services. This centralized location serves as the core of our application, consolidating essential components such as routing logic, business operations, middleware implementations, and configurations for external services. By organizing these elements within the /src directory, we ensure clarity, maintainability, and ease of access for developers working on the project.
+
+*/api*
+*/config*
+*/interfaces*
+*/logger*
+*/middleware*
+*/routes*
+*/services*
+
 ## **Database and data structure** <a name="database"></a>
 
 Our choice of MySQL as the primary database, complemented by the TypeORM ORM, underscores our commitment to reliability and performance. By deliberately simplifying the number of tables within our database schema, we optimize the template for both ease of use and future scalability. This strategic approach not only enhances the template's flexibility but also accelerates development cycles and minimizes potential complexities associated with database management. Additionally, leveraging TypeORM facilitates seamless integration with TypeScript, further enhancing code maintainability and productivity for our development team.
@@ -63,6 +72,10 @@ While Morgan serves as our primary logging tool for the application, we are cont
 ## **Communication protocols** <a name="protocol"></a>
 
 In our application, we've seamlessly integrated both HTTP and WebSocket protocols to cater to diverse communication needs. Leveraging the versatile Express.js framework, we efficiently manage server operations and HTTP requests, ensuring robustness and scalability. Additionally, for WebSocket communications, we've opted for the native WS module, which provides efficient handling of real-time data exchange, enhancing responsiveness and interactivity within our application. By utilizing these technologies in tandem, we deliver a comprehensive solution capable of meeting various communication requirements while maintaining performance and reliability.
+
+## **Documentation** <a name="docs"></a>
+
+In addition to our database setup, we prioritize comprehensive documentation for our Node.js applications, including the integration of Swagger. Clear and detailed documentation ensures that our codebase is easily understandable and accessible to all team members. By incorporating Swagger, we provide an interactive API documentation platform that facilitates seamless communication between developers, stakeholders, and other project members. Swagger enables us to document endpoints, request/response payloads, and authentication mechanisms, enhancing clarity and consistency across our API implementations. This commitment to documentation, bolstered by Swagger, fosters collaboration, accelerates onboarding processes for new team members, and ultimately contributes to the long-term maintainability and scalability of our applications.
 
 ## **Conclusion** <a name="conclusion"></a>
 
