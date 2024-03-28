@@ -47,13 +47,13 @@ Given that our codebase is written in TypeScript, we've adopted the "package-by-
 
 Within the */src* directory, we house the definitions of Express routes, business logic, middleware functions, and configurations for third-party services. This centralized location serves as the core of our application, consolidating essential components such as routing logic, business operations, middleware implementations, and configurations for external services. By organizing these elements within the /src directory, we ensure clarity, maintainability, and ease of access for developers working on the project.
 
-*/api*
-*/config*
-*/interfaces*
-*/logger*
-*/middleware*
-*/routes*
-*/services*
+*/api*<br>
+*/config*<br>
+*/interfaces*<br>
+*/logger*<br>
+*/middleware*<br>
+*/routes*<br>
+*/services*<br>
 
 ## **Database and data structure** <a name="database"></a>
 
