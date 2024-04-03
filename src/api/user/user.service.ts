@@ -1,7 +1,7 @@
 import config from '../../config'
 import { AsyncResponse, ResponseCode, ResponseMessage } from '../../interfaces'
 import { logger } from '../../logger'
-import { query } from '../../services/mysql2'
+import { query } from '../../services/typeorm'
 import { getResponseMessage } from '../../services/utils'
 import {
   FullUser,

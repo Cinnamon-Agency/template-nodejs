@@ -34,6 +34,7 @@ npm run start
 After you started the app, you can visit to http://localost:3000/api-docs you will find yourself on Swagger page.
 
 ###### ** We are using port 3000, but you can set up your env variables as you like and use any other port.
+###### ** We are using host 127.0.0.1, but you can set up your env variables as you like and use any other host.
 
 There you can test our template.
 

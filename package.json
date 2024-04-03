@@ -7,7 +7,11 @@
     "lint": "eslint src/**/*.ts",
     "build": "tsc",
     "start": "node -r dotenv/config build/server.js",
-    "dev": "ts-node-dev --respawn -r dotenv/config src/server.ts"
+    "dev": "ts-node-dev --respawn -r dotenv/config src/server.ts",
+    "migration:generate": "ts-node-dev ./node_modules/.bin/typeorm migration:generate -d ./src/services/typeorm/index.ts",
+    "migration:up": "ts-node-dev ./node_modules/.bin/typeorm migration:run -d ./src/services/typeorm/index.ts",
+    "migration:down": "ts-node-dev ./node_modules/.bin/typeorm migration:revert -d ./src/services/typeorm/index.ts",
+    "migration-deploy:up": "typeorm migration:run -d ./build/services/typeorm/index.js"
   },
   "author": "Cinnamon Agency",
   "license": "ISC",
@@ -24,7 +28,8 @@
     "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",
     "morgan": "^1.10.0",
-    "mysql2": "^3.6.5",
+    "typeorm": "^0.3.19",
+    "typeorm-naming-strategies": "^4.1.0",
     "node-schedule": "^2.1.1",
     "rate-limiter-flexible": "^3.0.4",
     "swagger-ui-express": "^5.0.0",

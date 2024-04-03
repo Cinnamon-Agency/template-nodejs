@@ -23,7 +23,7 @@ import {
   verifyToken
 } from '../../services/jsonwebtoken'
 import { AuthQueries } from './auth.queries'
-import { query } from '../../services/mysql2'
+import { query } from '../../services/typeorm'
 import config from '../../config'
 import { VerificationUIDService } from '../verification_uid/verificationUIDService'
 import { ResultSetHeader } from 'mysql2'

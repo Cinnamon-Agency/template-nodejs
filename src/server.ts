@@ -6,21 +6,26 @@ import config from './config'
 import { logger } from './logger'
 
 const port = config.PORT
+const host = config.HOST
 const commitHash = execSync('git rev-parse HEAD').toString().trim()
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
   logger.info(
-    `Template listening at http://localhost:${port} with commit hash ${commitHash}`
+    `Template listening at http://${host}:${port} with commit hash ${commitHash}`
   )
 
   if (config.ENABLE_WEB_SOCKET) {
     const socketPort = config.WEB_SOCKET_PORT
     initializeWebSocketServer()
-    logger.info(`WebSocket listening at http://localhost:${socketPort}`)
+    logger.info(`WebSocket listening at http://${host}:${socketPort}`)
   }
 })
 
 if (config.EXAMPLE_CHECK_SCHEDULE) {
   scheduleGenericJob()
   logger.info('Generic job enabled')
+}
+
+export const closeServer = () => {
+  server.close()
 }

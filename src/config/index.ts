@@ -3,6 +3,7 @@ import { getAccessCookieOptions, getRefreshCookieOptions } from './tokens'
 /* eslint-disable operator-linebreak */
 interface ENV {
   PORT?: number
+  HOST?: string
   SWAGGER_BASE_URL?: string
   BASE_URL?: string
   SALT_ROUNDS?: number
@@ -36,6 +37,8 @@ interface ENV {
   WEB_SOCKET_PORT?: number
   FILE_UPLOAD_SIZE_LIMIT?: number
   LOG_REQUESTS?: boolean
+  TYPEORM_SYNCHRONIZE?: boolean,
+  TYPEORM_RUN_MIGRATIONS?: boolean
 }
 
 const environmentNumber = (envNum: any): number | undefined => {
@@ -51,6 +54,7 @@ const environmentBoolean = (envBool: any): boolean | undefined => {
 const getConfig = (): ENV => {
   return {
     PORT: process.env.PORT ? Number(process.env.PORT) : undefined,
+    HOST: process.env.HOST ? String(process.env.HOST) : 'localhost',
     SWAGGER_BASE_URL: process.env.SWAGGER_BASE_URL,
     BASE_URL: process.env.BASE_URL,
     SALT_ROUNDS: environmentNumber(process.env.SALT_ROUNDS),
@@ -95,7 +99,9 @@ const getConfig = (): ENV => {
     FILE_UPLOAD_SIZE_LIMIT: environmentNumber(
       process.env.FILE_UPLOAD_SIZE_LIMIT
     ),
-    LOG_REQUESTS: environmentBoolean(process.env.LOG_REQUESTS)
+    LOG_REQUESTS: environmentBoolean(process.env.LOG_REQUESTS),
+    TYPEORM_SYNCHRONIZE: environmentBoolean(process.env.TYPEORM_SYNCHRONIZE),
+    TYPEORM_RUN_MIGRATIONS: environmentBoolean(process.env.TYPEORM_RUN_MIGRATIONS)
   }
 }
 

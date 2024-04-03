@@ -1,34 +1,33 @@
 import express from 'express'
 import bodyParser from 'body-parser'
-import cookieParser from 'cookie-parser'
-import swaggerUi from 'swagger-ui-express'
-import swaggerDocument from './swagger.json'
 import cors from 'cors'
-import * as MySQLConnector from './services/mysql2'
 import router from './routes'
-import { authenticateDocs } from './middleware/auth'
+import * as TypeormDataSource from './services/typeorm'
+import { shutdownHandler } from './middleware/shutdown'
 import { requestLogger } from './middleware/http'
 import { notFound } from './middleware/notFound'
 import { responseFormatter } from './middleware/response'
+import { logger } from './logger'
 import config from './config'
 import helmet from 'helmet'
 import rateLimiter from './middleware/rateLimiter'
 import fileUpload from 'express-fileupload'
+import { closeServer } from './server'
 
 export const app = express()
+
+let shuttingDown = false
 
 app.use(cors())
 
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }))
 
+app.use(fileUpload({ useTempFiles: true }))
+
 app.use(rateLimiter)
 
 // Use body parser to read sent json payloads
 app.use(bodyParser.json())
-
-app.use(cookieParser(config.COOKIE_SECRET))
-
-app.use(fileUpload())
 
 if (config.LOG_REQUESTS) {
   app.use(requestLogger)
@@ -44,17 +43,7 @@ app.use((req, res, next) => {
   next()
 })
 
-// Swagger documentation protected by basic auth
-app.use(
-  config.SWAGGER_BASE_URL,
-  authenticateDocs,
-  swaggerUi.serveFiles(swaggerDocument),
-  swaggerUi.setup(swaggerDocument, {
-    swaggerOptions: {
-      filter: true
-    }
-  })
-)
+app.use(shutdownHandler(shuttingDown))
 
 //Route definitions
 app.use('/', router)
@@ -63,13 +52,28 @@ app.use('/', router)
 
  Each response includes 3 required fields.
  data - Optional
- code - Mandatory code, a ResponseCodeEnum code, which consists of 5 numbers. The first 3 being the status code of the response, and the last 2 being a code identifier
- message - Mandatory message, a ResponseMessageEnum message which can match the response code, or custom defined by the user
+ code - Mandatory code, a ResponseCode code, which consists of 5 numbers. The first 3 being the status code of the response, and the last 2 being a code identifier
+ message - Mandatory message, a ResponseMessage message which can match the response code, or custom defined by the user
 */
 app.use(responseFormatter)
 
-//Catch any non existing routes
 app.use(notFound)
 
-//Initialize database connection
-MySQLConnector.init()
+TypeormDataSource.init()
+
+const shutdown = (signal: string) => {
+  try {
+    shuttingDown = true
+    logger.info(`Received ${signal}`)
+    logger.info('*** App is now closing ***')
+    TypeormDataSource.AppDataSource.destroy()
+    closeServer()
+    process.exit(0)
+  } catch (err) {
+    logger.info(err)
+  }
+}
+
+process.on('SIGINT', shutdown)
+
+process.on('SIGTERM', shutdown)

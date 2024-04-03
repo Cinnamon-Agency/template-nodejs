@@ -1,7 +1,7 @@
 import { ResponseCode } from '../../interfaces'
 import { logger } from '../../logger'
 import { compare, hashString } from '../../services/bcrypt'
-import { query } from '../../services/mysql2'
+import { query } from '../../services/typeorm'
 import { getResponseMessage } from '../../services/utils'
 import { generateUUID } from '../../services/uuid'
 import {

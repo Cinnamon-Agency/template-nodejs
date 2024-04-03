@@ -1,5 +1,5 @@
 import { ResponseCode } from '../../interfaces'
-import { query } from '../../services/mysql2'
+import { query } from '../../services/typeorm'
 import {
   DynamicMessage,
   IGetDynamicMessage,

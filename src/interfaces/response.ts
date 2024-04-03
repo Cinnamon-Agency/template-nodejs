@@ -42,7 +42,8 @@ export enum ResponseCode {
   TOO_MANY_REQUESTS = 42900,
   SERVER_ERROR = 50000,
   BAD_GATEWAY = 50200,
-  SERVICE_UNAVAILABLE = 50300
+  SERVICE_UNAVAILABLE = 50300,
+  APP_SHUTTING_DOWN = 503001
 }
 
 export enum ResponseMessage {
@@ -71,5 +72,6 @@ export enum ResponseMessage {
   TOO_MANY_REQUESTS = 'Too many requests',
   SERVER_ERROR = 'Internal server error',
   BAD_GATEWAY = 'Bad gateway',
-  SERVICE_UNAVAILABLE = 'Service unavailable'
+  SERVICE_UNAVAILABLE = 'Service unavailable',
+  APP_SHUTTING_DOWN = 'Application is shutting down'
 }
