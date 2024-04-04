@@ -7,8 +7,6 @@ export const UserQueries = {
     last_name as 'lastName', 
     email, 
     password, 
-    profile_image as 'profileImage', 
-    status, 
     created_at as 'createdAt', 
     updated_at as 'updatedAt'
   FROM user 
@@ -21,8 +19,6 @@ export const UserQueries = {
     last_name as 'lastName', 
     email, 
     password, 
-    profile_image as 'profileImage', 
-    status, 
     created_at as 'createdAt', 
     updated_at as 'updatedAt'
   FROM user 
@@ -30,15 +26,13 @@ export const UserQueries = {
   AND status != ${UserStatus.DELETED}
 `,
   createUser: `
-    INSERT INTO user(first_name, last_name, email, password, profile_image)
+    INSERT INTO user(first_name, last_name, email, password)
     VALUES(?, ?, ?, ?, ?);
     SELECT id, 
       first_name as 'firstName', 
       last_name as 'lastName', 
       email, 
       password, 
-      profile_image as 'profileImage', 
-      status, 
       created_at as 'createdAt', 
       updated_at as 'updatedAt'
     FROM user
@@ -50,8 +44,8 @@ export const UserQueries = {
     WHERE id = ?
   `,
   getProfile: `
-    SELECT id, first_name as 'firstName', last_name as 'lastName', profile_image as 'profileImage'
-    FRON user
+    SELECT id, first_name as 'firstName', last_name as 'lastName'
+    FROM user
     WHERE id = ?
     AND status != ${UserStatus.DELETED}
   `,
@@ -61,9 +55,8 @@ export const UserQueries = {
   SET first_name = ?,
   last_name = ?,
   email = ?,
-  profile_image = ?
   WHERE id = @user_id;
-  SELECT id, first_name as 'firstName', last_name as 'lastName', profile_image as 'profileImage'
+  SELECT id, first_name as 'firstName', last_name as 'lastName'
   FROM user
   WHERE id = @user_id
   AND status != ${UserStatus.DELETED}

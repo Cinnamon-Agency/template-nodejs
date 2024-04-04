@@ -1,4 +1,4 @@
-import config from '../../config'
+import { autoInjectable } from 'tsyringe'
 import { ResponseCode } from '../../interfaces'
 import { logger } from '../../logger'
 import { getResponseMessage } from '../../services/utils'
@@ -8,7 +8,6 @@ import {
   IGetProfile,
   IGetUserByEmail,
   IGetUserById,
-  ISaveProfileImage,
   IUserService,
   Profile,
   IEditProfile,
@@ -17,6 +16,7 @@ import {
 } from './interface'
 import { UserQueries } from './user.queries'
 
+@autoInjectable()
 export class UserService implements IUserService {
   constructor() {}
 
@@ -89,15 +89,14 @@ export class UserService implements IUserService {
     firstName,
     lastName,
     email,
-    password,
-    profileImage
+    password
   }: ICreateUser) => {
     let code: ResponseCode = ResponseCode.OK
 
     try {
       const [user] = await query<[FullUser]>(
         UserQueries.createUser,
-        [firstName, lastName, email, password, profileImage],
+        [firstName, lastName, email, password],
         true
       )
 
@@ -146,8 +145,7 @@ export class UserService implements IUserService {
     userId,
     firstName,
     lastName,
-    email,
-    profileImage
+    email
   }: IEditProfile) {
     let code: ResponseCode = ResponseCode.OK
 
@@ -156,8 +154,7 @@ export class UserService implements IUserService {
         userId,
         firstName,
         lastName,
-        email,
-        profileImage
+        email
       ])
       return { profile, code }
     } catch (e: any) {
@@ -195,52 +192,6 @@ export class UserService implements IUserService {
     } catch (e: any) {
       code = ResponseCode.SERVER_ERROR
     }
-    return { code }
-  }
-
-  saveProfileImage = async ({ userId, image }: ISaveProfileImage) => {
-    let code: ResponseCode = ResponseCode.OK
-
-    try {
-      const { user, code: userCode } = await this.getUserById({ userId })
-      if (!user) {
-        return { code: userCode }
-      }
-
-      if (image.size > config.FILE_UPLOAD_SIZE_LIMIT * 1024 * 1024) {
-        return {
-          code: ResponseCode.FILE_TOO_LARGE
-        }
-      }
-
-      const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png']
-      if (!ACCEPTED_IMAGE_TYPES.includes(image.mimetype)) {
-        return {
-          code: ResponseCode.WRONG_INPUT_PHOTO_TYPE
-        }
-      }
-
-      const url = `${config.STORAGE_BASE_URL}${config.PROFILE_IMAGE_BASE_URL}${userId}`
-
-      /*
-        Upload related logic to specific service or location goes here
-      */
-
-      const { profile, code } = await this.updateProfile({
-        userId,
-        profileImage: url
-      })
-
-      return { profile, code }
-    } catch (err: any) {
-      code = ResponseCode.SERVER_ERROR
-      logger.error({
-        code,
-        message: getResponseMessage(code),
-        stack: err.stack
-      })
-    }
-
     return { code }
   }
 }

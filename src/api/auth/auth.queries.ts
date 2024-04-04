@@ -71,9 +71,6 @@ export const AuthQueries = {
     last_name as 'lastName', 
     email, 
     password, 
-    profile_picture as 'profilePicture', 
-    user.onboarding_status as 'onboardingStatus',
-    role_id as 'roleId', 
     user.created_at as 'createdAt', 
     user.updated_at as 'updatedAt'
   FROM user

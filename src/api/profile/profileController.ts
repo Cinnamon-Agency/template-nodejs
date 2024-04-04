@@ -2,7 +2,9 @@ import { NextFunction, Response, Request } from 'express'
 import { UserService } from '../user/userService'
 import { ResponseCode } from '../../interfaces'
 import fileUpload from 'express-fileupload'
+import { autoInjectable } from 'tsyringe'
 
+@autoInjectable()
 export class ProfileController {
   private readonly userService: UserService
 

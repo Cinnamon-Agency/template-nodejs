@@ -1,5 +1,6 @@
 import { StatusCode, ResponseCode, ResponseMessage } from './response'
 import { User } from '../api/user/interface'
+import { QueryRunner } from 'typeorm'
 
 type ResponseCodeRequired = { code: ResponseCode }
 
@@ -9,6 +10,9 @@ export type AsyncResponse<T> = Promise<DataType<T> & ResponseCodeRequired>
 
 export type ResponseParams = {data?: object, code: ResponseCode, message?: ResponseMessage}
 
+export interface IServiceMethod {
+  queryRunner?: QueryRunner
+}
 
 declare module 'ws' {
   interface WebSocket {
@@ -19,7 +23,6 @@ declare module 'ws' {
 }
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     export interface Request {
       user: User

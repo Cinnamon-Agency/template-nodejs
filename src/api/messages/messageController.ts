@@ -3,6 +3,7 @@ import _ from 'lodash'
 import { ResponseCode } from '../../interfaces'
 import { MessageService } from './messageService'
 
+@autoInjectable()
 export class MessageController {
   private readonly messageService: MessageService
 
