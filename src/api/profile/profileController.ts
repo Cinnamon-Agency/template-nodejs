@@ -45,24 +45,4 @@ export class ProfileController {
 
     return next({ profile, code: ResponseCode.OK })
   }
-
-  upload = async (req: Request, res: Response, next: NextFunction) => {
-    const { user } = req
-
-    if (!req.files) {
-      return next({ code: ResponseCode.FILE_NOT_FOUND })
-    }
-
-    const { image } = req.files
-    if (!image) {
-      return next({ code: ResponseCode.FILE_NOT_FOUND })
-    }
-
-    const { code } = await this.userService.saveProfileImage({
-      userId: user.id,
-      image: image as fileUpload.UploadedFile
-    })
-
-    return next({ code })
-  }
 }
