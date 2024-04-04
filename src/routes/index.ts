@@ -1,7 +1,7 @@
 import express from 'express'
 
-import { authRouter } from '../api/auth/auth.router'
-import { profileRouter } from '../api/profile/profile.router'
+import { authRouter } from '../api/auth/authRouter'
+import { profileRouter } from '../api/profile/profileRouter'
 import { messageRouter } from '../api/messages/messageRouter'
 
 const router = express.Router()

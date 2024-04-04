@@ -1,6 +1,6 @@
 import { StatusCode, ResponseCode, ResponseMessage } from '../../interfaces'
-import { NextFunction, Request, RequestHandler, Response } from 'express'
-import { UserService } from '../../api/user/user.service'
+import { NextFunction, Request, Response } from 'express'
+import { UserService } from '../../api/user/userService'
 import { KeyType, verifyToken } from '../../services/jsonwebtoken'
 import _ from 'lodash'
 import { logger } from '../../logger'

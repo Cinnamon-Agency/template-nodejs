@@ -1,35 +1,55 @@
+import { Repository } from 'typeorm'
 import { ResponseCode } from '../../interfaces'
 import { logger } from '../../logger'
 import { compare, hashString } from '../../services/bcrypt'
-import { query } from '../../services/typeorm'
 import { getResponseMessage } from '../../services/utils'
 import { generateUUID } from '../../services/uuid'
 import {
   IClearVerificationUID,
+  IGetVerificationUID,
   ISetVerificationUID,
   IVerificationUIDService,
   IVerifyUID
 } from './interface'
-import { VerificationUIDQueries } from './verificationUIDQueries'
+import { VerificationUID } from './verificationUIDModel'
+import { AppDataSource } from '../../services/typeorm'
+import { autoInjectable } from 'tsyringe'
 
+@autoInjectable()
 export class VerificationUIDService implements IVerificationUIDService {
-  constructor() {}
+  private readonly verificationUIDRepository: Repository<VerificationUID>
 
-  async setVerificationUID({ userId, type }: ISetVerificationUID) {
+  constructor() {
+    this.verificationUIDRepository =
+      AppDataSource.manager.getRepository(VerificationUID)
+  }
+
+  setVerificationUID = async ({
+    userId,
+    type,
+    queryRunner
+  }: ISetVerificationUID) => {
     let code = ResponseCode.OK
 
     try {
       const uid = generateUUID()
-      const hash = await hashString(uid)
+      const hashUID = generateUUID()
+      const hash = await hashString(hashUID)
 
       await this.clearVerificationUID({ userId, type })
-      await query(VerificationUIDQueries.createVerificationUID, [
-        userId,
-        hash,
-        type
-      ])
 
-      return { uid, code }
+      let insertResult = await this.verificationUIDRepository
+        .createQueryBuilder('verificationUID', queryRunner)
+        .insert()
+        .into(VerificationUID)
+        .values([{ userId, uid, hash, type }])
+        .execute()
+
+      if (insertResult.raw.affectedRows !== 1) {
+        return { code: ResponseCode.FAILED_INSERT }
+      }
+
+      return { uids: { uid, hashUID }, code }
     } catch (err: any) {
       switch (err.errno) {
         case 1062:
@@ -51,11 +71,44 @@ export class VerificationUIDService implements IVerificationUIDService {
     return { code }
   }
 
-  async clearVerificationUID({ userId, type }: IClearVerificationUID) {
+  getVerificationUID = async ({ uid }: IGetVerificationUID) => {
     let code = ResponseCode.OK
 
     try {
-      await query(VerificationUIDQueries.deleteVerificationUID, [userId, type])
+      const verificationUID = await this.verificationUIDRepository.findOne({
+        where: { uid }
+      })
+      if (!verificationUID) {
+        return { code: ResponseCode.INVALID_UID }
+      }
+
+      return { verificationUID, code }
+    } catch (err: any) {
+      code = ResponseCode.SERVER_ERROR
+      logger.error({
+        code,
+        message: getResponseMessage(code),
+        stack: err.stack
+      })
+    }
+
+    return { code }
+  }
+
+  clearVerificationUID = async ({ userId, type }: IClearVerificationUID) => {
+    let code = ResponseCode.OK
+
+    try {
+      const verificationUID = await this.verificationUIDRepository.findOne({
+        where: { userId, type }
+      })
+      if (!verificationUID) {
+        return { code: ResponseCode.VERIFICATION_UID_NOT_FOUND }
+      }
+
+      await this.verificationUIDRepository.delete({
+        id: verificationUID.id
+      })
 
       return { code }
     } catch (err: any) {
@@ -70,31 +123,23 @@ export class VerificationUIDService implements IVerificationUIDService {
     return { code }
   }
 
-  async verifyUID({ userId, uid, type }: IVerifyUID) {
+  verifyUID = async ({ uid, hashUid, type }: IVerifyUID) => {
     let code = ResponseCode.OK
 
     try {
-      if (
-        !uid ||
-        typeof uid !== 'string' ||
-        !uid.match(
-          /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/
-        )
-      ) {
-        return { code: ResponseCode.INVALID_UID }
+      const verificationUID = await this.verificationUIDRepository.findOne({
+        where: { uid, type }
+      })
+      if (!verificationUID) {
+        return { code: ResponseCode.VERIFICATION_UID_NOT_FOUND }
       }
 
-      const [hashedUID] = await query<[any]>(
-        VerificationUIDQueries.getVerificationUID,
-        [userId, type]
-      )
-
-      const matches = await compare(uid, hashedUID)
+      const matches = await compare(hashUid, verificationUID.hash)
       if (!matches) {
         return { code: ResponseCode.INVALID_UID }
       }
 
-      return { valid: true, code }
+      return { verificationUID, code }
     } catch (err: any) {
       code = ResponseCode.SERVER_ERROR
       logger.error({

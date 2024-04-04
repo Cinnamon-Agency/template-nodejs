@@ -1,7 +1,6 @@
 import config from '../../config'
-import { AsyncResponse, ResponseCode, ResponseMessage } from '../../interfaces'
+import { ResponseCode } from '../../interfaces'
 import { logger } from '../../logger'
-import { query } from '../../services/typeorm'
 import { getResponseMessage } from '../../services/utils'
 import {
   FullUser,
@@ -15,7 +14,7 @@ import {
   IEditProfile,
   IUpdateProfile,
   ISetUserStatus
-} from './user.interface'
+} from './interface'
 import { UserQueries } from './user.queries'
 
 export class UserService implements IUserService {

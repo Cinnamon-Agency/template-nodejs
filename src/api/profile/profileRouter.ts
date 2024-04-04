@@ -1,7 +1,7 @@
 import express from 'express'
 import { validate } from '../../middleware/validation'
-import { ProfileController } from './profile.controller'
-import { editProfileSchema, getByIdSchema } from './profile.input'
+import { ProfileController } from './profileController'
+import { editProfileSchema, getByIdSchema } from './profileInput'
 import { requireToken } from '../../middleware/auth'
 
 const profileController = new ProfileController()

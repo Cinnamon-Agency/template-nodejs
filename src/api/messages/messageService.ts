@@ -1,5 +1,4 @@
 import { ResponseCode } from '../../interfaces'
-import { query } from '../../services/typeorm'
 import {
   DynamicMessage,
   IGetDynamicMessage,

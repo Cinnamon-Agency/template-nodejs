@@ -79,8 +79,6 @@ export const AuthQueries = {
   FROM user
   LEFT JOIN oauth
   ON user.id = oauth.user_id
-  LEFT JOIN user_role
-  ON user.id = user_role.user_id
   WHERE oauth.id = LAST_INSERT_ID();
   `,
 

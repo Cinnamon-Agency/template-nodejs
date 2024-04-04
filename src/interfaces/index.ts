@@ -1,5 +1,5 @@
 import { StatusCode, ResponseCode, ResponseMessage } from './response'
-import { User } from '../api/user/user.interface'
+import { User } from '../api/user/interface'
 
 type ResponseCodeRequired = { code: ResponseCode }
 

@@ -1,4 +1,4 @@
-import { UserStatus } from './user.interface'
+import { UserStatus } from './interface'
 
 export const UserQueries = {
   getUserById: `
