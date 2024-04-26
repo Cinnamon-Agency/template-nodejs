@@ -8,10 +8,10 @@ import {
 import { MessageQueries } from './messageQueries'
 import { getResponseMessage } from '../../services/utils'
 import { logger } from '../../logger'
+import { autoInjectable } from 'tsyringe'
 
+@autoInjectable()
 export class MessageService implements IMessageService {
-  constructor() {}
-
   async getDynamicMessageBySlug({ slug }: IGetDynamicMessage) {
     let code = ResponseCode.OK
 

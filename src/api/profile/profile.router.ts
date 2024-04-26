@@ -3,8 +3,9 @@ import { validate } from '../../middleware/validation'
 import { ProfileController } from './profile.controller'
 import { editProfileSchema, getByIdSchema } from './profile.input'
 import { requireToken } from '../../middleware/auth'
+import { container } from 'tsyringe'
 
-const profileController = new ProfileController()
+const profileController = container.resolve(ProfileController)
 export const profileRouter = express.Router()
 
 profileRouter.get('/', requireToken, profileController.getProfile)

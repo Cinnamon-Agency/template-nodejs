@@ -1,5 +1,5 @@
 import config from '../../config'
-import { AsyncResponse, ResponseCode, ResponseMessage } from '../../interfaces'
+import { ResponseCode } from '../../interfaces'
 import { logger } from '../../logger'
 import { query } from '../../services/mysql2'
 import { getResponseMessage } from '../../services/utils'
@@ -17,10 +17,10 @@ import {
   ISetUserStatus
 } from './user.interface'
 import { UserQueries } from './user.queries'
+import { autoInjectable } from 'tsyringe'
 
+@autoInjectable()
 export class UserService implements IUserService {
-  constructor() {}
-
   getUserByEmail = async ({ email }: IGetUserByEmail) => {
     let code = ResponseCode.OK
 

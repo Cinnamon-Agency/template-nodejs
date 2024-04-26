@@ -2,12 +2,14 @@ import { NextFunction, Request, Response } from 'express'
 import _ from 'lodash'
 import { ResponseCode } from '../../interfaces'
 import { MessageService } from './messageService'
+import { autoInjectable } from 'tsyringe'
 
+@autoInjectable()
 export class MessageController {
   private readonly messageService: MessageService
 
-  constructor() {
-    this.messageService = new MessageService()
+  constructor(messageService: MessageService) {
+    this.messageService = messageService
   }
 
   getMessage = async (req: Request, res: Response, next: NextFunction) => {

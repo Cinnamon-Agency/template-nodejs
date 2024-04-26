@@ -11,10 +11,10 @@ import {
   IVerifyUID
 } from './interface'
 import { VerificationUIDQueries } from './verificationUIDQueries'
+import { autoInjectable } from 'tsyringe'
 
+@autoInjectable()
 export class VerificationUIDService implements IVerificationUIDService {
-  constructor() {}
-
   async setVerificationUID({ userId, type }: ISetVerificationUID) {
     let code = ResponseCode.OK
 
