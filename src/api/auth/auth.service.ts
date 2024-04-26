@@ -13,7 +13,7 @@ import {
   ISignToken,
   IVerifyRegistration
 } from './auth.interface'
-import { AsyncResponse, ResponseCode } from '../../interfaces'
+import { ResponseCode } from '../../interfaces'
 import { compare, hashString } from '../../services/bcrypt'
 import { getResponseMessage } from '../../services/utils'
 import { logger } from '../../logger'
@@ -30,14 +30,19 @@ import { ResultSetHeader } from 'mysql2'
 import { VerificationUIDType } from '../verification_uid/interface'
 import { generateUUID } from '../../services/uuid'
 import { UserStatus } from '../user/user.interface'
+import { autoInjectable } from 'tsyringe'
 
+@autoInjectable()
 export class AuthService implements IAuthService {
   private readonly userService: UserService
   private readonly verificationUIDService: VerificationUIDService
 
-  constructor() {
-    this.userService = new UserService()
-    this.verificationUIDService = new VerificationUIDService()
+  constructor(
+    userService: UserService,
+    verificationUIDService: VerificationUIDService
+  ) {
+    this.userService = userService
+    this.verificationUIDService = verificationUIDService
   }
 
   async registerUser({ firstName, lastName, email, password }: IRegisterUser) {

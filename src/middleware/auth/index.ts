@@ -1,10 +1,11 @@
 import { StatusCode, ResponseCode, ResponseMessage } from '../../interfaces'
-import { NextFunction, Request, RequestHandler, Response } from 'express'
+import { NextFunction, Request, Response } from 'express'
 import { UserService } from '../../api/user/user.service'
 import { KeyType, verifyToken } from '../../services/jsonwebtoken'
 import _ from 'lodash'
 import { logger } from '../../logger'
 import config from '../../config'
+import { container } from 'tsyringe'
 
 const authenticatedDocUsers: { [key: string]: string } = {
   [config.DOCS_USER]: config.DOCS_PASSWORD
@@ -42,7 +43,7 @@ export const requireToken = async (
       })
     }
 
-    const { user } = await new UserService().getUserById({
+    const { user } = await container.resolve(UserService).getUserById({
       userId: decodedToken.sub
     })
     if (!user) {

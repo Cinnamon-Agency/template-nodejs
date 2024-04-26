@@ -12,8 +12,9 @@ import {
 } from './auth.input'
 import { requireToken } from '../../middleware/auth'
 import { loginRateLimiter } from '../../middleware/rateLimiter'
+import { container } from 'tsyringe'
 
-const authController = new AuthController()
+const authController = container.resolve(AuthController)
 export const authRouter = express.Router()
 
 authRouter.post('/register', validate(registerSchema), authController.register)

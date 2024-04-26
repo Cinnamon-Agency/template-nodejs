@@ -3,12 +3,14 @@ import { AuthService } from './auth.service'
 import { ResponseCode } from '../../interfaces'
 import { getAccessCookieOptions } from '../../config'
 import _ from 'lodash'
+import { autoInjectable } from 'tsyringe'
 
+@autoInjectable()
 export class AuthController {
   private readonly authService: AuthService
 
-  constructor() {
-    this.authService = new AuthService()
+  constructor(authService: AuthService) {
+    this.authService = authService
   }
 
   register = async (req: Request, res: Response, next: NextFunction) => {
