@@ -2,12 +2,9 @@ import 'reflect-metadata'
 import express from 'express'
 import bodyParser from 'body-parser'
 import cookieParser from 'cookie-parser'
-import swaggerUi from 'swagger-ui-express'
-import swaggerDocument from './swagger.json'
 import cors from 'cors'
 import * as MySQLConnector from './services/mysql2'
 import router from './routes'
-import { authenticateDocs } from './middleware/auth'
 import { requestLogger } from './middleware/http'
 import { notFound } from './middleware/notFound'
 import { responseFormatter } from './middleware/response'
@@ -35,27 +32,15 @@ if (config.LOG_REQUESTS) {
   app.use(requestLogger)
 }
 
-// Redirect root to swagger docs
+// Redirect root to API docs
 app.use((req, res, next) => {
   if (req.url === '/') {
-    res.redirect(config.SWAGGER_BASE_URL)
+    res.redirect(config.DOCS_BASE_URL)
     return
   }
 
   next()
 })
-
-// Swagger documentation protected by basic auth
-app.use(
-  config.SWAGGER_BASE_URL,
-  authenticateDocs,
-  swaggerUi.serveFiles(swaggerDocument),
-  swaggerUi.setup(swaggerDocument, {
-    swaggerOptions: {
-      filter: true
-    }
-  })
-)
 
 //Route definitions
 app.use('/', router)

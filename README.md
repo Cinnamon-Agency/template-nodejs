@@ -31,7 +31,7 @@ Run the app:
 ```bash
 npm run start
 ```
-After you started the app, you can visit to http://localost:3000/api-docs you will find yourself on Swagger page.
+After you started the app, you can visit to http://localost:3000/api-docs you will find yourself on our API documentation page.
 
 ###### ** We are using port 3000, but you can set up your env variables as you like and use any other port.
 

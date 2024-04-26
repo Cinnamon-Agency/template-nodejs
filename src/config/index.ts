@@ -3,8 +3,8 @@ import { getAccessCookieOptions, getRefreshCookieOptions } from './tokens'
 /* eslint-disable operator-linebreak */
 interface ENV {
   PORT?: number
-  SWAGGER_BASE_URL?: string
-  BASE_URL?: string
+  API_BASE_URL?: string
+  DOCS_BASE_URL?: string
   SALT_ROUNDS?: number
   COOKIE_SECRET?: string
   NODE_ENV?: string
@@ -51,8 +51,8 @@ const environmentBoolean = (envBool: any): boolean | undefined => {
 const getConfig = (): ENV => {
   return {
     PORT: process.env.PORT ? Number(process.env.PORT) : undefined,
-    SWAGGER_BASE_URL: process.env.SWAGGER_BASE_URL,
-    BASE_URL: process.env.BASE_URL,
+    API_BASE_URL: process.env.API_BASE_URL,
+    DOCS_BASE_URL: process.env.DOCS_BASE_URL,
     SALT_ROUNDS: environmentNumber(process.env.SALT_ROUNDS),
     COOKIE_SECRET: process.env.COOKIE_SECRET,
     NODE_ENV: process.env.NODE_ENV,
