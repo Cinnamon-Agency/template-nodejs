@@ -1,10 +1,11 @@
-import { ResponseCode } from '../../interfaces'
+import { ResponseCode } from '../../interface'
 import { AppDataSource } from '../../services/typeorm'
 import { Repository } from 'typeorm'
 import { logger } from '../../logger'
 import { getResponseMessage } from '../../services/utils'
 import {
   IExpireUserSession,
+  IGetUserSession,
   IStoreUserSession,
   IUpdateUserSession,
   IUserSessionService,
@@ -53,6 +54,38 @@ export class UserSessionService implements IUserSessionService {
       const refreshTokenHash = await hashString(refreshToken)
       const userSession = new UserSession(userId, refreshTokenHash, expiresAt)
       await this.userSessionRepository.save(userSession)
+
+      return { userSession, code }
+    } catch (err: any) {
+      code = ResponseCode.SERVER_ERROR
+      logger.error({
+        code,
+        message: getResponseMessage(code),
+        stack: err.stack
+      })
+    }
+
+    return { code }
+  }
+
+  getUserSession = async ({ userId }: IGetUserSession) => {
+    let code: ResponseCode = ResponseCode.OK
+
+    try {
+      const { user, code: userCode } = await this.userService.getUserById({
+        userId
+      })
+      if (!user) {
+        return { code: userCode }
+      }
+
+      const userSession = await this.userSessionRepository.findOne({
+        where: { userId }
+      })
+
+      if (!userSession) {
+        return { code: ResponseCode.USER_SESSION_NOT_FOUND }
+      }
 
       return { userSession, code }
     } catch (err: any) {

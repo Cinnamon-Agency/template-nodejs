@@ -1,4 +1,4 @@
-import { AsyncResponse, IServiceMethod } from '../../interfaces'
+import { AsyncResponse, IServiceMethod } from '../../interface'
 import { VerificationUID } from './verificationUIDModel'
 
 export enum VerificationUIDType {

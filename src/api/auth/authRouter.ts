@@ -1,32 +1,35 @@
 import express from 'express'
 import { AuthController } from './authController'
+import { validate } from '../../middleware/validation'
+import { loginRateLimiter } from '../../middleware/rate_limiter'
+import { container } from 'tsyringe'
 import {
+  loginSchema,
+  registerSchema,
   forgotPasswordSchema,
-  loginUserSchema,
-  resetPasswordSchema,
-  verifyGetEmailSchema,
-  verifyUserSchema
+  resetPasswordSchema
 } from './authInput'
 import { requireToken } from '../../middleware/auth'
-import { validate } from '../../middleware/validation'
-import { loginRateLimiter } from '../../middleware/rateLimiter'
-import { container } from 'tsyringe'
 
 const authController = container.resolve(AuthController)
 export const authRouter = express.Router()
 
+authRouter.post('/register', validate(registerSchema), authController.register)
 authRouter.post(
-  '/verify',
-  validate(verifyUserSchema),
-  authController.verifyUser
+  '/login',
+  validate(loginSchema),
+  loginRateLimiter,
+  authController.login
 )
-authRouter.post('/login', validate(loginUserSchema), loginRateLimiter, authController.login)
-authRouter.post('/refresh', authController.refreshToken)
 authRouter.post('/logout', requireToken, authController.logout)
-authRouter.get(
-  '/email',
-  validate(verifyGetEmailSchema),
-  authController.getEmail
+authRouter.post('/refresh', authController.refreshToken)
+authRouter.post(
+  '/password/forgot',
+  validate(forgotPasswordSchema),
+  authController.forgotPassword
 )
-authRouter.post('/password/forgot', validate(forgotPasswordSchema), authController.forgotPassword)
-authRouter.post('/password/reset', validate(resetPasswordSchema), authController.resetPassword)
+authRouter.post(
+  '/password/reset',
+  validate(resetPasswordSchema),
+  authController.resetPassword
+)

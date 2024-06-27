@@ -1,6 +1,7 @@
 import { Schema } from 'joi'
 import { NextFunction, Request, Response } from 'express'
-import { StatusCode, ResponseCode, ResponseMessage } from '../../interfaces'
+import { StatusCode, ResponseCode, ResponseMessage } from '../../interface'
+import { logger } from '../../logger'
 
 type ValidationInput = { schema: Schema; input: Record<string, unknown> }
 type Validate = (req: Request) => ValidationInput
@@ -14,6 +15,7 @@ export const validate = (validate: Validate) => {
       res.locals.input = validated || {}
       return next()
     } catch (err: any) {
+      logger.info(err + err.toString())
       const errors = []
       if (err && err.details) {
         for (let i = 0; i < err.details.length; i++) {
@@ -30,7 +32,7 @@ export const validate = (validate: Validate) => {
 
       return res.status(StatusCode.BAD_REQUEST).send({
         data: null,
-        code: ResponseCode.INVALID_INPUT,
+        code: ResponseCode.BAD_REQUEST,
         message: ResponseMessage.INVALID_INPUT,
         errors
       })

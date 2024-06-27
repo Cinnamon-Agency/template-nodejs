@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
-import { ResponseCode } from '../../interfaces'
+import { ResponseCode } from '../../interface'
 
 export const shutdownHandler = (shuttingDown: boolean) => {
   return (req: Request, res: Response, next: NextFunction) => {

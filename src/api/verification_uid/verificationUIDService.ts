@@ -1,5 +1,5 @@
 import { Repository } from 'typeorm'
-import { ResponseCode } from '../../interfaces'
+import { ResponseCode } from '../../interface'
 import { logger } from '../../logger'
 import { compare, hashString } from '../../services/bcrypt'
 import { getResponseMessage } from '../../services/utils'
@@ -38,7 +38,7 @@ export class VerificationUIDService implements IVerificationUIDService {
 
       await this.clearVerificationUID({ userId, type })
 
-      let insertResult = await this.verificationUIDRepository
+      const insertResult = await this.verificationUIDRepository
         .createQueryBuilder('verificationUID', queryRunner)
         .insert()
         .into(VerificationUID)

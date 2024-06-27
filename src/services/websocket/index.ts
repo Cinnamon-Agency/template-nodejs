@@ -1,102 +1,54 @@
-import { WebSocket, WebSocketServer } from 'ws'
-import { KeyType, verifyToken } from '../jsonwebtoken'
-import { createServer } from 'http'
-import { getResponseMessage } from '../../services/utils'
-import { StatusCode } from '../../interfaces'
-import { logger } from '../../logger'
+import { WebSocket } from 'ws'
+import config from '../../config'
+import { IWebSocketEventData } from './interface'
 
-//Define static authenticated clients elsewhere
-let authenticatedClients: Map<number, WebSocket>
+class WebSocketService {
+  private url: string
+  private websocket: WebSocket | null = null
 
-export const initializeWebSocketServer = async () => {
-  try {
-    const server = createServer()
-    const wss = new WebSocketServer({ noServer: true })
+  constructor(url: string) {
+    this.url = url
+  }
 
-    authenticatedClients = new Map<number, WebSocket>()
-
-    wss.on('connection', async (ws: WebSocket) => {
-      ws.on('error', (err: any) => {
-        const code = StatusCode.SERVICE_UNAVAILABLE
-        logger.error({
-          code,
-          message: getResponseMessage(code),
-          stack: err.stack
-        })
-      })
-
-      ws.on('pong', () => {
-        ws.isAlive = true
-      })
-
-      ws.on('close', () => {
-        authenticatedClients.delete(ws.userId)
-      })
-    })
-
-    // Initiate ping-pong mechanism to ensure connection is alive
-    if (process.env.ENABLE_WEB_SOCKET_PING_PONG == 'true') {
-      const interval = setInterval(() => {
-        if (authenticatedClients.size > 0) {
-          authenticatedClients.forEach((ws) => {
-            if (ws.isAlive === false) {
-              authenticatedClients.delete(ws.userId)
-              return ws.terminate()
-            }
-            ws.isAlive = false
-            ws.ping()
-          })
-        }
-      }, 15000)
+  connect() {
+    if (this.websocket && this.websocket.readyState !== WebSocket.CLOSED) {
+      console.warn('WebSocket is already connected.')
+      return
     }
 
-    server.on('upgrade', async (request, socket, head) => {
-      socket.on('error', (err: any) => {
-        const code = StatusCode.SERVICE_UNAVAILABLE
-        logger.error({
-          code,
-          message: getResponseMessage(code),
-          stack: err.stack
-        })
-      })
+    this.websocket = new WebSocket(this.url)
 
-      // Get the JWT from the client's headers
-      const accessToken = request.headers.access_token
+    this.websocket.onopen = (event) => {
+      console.log('WebSocket connection opened:', event)
+    }
 
-      if (typeof accessToken === 'string' && accessToken.startsWith('Bearer')) {
-        const token = accessToken.split(' ')[1]
-        const decodedToken = await verifyToken<any>(
-          token,
-          KeyType.ACCESS_TOKEN_PRIVATE_KEY
-        )
-        if (
-          !decodedToken ||
-          typeof decodedToken.payload === 'string' ||
-          !decodedToken.sub
-        ) {
-          socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n')
-          socket.destroy()
-          return
-        }
+    this.websocket.onerror = (error) => {
+      console.error('WebSocket error:', error)
+    }
 
-        wss.handleUpgrade(request, socket, head, (ws: any) => {
-          ws.userId = decodedToken.sub
-          ws.expiration = decodedToken.exp
-          ws.isAlive = false
+    this.websocket.onclose = (event) => {
+      console.log('WebSocket connection closed:', event)
+      // Optionally, you can try to reconnect
+    }
+  }
 
-          authenticatedClients.set(ws.userId, ws)
-          wss.emit('connection', ws, request, socket)
-        })
-      } else {
-        socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n')
-        socket.destroy()
-        return
-      }
-    })
+  emit(event: string, data: IWebSocketEventData) {
+    if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+      this.websocket.emit(event, data)
+    } else if (this.websocket) {
+      console.error(
+        `WebSocket is not open. Ready state is: ${this.websocket.readyState}`
+      )
+    } else console.error(`Error on websocket initialization`)
+  }
 
-    server.listen(process.env.WEB_SOCKET_PORT)
-  } catch (err: any) {
-    const code = StatusCode.SERVICE_UNAVAILABLE
-    logger.error({ code, message: getResponseMessage(code), stack: err.stack })
+  close() {
+    if (this.websocket) {
+      this.websocket.close()
+    }
   }
 }
+
+const wsServiceInstance = new WebSocketService(config.WEB_SOCKET_URL)
+
+export default wsServiceInstance

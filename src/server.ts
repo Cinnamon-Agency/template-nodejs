@@ -1,31 +1,19 @@
 import { app } from './app'
-import { initializeWebSocketServer } from './services/websocket'
-import { scheduleGenericJob } from './services/scheduler'
-import { execSync } from 'child_process'
 import config from './config'
 import { logger } from './logger'
+import wsServiceInstance from './services/websocket'
 
 const port = config.PORT
-const host = config.HOST
-const commitHash = execSync('git rev-parse HEAD').toString().trim()
+const commitHash = config.COMMIT_HASH
 
 const server = app.listen(port, () => {
+  wsServiceInstance.connect()
   logger.info(
-    `Template listening at http://${host}:${port} with commit hash ${commitHash}`
+    `Server listening at http://localhost:${port} with commit hash ${commitHash}`
   )
-
-  if (config.ENABLE_WEB_SOCKET) {
-    const socketPort = config.WEB_SOCKET_PORT
-    initializeWebSocketServer()
-    logger.info(`WebSocket listening at http://${host}:${socketPort}`)
-  }
 })
 
-if (config.EXAMPLE_CHECK_SCHEDULE) {
-  scheduleGenericJob()
-  logger.info('Generic job enabled')
-}
-
 export const closeServer = () => {
+  wsServiceInstance.close()
   server.close()
 }

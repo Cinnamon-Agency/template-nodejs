@@ -1,80 +1,49 @@
-import fileUpload from 'express-fileupload'
-import { AsyncResponse } from '../../interfaces'
+import { AsyncResponse, IServiceMethod } from '../../interface'
+import { AuthType } from '../auth/interface'
+import { User } from './userModel'
 
-export type FullUser = {
-  id: number
-  firstName: string
-  lastName: string
+export interface ICreateUser extends IServiceMethod {
   email: string
+  password?: string
+  authType: AuthType
+}
+
+export interface IGetUserById extends IServiceMethod {
+  userId: string
+  allUsers?: boolean
+}
+
+export interface IGetUserByEmail extends IServiceMethod {
+  email: string
+  allUsers?: boolean
+}
+
+export interface IGetUserByEmailAndAuthType {
+  email: string
+  authType: AuthType
+}
+
+export interface UserSkill {
+  userId: string
+  skillId: string
+}
+
+export interface IToogleNotifications {
+  userId: string
+}
+
+export interface IUpdatePassword {
+  userId: string
   password: string
-  profilePicture: string
-  createdAt: string
-  updatedAt: string
-}
-
-export type User = Omit<FullUser, 'password' | 'createdAt' | 'updatedAt'>
-
-export interface ICreateUser {
-  firstName: string
-  lastName: string
-  email: string
-  password: string
-  profileImage: string
-}
-
-export interface IGetUserByEmail {
-  email: string
-}
-
-export interface IGetUserById {
-  userId: number
-}
-
-export enum UserStatus {
-  UNVERIFIED = 'Unverified',
-  VERIFIED = 'Verified',
-  DELETED = 'Deleted'
-}
-
-export type Profile = Omit<User, 'email'>
-
-export interface ISaveProfileImage {
-  userId: number
-  image: fileUpload.UploadedFile
-}
-
-export interface IGetProfile {
-  userId: number
-}
-
-export interface IEditProfile {
-  userId: number
-  firstName: string
-  lastName: string
-  email: string
-  profileImage: string
-}
-
-export interface IUpdateProfile {
-  userId: number
-  firstName?: string
-  lastName?: string
-  email?: string
-  profileImage?: string
-}
-
-export interface ISetUserStatus {
-  userId: number,
-  status: UserStatus
 }
 
 export interface IUserService {
-  getUserByEmail(params: IGetUserByEmail): AsyncResponse<FullUser>
-  getUserById(params: IGetUserById): AsyncResponse<FullUser>
-  create(params: ICreateUser): AsyncResponse<FullUser>
-  setUserStatus(params: ISetUserStatus): AsyncResponse<null>
-  getProfile(params: IGetProfile): AsyncResponse<Profile>
-  editProfile(params: IEditProfile): AsyncResponse<Profile>
-  updateProfile(params: IUpdateProfile): AsyncResponse<Profile>
-  saveProfileImage(params: ISaveProfileImage): AsyncResponse<Profile>
+  createUser(params: ICreateUser): AsyncResponse<User>
+  getUserById(params: IGetUserById): AsyncResponse<User>
+  getUserByEmail(params: IGetUserByEmail): AsyncResponse<User>
+  getUserByEmailAndAuthType(
+    params: IGetUserByEmailAndAuthType
+  ): AsyncResponse<User>
+  toogleNotifications(params: IToogleNotifications): AsyncResponse<null>
+  updatePassword(params: IUpdatePassword): AsyncResponse<null>
 }
