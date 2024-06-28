@@ -29,7 +29,6 @@ interface ENV {
   GOOGLE_CLOUD_STORAGE_BUCKET_NAME?: string
   TYPEORM_SYNCHRONIZE?:boolean
   TYPEORM_RUN_MIGRATIONS?:boolean
-  WEB_SOCKET_URL?: string
 }
 
 const environmentNumber = (envNum: unknown): number | undefined => {
@@ -49,7 +48,6 @@ const getConfig = (): ENV => {
     NODE_ENV: process.env.NODE_ENV,
     PORT: environmentNumber(process.env.PORT),
     API_BASE_URL: process.env.API_BASE_URL,
-    WEB_SOCKET_URL: process.env.WEB_SOCKET_URL,
     LOG_TO_CONSOLE: environmentBoolean(process.env.LOG_TO_CONSOLE),
     LOG_REQUESTS: environmentBoolean(process.env.LOG_REQUESTS),
     DOCS_USER: process.env.DOCS_USER,

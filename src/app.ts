@@ -1,4 +1,3 @@
-import 'reflect-metadata'
 import express from 'express'
 import bodyParser from 'body-parser'
 import fileUpload from 'express-fileupload'

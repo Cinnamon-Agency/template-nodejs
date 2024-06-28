@@ -1,4 +1,4 @@
-import { Request, Response } from 'express'
+import { NextFunction, Request, Response } from 'express'
 import { ResponseParams, ResponseCode } from '../../interface'
 import { getResponseMessage } from '../../services/utils'
 
@@ -12,7 +12,8 @@ import { getResponseMessage } from '../../services/utils'
 export const responseFormatter = async (
   prev: ResponseParams,
   req: Request,
-  res: Response
+  res: Response,
+  next: NextFunction
 ) => {
   const { data, code, message: definedMessage } = prev
 

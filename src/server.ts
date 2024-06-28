@@ -1,3 +1,4 @@
+import 'reflect-metadata'
 import { container } from 'tsyringe'
 import { app } from './app'
 import config from './config'
