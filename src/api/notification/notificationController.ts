@@ -1,8 +1,10 @@
 import { NextFunction, Request, Response } from 'express'
 import { ResponseCode } from '../../interface'
-import { autoInjectable } from 'tsyringe'
+import { autoInjectable, container } from 'tsyringe'
 import { NotificationService } from './notificationService'
-import wsServiceInstance from '../../services/websocket'
+import { WebSocketService } from '../../services/websocket'
+
+const webSocketService = container.resolve(WebSocketService)
 
 @autoInjectable()
 export class NotificationController {
@@ -70,7 +72,7 @@ export class NotificationController {
       userId: id
     })
 
-    wsServiceInstance.emit(`${id}_delete_notif`, { notificationId })
+    webSocketService.emit(`${id}_delete_notif`, { notificationId })
 
     return next({ code })
   }

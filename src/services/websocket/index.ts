@@ -1,13 +1,14 @@
 import { WebSocket } from 'ws'
 import config from '../../config'
 import { IWebSocketEventData } from './interface'
+import { autoInjectable } from 'tsyringe'
 
-class WebSocketService {
-  private url: string
-  private websocket: WebSocket | null = null
+@autoInjectable()
+export class WebSocketService {
+  private websocket: WebSocket
 
-  constructor(url: string) {
-    this.url = url
+  constructor() {
+    this.websocket = new WebSocket(config.WEB_SOCKET_URL)
   }
 
   connect() {
@@ -15,8 +16,6 @@ class WebSocketService {
       console.warn('WebSocket is already connected.')
       return
     }
-
-    this.websocket = new WebSocket(this.url)
 
     this.websocket.onopen = (event) => {
       console.log('WebSocket connection opened:', event)
@@ -48,7 +47,3 @@ class WebSocketService {
     }
   }
 }
-
-const wsServiceInstance = new WebSocketService(config.WEB_SOCKET_URL)
-
-export default wsServiceInstance
