@@ -9,8 +9,8 @@ export const requestLogger = morgan(
       url: tokens.url(req, res),
       code: tokens.status(req, res),
       content_length: tokens.res(req, res, 'content-length'),
-      response_time: tokens['response-time'](req, res) + ' ms',
-      user_id: req.user?.id || 'null'
+      response_time: tokens['response-time'](req, res) + ' ms'
+      // user_id: req.user?.id || "null",
     })
   },
   {

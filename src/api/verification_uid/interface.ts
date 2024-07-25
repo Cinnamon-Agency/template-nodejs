@@ -1,37 +1,39 @@
-import { AsyncResponse } from '../../interfaces'
+import { AsyncResponse, IServiceMethod } from '../../interface'
+import { VerificationUID } from './verificationUIDModel'
 
 export enum VerificationUIDType {
   REGISTRATION = 'Registration',
-  RESET_PASSWORD = 'ResetPassword'
+  RESET_PASSWORD = 'ResetPassword',
+  CHANGE_EMAIL = 'ChangeEmail'
 }
 
-export type VerificationUID = {
-  id: number
-  userId: number
-  UID: string
+export interface ISetVerificationUID extends IServiceMethod {
+  userId: string
   type: VerificationUIDType
-  createdAt: string
-  updatedAt: string
 }
 
-export interface ISetVerificationUID {
-  userId: number
-  type: VerificationUIDType
+export interface IGetVerificationUID {
+  uid: string
 }
 
 export interface IClearVerificationUID {
-  userId: number
+  userId: string
   type: VerificationUIDType
 }
 
 export interface IVerifyUID {
-  userId: number
   uid: string
+  hashUid: string
   type: VerificationUIDType
 }
 
 export interface IVerificationUIDService {
-  setVerificationUID(params: ISetVerificationUID): AsyncResponse<string>
-  clearVerificationUID(params: IClearVerificationUID): AsyncResponse<string>
-  verifyUID(params: IVerifyUID): AsyncResponse<boolean>
+  setVerificationUID(
+    params: ISetVerificationUID
+  ): AsyncResponse<{ uid: string; hashUID: string }>
+  getVerificationUID(
+    params: IGetVerificationUID
+  ): AsyncResponse<VerificationUID>
+  clearVerificationUID(params: IClearVerificationUID): AsyncResponse<null>
+  verifyUID(params: IVerifyUID): AsyncResponse<VerificationUID>
 }

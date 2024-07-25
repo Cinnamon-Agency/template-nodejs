@@ -1,77 +1,17 @@
-import { StatusCode, ResponseCode, ResponseMessage } from '../../interfaces'
 import { NextFunction, Request, Response } from 'express'
-import { UserService } from '../../api/user/user.service'
-import { KeyType, verifyToken } from '../../services/jsonwebtoken'
-import _ from 'lodash'
-import { logger } from '../../logger'
-import config from '../../config'
 import { container } from 'tsyringe'
+import config from '../../config'
+import { StatusCode, ResponseCode, ResponseMessage } from '../../interface'
+
+import { UserService } from '../../api/user/userService'
+import { TokenType, verifyToken } from '../../services/jsonwebtoken'
+import _ from 'lodash'
 
 const authenticatedDocUsers: { [key: string]: string } = {
   [config.DOCS_USER]: config.DOCS_PASSWORD
 }
 
-export const requireToken = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    let token = ''
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.startsWith('Bearer')
-    ) {
-      token = req.headers.authorization.split(' ')[1]
-    } else if (req.cookies?.access_token) {
-      token = req.cookies.access_token
-    }
-
-    const decodedToken = await verifyToken<any>(
-      token,
-      KeyType.ACCESS_TOKEN_PRIVATE_KEY
-    )
-    if (
-      !decodedToken ||
-      typeof decodedToken.payload === 'string' ||
-      !decodedToken.sub
-    ) {
-      return res.status(StatusCode.UNAUTHORIZED).send({
-        data: null,
-        code: ResponseCode.INVALID_TOKEN,
-        message: ResponseMessage.INVALID_TOKEN
-      })
-    }
-
-    const { user } = await container.resolve(UserService).getUserById({
-      userId: decodedToken.sub
-    })
-    if (!user) {
-      return res.status(StatusCode.UNAUTHORIZED).send({
-        data: null,
-        code: ResponseCode.INVALID_TOKEN,
-        message: ResponseMessage.INVALID_TOKEN
-      })
-    }
-
-    const requestUser = _.omit(user, ['password', 'createdAt', 'updatedAt'])
-
-    req.user = requestUser
-
-    logger.defaultMeta = {
-      ...logger.defaultMeta,
-      user_id: requestUser.id || 'null'
-    }
-
-    return next()
-  } catch (e: any) {
-    return res.status(StatusCode.UNAUTHORIZED).send({
-      data: null,
-      code: ResponseCode.INVALID_TOKEN,
-      message: ResponseMessage.INVALID_TOKEN
-    })
-  }
-}
+const userService = container.resolve(UserService)
 
 export const authenticateDocs = (
   req: Request,
@@ -95,4 +35,55 @@ export const authenticateDocs = (
 
   res.setHeader('WWW-Authenticate', 'Basic realm="Authentication Required"')
   res.status(401).send('Authentication required')
+}
+
+export const requireToken = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    let token = ''
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith('Bearer')
+    ) {
+      token = req.headers.authorization.split(' ')[1]
+    }
+
+    const decodedToken = await verifyToken<any>(token, TokenType.ACCESS_TOKEN)
+    if (
+      !decodedToken ||
+      typeof decodedToken.payload === 'string' ||
+      !decodedToken.sub
+    ) {
+      return res.status(StatusCode.UNAUTHORIZED).send({
+        data: null,
+        code: ResponseCode.INVALID_TOKEN,
+        message: ResponseMessage.INVALID_TOKEN
+      })
+    }
+
+    const { user } = await userService.getUserById({
+      userId: decodedToken.sub
+    })
+
+    if (!user) {
+      return res.status(StatusCode.UNAUTHORIZED).send({
+        data: null,
+        code: ResponseCode.INVALID_TOKEN,
+        message: ResponseMessage.INVALID_TOKEN
+      })
+    }
+
+    req.user = { ...user }
+
+    return next()
+  } catch (e: unknown) {
+    return res.status(StatusCode.UNAUTHORIZED).send({
+      data: null,
+      code: ResponseCode.INVALID_TOKEN,
+      message: ResponseMessage.INVALID_TOKEN
+    })
+  }
 }

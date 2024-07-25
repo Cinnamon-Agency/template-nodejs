@@ -1,26 +1,22 @@
+import 'reflect-metadata'
+import { container } from 'tsyringe'
 import { app } from './app'
-import { initializeWebSocketServer } from './services/websocket'
-import { scheduleGenericJob } from './services/scheduler'
-import { execSync } from 'child_process'
 import config from './config'
 import { logger } from './logger'
+import { WebSocketService } from './services/websocket'
 
 const port = config.PORT
-const commitHash = execSync('git rev-parse HEAD').toString().trim()
+const commitHash = config.COMMIT_HASH
+const webSocketService = container.resolve(WebSocketService)
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
+  webSocketService.connect()
   logger.info(
-    `Template listening at http://localhost:${port} with commit hash ${commitHash}`
+    `Server listening at http://localhost:${port} with commit hash ${commitHash}`
   )
-
-  if (config.ENABLE_WEB_SOCKET) {
-    const socketPort = config.WEB_SOCKET_PORT
-    initializeWebSocketServer()
-    logger.info(`WebSocket listening at http://localhost:${socketPort}`)
-  }
 })
 
-if (config.EXAMPLE_CHECK_SCHEDULE) {
-  scheduleGenericJob()
-  logger.info('Generic job enabled')
+export const closeServer = () => {
+  webSocketService.close()
+  server.close()
 }
