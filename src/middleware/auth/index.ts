@@ -1,13 +1,11 @@
 import { NextFunction, Request, Response } from 'express'
-import config from '../../config'
-import {
-  ResponseCode,
-  ResponseMessage,
-  StatusCode
-} from '../../interface/response'
 import { container } from 'tsyringe'
+import config from '../../config'
+import { StatusCode, ResponseCode, ResponseMessage } from '../../interface'
+
 import { UserService } from '../../api/user/userService'
 import { TokenType, verifyToken } from '../../services/jsonwebtoken'
+import _ from 'lodash'
 
 const authenticatedDocUsers: { [key: string]: string } = {
   [config.DOCS_USER]: config.DOCS_PASSWORD
