@@ -18,6 +18,8 @@
   "author": "Cinnamon Agency",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.629.0",
+    "@aws-sdk/s3-request-presigner": "^3.629.0",
     "@google-cloud/storage": "^7.11.2",
     "axios": "^1.6.8",
     "bcrypt": "^5.1.1",
@@ -35,11 +37,11 @@
     "mysql2": "^3.9.7",
     "nodemailer": "^6.9.13",
     "rate-limiter-flexible": "^3.0.4",
-    "typeorm": "^0.3.20",
-    "typeorm-naming-strategies": "^4.1.0",
     "reflect-metadata": "^0.2.2",
     "swagger-ui-express": "^5.0.0",
     "tsyringe": "^4.8.0",
+    "typeorm": "^0.3.20",
+    "typeorm-naming-strategies": "^4.1.0",
     "uuid": "^9.0.1",
     "winston": "^3.11.0",
     "ws": "^8.17.1"
