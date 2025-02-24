@@ -1,15 +1,12 @@
 import { NextFunction, Request, Response } from 'express'
-import { ResponseCode } from '../../interface'
-import { autoInjectable } from 'tsyringe'
+import { ResponseCode } from '@common'
+import { autoInjectable, singleton } from 'tsyringe'
 import { UserService } from './userService'
 
+@singleton()
 @autoInjectable()
 export class UserController {
-  private readonly userService: UserService
-
-  constructor(userService: UserService) {
-    this.userService = userService
-  }
+  constructor(private readonly userService: UserService) {}
 
   getUser = async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.user
@@ -22,9 +19,9 @@ export class UserController {
 
     return next({
       data: {
-        user
+        user,
       },
-      code: ResponseCode.OK
+      code: ResponseCode.OK,
     })
   }
 
@@ -35,10 +32,10 @@ export class UserController {
   ) => {
     const { id } = req.user
 
-    const { code } = await this.userService.toogleNotifications({ userId: id })
+    const { code } = await this.userService.toggleNotifications({ userId: id })
 
     return next({
-      code
+      code,
     })
   }
 
@@ -53,9 +50,9 @@ export class UserController {
 
     return next({
       data: {
-        user
+        user,
       },
-      code: ResponseCode.OK
+      code: ResponseCode.OK,
     })
   }
 }

@@ -1,7 +1,6 @@
-import { Schema } from 'joi'
+import Joi, { Schema } from 'joi'
 import { NextFunction, Request, Response } from 'express'
-import { StatusCode, ResponseCode, ResponseMessage } from '../../interface'
-import { logger } from '../../logger'
+import { ResponseCode, ResponseError } from '@common'
 
 type ValidationInput = { schema: Schema; input: Record<string, unknown> }
 type Validate = (req: Request) => ValidationInput
@@ -14,28 +13,25 @@ export const validate = (validate: Validate) => {
 
       res.locals.input = validated || {}
       return next()
-    } catch (err: any) {
-      logger.info(err + err.toString())
+    } catch (err: unknown) {
       const errors = []
-      if (err && err.details) {
-        for (let i = 0; i < err.details.length; i++) {
-          const limit = err.details[i].context.limit
-          const key = err.details[i].path[0]
-          errors.push({
-            limit,
-            key,
-            type: err.details[i].type,
-            message: err.details[i].message
-          })
+
+      if (err instanceof Joi.ValidationError) {
+        if (err && err.details) {
+          for (let i = 0; i < err.details.length; i++) {
+            const limit = err.details[i]?.context?.limit
+            const key = err.details[i]?.path?.[0]
+            errors.push({
+              limit,
+              key,
+              type: err.details[i].type,
+              message: err.details[i].message,
+            })
+          }
         }
       }
 
-      return res.status(StatusCode.BAD_REQUEST).send({
-        data: null,
-        code: ResponseCode.BAD_REQUEST,
-        message: ResponseMessage.INVALID_INPUT,
-        errors
-      })
+      next(new ResponseError(ResponseCode.INVALID_INPUT))
     }
   }
 }

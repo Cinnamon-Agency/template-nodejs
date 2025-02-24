@@ -1,0 +1,86 @@
+import { Express } from 'express'
+import { Server } from 'http'
+import { logger } from '@core/logger'
+import config from '@core/config'
+import { serverState } from './state'
+import { container } from 'tsyringe'
+import { DataSource } from 'typeorm'
+import { WebSocketService } from '@services/websocket'
+
+export class AppServer {
+  private server: Server | null = null
+
+  constructor(private app: Express) {}
+
+  public start(): void {
+    process.on('SIGINT', () => this.shutdown('SIGINT'))
+    process.on('SIGTERM', () => this.shutdown('SIGTERM'))
+
+    const port = config.PORT
+    const commitHash = config.COMMIT_HASH
+
+    this.server = this.app.listen(port, () => {
+      logger.info(
+        `Server listening at http://localhost:${port} with commit hash ${commitHash}`
+      )
+    })
+
+    const webSocketService = container.resolve(WebSocketService)
+    webSocketService.connect()
+  }
+
+  private async shutdown(signal: string): Promise<void> {
+    if (serverState.shuttingDown) {
+      return
+    }
+
+    try {
+      serverState.shuttingDown = true
+      logger.info(`Received ${signal}`)
+      logger.info('*** App is now closing ***')
+
+      const shutdownTasks = []
+
+      const dataSource = container.resolve(DataSource)
+
+      shutdownTasks.push([
+        new Promise<void>((resolve, reject) => {
+          dataSource
+            .destroy()
+            .then(() => resolve())
+            .catch((err) => reject(err))
+        })
+      ])
+
+      const webSocketService = container.resolve(WebSocketService)
+      shutdownTasks.push(webSocketService.close)
+
+      if (this.server) {
+        shutdownTasks.push(
+          new Promise<void>((resolve, reject) => {
+            this.server?.close((err) => {
+              if (err) {
+                reject(err)
+              } else {
+                resolve()
+              }
+            })
+          })
+        )
+      }
+
+      const timeout = setTimeout(() => {
+        logger.error('Shutdown timed out.')
+        process.exit(1)
+      }, 10000)
+
+      await Promise.all(shutdownTasks)
+      clearTimeout(timeout)
+
+      logger.info('*** App has shut down ***')
+    } catch (err) {
+      logger.error('Error during shutdown:', err)
+      process.exit(1)
+    }
+  }
+}

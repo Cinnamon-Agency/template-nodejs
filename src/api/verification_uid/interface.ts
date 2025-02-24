@@ -1,13 +1,13 @@
-import { AsyncResponse, IServiceMethod } from '../../interface'
+import { AsyncResponse, ITransactionMethod } from '@common'
 import { VerificationUID } from './verificationUIDModel'
 
 export enum VerificationUIDType {
   REGISTRATION = 'Registration',
   RESET_PASSWORD = 'ResetPassword',
-  CHANGE_EMAIL = 'ChangeEmail'
+  CHANGE_EMAIL = 'ChangeEmail',
 }
 
-export interface ISetVerificationUID extends IServiceMethod {
+export interface ISetVerificationUID extends ITransactionMethod {
   userId: string
   type: VerificationUIDType
 }

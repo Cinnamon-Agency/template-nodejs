@@ -1,11 +1,11 @@
-import { AsyncResponse } from '../../interface'
-import { User } from '../user/userModel'
+import { AsyncResponse } from '@common'
+import { User } from '@api/user/userModel'
 
 export enum AuthType {
   GOOGLE = 'Google',
   LINKED_IN = 'LinkedIn',
   FACEBOOK = 'Facebook',
-  USER_PASSWORD = 'UserPassword'
+  USER_PASSWORD = 'UserPassword',
 }
 
 interface TokenResponse {

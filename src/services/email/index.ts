@@ -2,8 +2,9 @@
 // Possible changes in the future
 
 import nodemailer from 'nodemailer'
-import config from '../../config'
+import config from '@core/config'
 import { ISendEmail } from './interface'
+import { logger } from '@core/logger'
 
 export const sendEmail = ({ revieverMail, message }: ISendEmail) => {
   // Create a transporter object
@@ -13,8 +14,8 @@ export const sendEmail = ({ revieverMail, message }: ISendEmail) => {
     secure: false, // use SSL
     auth: {
       user: config.GMAIL_MAIL,
-      pass: config.GMAIL_PASSWORD
-    }
+      pass: config.GMAIL_PASSWORD,
+    },
   })
 
   // Configure the mailoptions object
@@ -22,15 +23,15 @@ export const sendEmail = ({ revieverMail, message }: ISendEmail) => {
     from: config.GMAIL_MAIL,
     to: revieverMail,
     subject: message.title,
-    text: message.content
+    text: message.content,
   }
 
   // Send the email
   transporter.sendMail(mailOptions, function (error, info) {
     if (error) {
-      console.log(`Error: ${error}`)
+      logger.error(`Error: ${error}`)
     } else {
-      console.log('Email sent: ' + info.response)
+      logger.error('Email sent: ' + info.response)
     }
   })
 }

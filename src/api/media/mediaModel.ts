@@ -5,9 +5,9 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   JoinColumn,
-  ManyToOne
+  ManyToOne,
 } from 'typeorm'
-import { Project } from '../project/projectModel'
+import { Project } from '@api/project/projectModel'
 import { MediaType } from './interface'
 
 @Entity()
@@ -30,14 +30,14 @@ export class Media {
 
   @CreateDateColumn({
     type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP(6)'
+    default: () => 'CURRENT_TIMESTAMP(6)',
   })
   createdAt!: Date
 
   @UpdateDateColumn({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP(6)',
-    onUpdate: 'CURRENT_TIMESTAMP(6)'
+    onUpdate: 'CURRENT_TIMESTAMP(6)',
   })
   updatedAt!: Date
 

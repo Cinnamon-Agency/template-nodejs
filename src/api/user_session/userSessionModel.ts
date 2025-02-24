@@ -5,9 +5,9 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
-  JoinColumn
+  JoinColumn,
 } from 'typeorm'
-import { User } from '../user/userModel'
+import { User } from '@api/user/userModel'
 import { UserSessionStatus } from './interface'
 
 @Entity()
@@ -31,20 +31,20 @@ export class UserSession {
   @Column({
     type: 'enum',
     enum: UserSessionStatus,
-    default: UserSessionStatus.ACTIVE
+    default: UserSessionStatus.ACTIVE,
   })
   status!: UserSessionStatus
 
   @CreateDateColumn({
     type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP(6)'
+    default: () => 'CURRENT_TIMESTAMP(6)',
   })
   createdAt!: Date
 
   @UpdateDateColumn({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP(6)',
-    onUpdate: 'CURRENT_TIMESTAMP(6)'
+    onUpdate: 'CURRENT_TIMESTAMP(6)',
   })
   updatedAt!: Date
 

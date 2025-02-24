@@ -1,35 +1,6 @@
-interface ENV {
-  COMMIT_HASH?:string
-  PROJECT_NAME?: string
-  NODE_ENV?: string
-  PORT?:number
-  ACCESS_TOKEN_SECRET?: string
-  REFRESH_TOKEN_SECRET?: string
-  ACCESS_TOKEN_EXPIRES_IN?: number
-  REFRESH_TOKEN_EXPIRES_IN?: number
-  LOG_REQUESTS?:boolean
-  LOG_TO_CONSOLE?:boolean
-  API_BASE_URL?:string
-  DOCS_USER?: string
-  DOCS_PASSWORD?: string
-  DB_HOSTNAME?: string
-  DB_PORT?: number
-  DB_USERNAME?: string
-  DB_PASSWORD?: string
-  DB_NAME?: string
-  SALT_ROUNDS?: number
-  RATE_LIMITER_POINTS?:  number
-  RATE_LIMITER_DURATION_IN_SECONDS?:  number
-  LOGIN_LIMITER_POINTS?:  number
-  LOGIN_LIMITER_DURATION_IN_SECONDS?:  number
-  LOGIN_LIMITER_BLOCKING_DURATION_IN_SECONDS?:  number
-  GMAIL_MAIL?: string
-  GMAIL_PASSWORD?: string
-  GOOGLE_SERVICE_ACCOUNT_KEY_LOCATION?: string
-  GOOGLE_CLOUD_STORAGE_BUCKET_NAME?: string
-  TYPEORM_SYNCHRONIZE?:boolean
-  TYPEORM_RUN_MIGRATIONS?:boolean
-}
+import { Config, ENV } from './interface'
+
+let cachedConfig: Config | undefined
 
 const environmentNumber = (envNum: unknown): number | undefined => {
   return envNum ? Number(envNum) : undefined
@@ -41,8 +12,10 @@ const environmentBoolean = (envBool: unknown): boolean | undefined => {
     : undefined
 }
 
-const getConfig = (): ENV => {
-  return {
+const getConfig = (): Config => {
+  if (cachedConfig) return cachedConfig
+
+  const config = {
     COMMIT_HASH: process.env.COMMIT_HASH,
     PROJECT_NAME: process.env.PROJECT_NAME,
     NODE_ENV: process.env.NODE_ENV,
@@ -83,13 +56,19 @@ const getConfig = (): ENV => {
     ),
     GOOGLE_SERVICE_ACCOUNT_KEY_LOCATION:
       process.env.GOOGLE_SERVICE_ACCOUNT_KEY_LOCATION,
-    GOOGLE_CLOUD_STORAGE_BUCKET_NAME: process.env.GOOGLE_CLOUD_STORAGE_BUCKET_NAME,
+    GOOGLE_CLOUD_STORAGE_BUCKET_NAME:
+      process.env.GOOGLE_CLOUD_STORAGE_BUCKET_NAME,
+    GOOGLE_CLOUD_PROJECT_ID: process.env.GOOGLE_CLOUD_PROJECT_ID,
     GMAIL_MAIL: process.env.GMAIL_MAIL,
-    GMAIL_PASSWORD: process.env.GMAIL_PASSWORD
+    GMAIL_PASSWORD: process.env.GMAIL_PASSWORD,
+    USE_UNIX_SOCKET: environmentBoolean(process.env.USE_UNIX_SOCKET),
+    DB_POOL_SIZE: environmentNumber(process.env.DB_POOL_SIZE),
   }
-}
 
-type Config = Required<ENV>
+  cachedConfig = getSanitizedConfig(config)
+
+  return cachedConfig
+}
 
 const getSanitizedConfig = (config: ENV) => {
   // eslint-disable-next-line no-restricted-syntax
@@ -101,6 +80,4 @@ const getSanitizedConfig = (config: ENV) => {
   return config as Config
 }
 
-const config = getConfig()
-
-export default getSanitizedConfig(config)
+export default getConfig()

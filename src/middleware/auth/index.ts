@@ -1,14 +1,14 @@
 import { NextFunction, Request, Response } from 'express'
 import { container } from 'tsyringe'
-import config from '../../config'
-import { StatusCode, ResponseCode, ResponseMessage } from '../../interface'
+import config from 'core/config'
+import { StatusCode, ResponseCode, ResponseMessage } from '@common'
 
-import { UserService } from '../../api/user/userService'
-import { TokenType, verifyToken } from '../../services/jsonwebtoken'
-import _ from 'lodash'
+import { UserService } from '@api/user/userService'
+import { TokenType, verifyToken } from '@services/jsonwebtoken'
+import { JwtPayload } from 'jsonwebtoken'
 
 const authenticatedDocUsers: { [key: string]: string } = {
-  [config.DOCS_USER]: config.DOCS_PASSWORD
+  [config.DOCS_USER]: config.DOCS_PASSWORD,
 }
 
 const userService = container.resolve(UserService)
@@ -51,7 +51,10 @@ export const requireToken = async (
       token = req.headers.authorization.split(' ')[1]
     }
 
-    const decodedToken = await verifyToken<any>(token, TokenType.ACCESS_TOKEN)
+    const decodedToken = await verifyToken<JwtPayload>(
+      token,
+      TokenType.ACCESS_TOKEN
+    )
     if (
       !decodedToken ||
       typeof decodedToken.payload === 'string' ||
@@ -60,19 +63,19 @@ export const requireToken = async (
       return res.status(StatusCode.UNAUTHORIZED).send({
         data: null,
         code: ResponseCode.INVALID_TOKEN,
-        message: ResponseMessage.INVALID_TOKEN
+        message: ResponseMessage.INVALID_TOKEN,
       })
     }
 
     const { user } = await userService.getUserById({
-      userId: decodedToken.sub
+      userId: decodedToken.sub,
     })
 
     if (!user) {
       return res.status(StatusCode.UNAUTHORIZED).send({
         data: null,
         code: ResponseCode.INVALID_TOKEN,
-        message: ResponseMessage.INVALID_TOKEN
+        message: ResponseMessage.INVALID_TOKEN,
       })
     }
 
@@ -83,7 +86,7 @@ export const requireToken = async (
     return res.status(StatusCode.UNAUTHORIZED).send({
       data: null,
       code: ResponseCode.INVALID_TOKEN,
-      message: ResponseMessage.INVALID_TOKEN
+      message: ResponseMessage.INVALID_TOKEN,
     })
   }
 }

@@ -1,7 +1,7 @@
 import express from 'express'
 import swaggerUi from 'swagger-ui-express'
-import { authenticateDocs } from '../middleware/auth'
-import { APIDocumentation } from '../documentation'
+import { authenticateDocs } from '@middleware/auth'
+import { APIDocumentation } from '@documentation'
 
 export const docsRouter = express.Router()
 
@@ -12,7 +12,7 @@ docsRouter.use(
   swaggerUi.serveFiles(APIDocumentation),
   swaggerUi.setup(APIDocumentation, {
     swaggerOptions: {
-      filter: true
-    }
+      filter: true,
+    },
   })
 )

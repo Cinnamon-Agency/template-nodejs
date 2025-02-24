@@ -1,14 +1,14 @@
 import { Storage } from '@google-cloud/storage'
-import config from '../../config'
-import { logger } from '../../logger'
-import { ResponseCode } from '../../interface'
-import { getResponseMessage } from '../utils'
+import config from '@core/config'
+import { logger } from '@core/logger'
+import { ResponseCode } from '@common'
+import { getResponseMessage } from '@common'
 
 let storageClientConfig = {}
 if (config.NODE_ENV == 'local') {
   storageClientConfig = {
-    projectId: 'barnahus',
-    keyFileName: config.GOOGLE_SERVICE_ACCOUNT_KEY_LOCATION
+    projectId: config.GOOGLE_CLOUD_PROJECT_ID,
+    keyFileName: config.GOOGLE_SERVICE_ACCOUNT_KEY_LOCATION,
   }
 }
 
@@ -21,7 +21,7 @@ export const getSignedURL = async (name: string, action: 'read' | 'write') => {
     const [url] = await gcs.file(name).getSignedUrl({
       version: 'v4',
       action,
-      expires: Date.now() + 60 * 60 * 1000
+      expires: Date.now() + 60 * 60 * 1000,
     })
 
     if (!url) {
@@ -29,14 +29,15 @@ export const getSignedURL = async (name: string, action: 'read' | 'write') => {
     }
 
     return { code, url }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
     logger.error({
       code,
       message: getResponseMessage(code),
-      stack: err.stack
+      stack: err.stack,
     })
     return {
-      code: ResponseCode.GOOGLE_STORAGE_ERROR
+      code: ResponseCode.GOOGLE_STORAGE_ERROR,
     }
   }
 }

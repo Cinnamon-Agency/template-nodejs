@@ -1,19 +1,19 @@
-import { AsyncResponse, IServiceMethod } from '../../interface'
-import { AuthType } from '../auth/interface'
+import { AsyncResponse, ITransactionMethod } from '@common'
+import { AuthType } from '@api/auth/interface'
 import { User } from './userModel'
 
-export interface ICreateUser extends IServiceMethod {
+export interface ICreateUser extends ITransactionMethod {
   email: string
   password?: string
   authType: AuthType
 }
 
-export interface IGetUserById extends IServiceMethod {
+export interface IGetUserById extends ITransactionMethod {
   userId: string
   allUsers?: boolean
 }
 
-export interface IGetUserByEmail extends IServiceMethod {
+export interface IGetUserByEmail extends ITransactionMethod {
   email: string
   allUsers?: boolean
 }
@@ -28,7 +28,7 @@ export interface UserSkill {
   skillId: string
 }
 
-export interface IToogleNotifications {
+export interface IToggleNotifications {
   userId: string
 }
 
@@ -44,6 +44,6 @@ export interface IUserService {
   getUserByEmailAndAuthType(
     params: IGetUserByEmailAndAuthType
   ): AsyncResponse<User>
-  toogleNotifications(params: IToogleNotifications): AsyncResponse<null>
+  toggleNotifications(params: IToggleNotifications): AsyncResponse<null>
   updatePassword(params: IUpdatePassword): AsyncResponse<null>
 }

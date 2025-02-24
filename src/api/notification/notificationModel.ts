@@ -5,9 +5,9 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   JoinColumn,
-  ManyToOne
+  ManyToOne,
 } from 'typeorm'
-import { User } from '../user/userModel'
+import { User } from '@api/user/userModel'
 import { NotificationType } from './interface'
 
 @Entity()
@@ -40,14 +40,14 @@ export class Notification {
 
   @CreateDateColumn({
     type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP(6)'
+    default: () => 'CURRENT_TIMESTAMP(6)',
   })
   createdAt!: Date
 
   @UpdateDateColumn({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP(6)',
-    onUpdate: 'CURRENT_TIMESTAMP(6)'
+    onUpdate: 'CURRENT_TIMESTAMP(6)',
   })
   updatedAt!: Date
 

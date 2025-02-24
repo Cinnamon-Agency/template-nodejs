@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
-import { ResponseParams, ResponseCode } from '../../interface'
-import { getResponseMessage } from '../../services/utils'
+import { ResponseParams, ResponseCode } from '@common'
+import { getResponseMessage } from '@common'
 
 /* Response formatting
 
@@ -27,6 +27,6 @@ export const responseFormatter = async (
   res.status(status).send({
     data: data || null,
     code: code || ResponseCode.SERVER_ERROR,
-    message
+    message,
   })
 }

@@ -1,8 +1,8 @@
 const tags = [
   {
     name: 'User',
-    description: 'Users related routes'
-  }
+    description: 'Users related routes',
+  },
 ]
 
 const paths = {
@@ -15,12 +15,12 @@ const paths = {
           description: 'Successfully Fetched User',
           content: {
             schema: {
-              $ref: '#/definitions/get_user_response'
-            }
-          }
-        }
-      }
-    }
+              $ref: '#/definitions/get_user_response',
+            },
+          },
+        },
+      },
+    },
   },
   '/user/{id}': {
     get: {
@@ -32,20 +32,20 @@ const paths = {
           name: 'id',
           type: 'string',
           required: false,
-          description: 'User ID'
-        }
+          description: 'User ID',
+        },
       ],
       responses: {
         '200': {
           description: 'Successfully Fetched user profile',
           content: {
             schema: {
-              $ref: '#/definitions/get_user_response'
-            }
-          }
-        }
-      }
-    }
+              $ref: '#/definitions/get_user_response',
+            },
+          },
+        },
+      },
+    },
   },
   '/user/toogleNotifications': {
     get: {
@@ -57,13 +57,13 @@ const paths = {
           description: 'Succefully finished onboarding flow',
           content: {
             schema: {
-              $ref: '#/definitions/200_response'
-            }
-          }
-        }
-      }
-    }
-  }
+              $ref: '#/definitions/200_response',
+            },
+          },
+        },
+      },
+    },
+  },
 }
 
 const definitions = {
@@ -71,30 +71,30 @@ const definitions = {
     example: {
       data: null,
       code: 200000,
-      message: 'OK'
-    }
+      message: 'OK',
+    },
   },
   '404': {
     description: 'User not found',
     content: {
       schema: {
-        $ref: '#/definitions/user_not_found_response'
-      }
-    }
+        $ref: '#/definitions/user_not_found_response',
+      },
+    },
   },
   '401_response': {
     example: {
       data: null,
       code: 401001,
-      message: 'Invalid token'
-    }
+      message: 'Invalid token',
+    },
   },
   user_not_found_response: {
     example: {
       data: null,
       code: 404001,
-      message: 'User not found'
-    }
+      message: 'User not found',
+    },
   },
   get_user_response: {
     example: {
@@ -105,13 +105,13 @@ const definitions = {
           notifications: true,
           profilePictureFileName: null,
           createdAt: '2024-03-25T15:20:06.410Z',
-          updatedAt: '2024-05-23T12:53:41.000Z'
-        }
+          updatedAt: '2024-05-23T12:53:41.000Z',
+        },
       },
       code: 200000,
-      message: 'OK'
-    }
-  }
+      message: 'OK',
+    },
+  },
 }
 
 export const userDocs = { tags, paths, definitions }

@@ -6,10 +6,10 @@ import {
   UpdateDateColumn,
   OneToMany,
   ManyToOne,
-  JoinColumn
+  JoinColumn,
 } from 'typeorm'
-import { Media } from '../media/mediaModel'
-import { User } from '../user/userModel'
+import { Media } from '@api/media/mediaModel'
+import { User } from '@api/user/userModel'
 import { ProjectStatus } from './interface'
 
 @Entity()
@@ -36,19 +36,19 @@ export class Project {
   @Column({ type: 'enum', enum: ProjectStatus, default: ProjectStatus.ACTIVE })
   projectStatus?: ProjectStatus
 
-  @OneToMany(() => Media, (media) => media.project)
+  @OneToMany(() => Media, media => media.project)
   mediaFiles?: Media[]
 
   @CreateDateColumn({
     type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP(6)'
+    default: () => 'CURRENT_TIMESTAMP(6)',
   })
   createdAt!: Date
 
   @UpdateDateColumn({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP(6)',
-    onUpdate: 'CURRENT_TIMESTAMP(6)'
+    onUpdate: 'CURRENT_TIMESTAMP(6)',
   })
   updatedAt!: Date
 

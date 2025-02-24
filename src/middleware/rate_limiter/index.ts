@@ -1,11 +1,11 @@
 import { Request, Response, NextFunction } from 'express'
 import limiter, { IRateLimiterOptions } from 'rate-limiter-flexible'
-import config from '../../config'
-import { ResponseCode } from '../../interface'
+import config from '@core/config'
+import { ResponseCode } from '@common'
 
 const options: IRateLimiterOptions = {
   points: config.RATE_LIMITER_POINTS,
-  duration: config.RATE_LIMITER_DURATION_IN_SECONDS
+  duration: config.RATE_LIMITER_DURATION_IN_SECONDS,
 }
 
 const limiterInMemory = new limiter.RateLimiterMemory(options)
@@ -26,7 +26,7 @@ export const rateLimiter = async (
 const loginLimiterOptions: IRateLimiterOptions = {
   points: config.LOGIN_LIMITER_POINTS,
   duration: config.LOGIN_LIMITER_DURATION_IN_SECONDS,
-  blockDuration: config.LOGIN_LIMITER_BLOCKING_DURATION_IN_SECONDS
+  blockDuration: config.LOGIN_LIMITER_BLOCKING_DURATION_IN_SECONDS,
 }
 
 const loginLimiterInMemory = new limiter.RateLimiterMemory(loginLimiterOptions)

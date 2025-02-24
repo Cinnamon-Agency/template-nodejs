@@ -1,15 +1,12 @@
 import { NextFunction, Request, Response } from 'express'
-import { autoInjectable } from 'tsyringe'
+import { autoInjectable, singleton } from 'tsyringe'
 import { ProjectService } from './projectService'
-import { ResponseMessage } from '../../interface'
+import { ResponseMessage } from '@common'
 
+@singleton()
 @autoInjectable()
 export class ProjectController {
-  private readonly projectService: ProjectService
-
-  constructor(projectService: ProjectService) {
-    this.projectService = projectService
-  }
+  constructor(private readonly projectService: ProjectService) {}
 
   createProject = async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.user
@@ -21,7 +18,7 @@ export class ProjectController {
         name,
         description,
         deadline,
-        mediaFiles
+        mediaFiles,
       })
 
     return next({ mediaInfo, code: adminCode })
@@ -32,7 +29,7 @@ export class ProjectController {
     const { projects, code: projectCode } =
       await this.projectService.getProjects({
         page,
-        perPage
+        perPage,
       })
 
     return next({ projects, code: projectCode })
@@ -42,7 +39,7 @@ export class ProjectController {
     const { id: projectId } = res.locals.input
 
     const { project, code } = await this.projectService.getProjectById({
-      projectId
+      projectId,
     })
 
     if (!project) {

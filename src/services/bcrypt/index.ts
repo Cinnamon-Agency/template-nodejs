@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt'
-import config from '../../config'
+import config from '@core/config'
 
 export const hashString = async (password: string): Promise<string> => {
   const salt = await bcrypt.genSalt(config.SALT_ROUNDS)

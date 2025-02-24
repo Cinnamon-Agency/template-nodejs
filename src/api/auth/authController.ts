@@ -1,15 +1,12 @@
 import { NextFunction, Request, Response } from 'express'
-import { ResponseCode } from '../../interface'
+import { ResponseCode } from '@common'
 import { AuthService } from './authService'
-import { autoInjectable } from 'tsyringe'
+import { autoInjectable, singleton } from 'tsyringe'
 
+@singleton()
 @autoInjectable()
 export class AuthController {
-  private readonly authService: AuthService
-
-  constructor(authService: AuthService) {
-    this.authService = authService
-  }
+  constructor(private readonly authService: AuthService) {}
 
   login = async (req: Request, res: Response, next: NextFunction) => {
     const { authType, email, password } = res.locals.input
@@ -17,14 +14,14 @@ export class AuthController {
     const { user, code } = await this.authService.login({
       authType,
       email,
-      password
+      password,
     })
     if (!user) {
       return next({ code })
     }
 
     const { tokens, code: tokenCode } = await this.authService.signToken({
-      user
+      user,
     })
 
     if (!tokens) {
@@ -32,15 +29,15 @@ export class AuthController {
     }
 
     const responseUser = {
-      id: user.id
+      id: user.id,
     }
 
     return next({
       data: {
         user: responseUser,
-        ...tokens
+        ...tokens,
       },
-      code: ResponseCode.OK
+      code: ResponseCode.OK,
     })
   }
 
@@ -50,7 +47,7 @@ export class AuthController {
     const { user, code } = await this.authService.register({
       authType,
       email,
-      password
+      password,
     })
 
     if (!user) {
@@ -58,7 +55,7 @@ export class AuthController {
     }
 
     const { tokens, code: tokenCode } = await this.authService.signToken({
-      user
+      user,
     })
 
     if (!tokens) {
@@ -66,15 +63,15 @@ export class AuthController {
     }
 
     const responseUser = {
-      id: user.id
+      id: user.id,
     }
 
     return next({
       data: {
         user: responseUser,
-        ...tokens
+        ...tokens,
       },
-      code: ResponseCode.OK
+      code: ResponseCode.OK,
     })
   }
 
@@ -82,7 +79,7 @@ export class AuthController {
     const refreshToken = req.headers['refresh-token'] as string
 
     const { tokens, code } = await this.authService.refreshToken({
-      refreshToken
+      refreshToken,
     })
 
     if (!tokens) {
@@ -91,7 +88,7 @@ export class AuthController {
 
     return next({
       data: tokens,
-      code: ResponseCode.OK
+      code: ResponseCode.OK,
     })
   }
 
@@ -122,7 +119,7 @@ export class AuthController {
     const { code } = await this.authService.resetPassword({
       uid: uids[0],
       hashUid: uids[1],
-      password
+      password,
     })
 
     return next({ code })

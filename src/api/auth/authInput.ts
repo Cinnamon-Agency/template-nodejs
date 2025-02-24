@@ -12,15 +12,15 @@ export const loginSchema = (req: Request) => {
         email: Joi.string().required(),
         password: Joi.alternatives().conditional('authType', {
           is: 'UserPassword',
-          then: Joi.string().required()
-        })
+          then: Joi.string().required(),
+        }),
       })
       .options({ abortEarly: false }),
     input: {
       token: req.body.token,
       type: req.body.type,
-      userCredentials: req.body.userCredentials
-    }
+      userCredentials: req.body.userCredentials,
+    },
   }
 }
 
@@ -34,15 +34,15 @@ export const registerSchema = (req: Request) => {
         email: Joi.string().required(),
         password: Joi.alternatives().conditional('authType', {
           is: 'UserPassword',
-          then: Joi.string().required()
-        })
+          then: Joi.string().required(),
+        }),
       })
       .options({ abortEarly: false }),
     input: {
       token: req.body.token,
       type: req.body.type,
-      userCredentials: req.body.userCredentials
-    }
+      userCredentials: req.body.userCredentials,
+    },
   }
 }
 
@@ -50,12 +50,12 @@ export const forgotPasswordSchema = (req: Request) => {
   return {
     schema: Joi.object()
       .keys({
-        email: Joi.string().required()
+        email: Joi.string().required(),
       })
       .options({ abortEarly: false }),
     input: {
-      email: req.body.email
-    }
+      email: req.body.email,
+    },
   }
 }
 
@@ -72,12 +72,12 @@ export const resetPasswordSchema = (req: Request) => {
           .min(8)
           .max(24)
           // .regex(new RegExp(atob(config.PASSWORD_BASE64_REGEX)))
-          .required()
+          .required(),
       })
       .options({ abortEarly: false }),
     input: {
       uid: req.body.uid,
-      password: req.body.password
-    }
+      password: req.body.password,
+    },
   }
 }

@@ -1,10 +1,10 @@
-import { AsyncResponse } from '../../interface'
-import { IMediaData, MediaInfo } from '../media/interface'
+import { AsyncResponse } from '@common'
+import { IMediaData, MediaInfo } from '@api/media/interface'
 import { Project } from './projectModel'
 
 export enum ProjectStatus {
   ACTIVE = 'Active',
-  FINISHED = 'Finished'
+  FINISHED = 'Finished',
 }
 
 export interface ICreateProject {

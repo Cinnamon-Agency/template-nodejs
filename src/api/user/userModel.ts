@@ -4,10 +4,10 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  OneToMany
+  OneToMany,
 } from 'typeorm'
-import { Project } from '../project/projectModel'
-import { AuthType } from '../auth/interface'
+import { Project } from '@api/project/projectModel'
+import { AuthType } from '@api/auth/interface'
 
 @Entity()
 export class User {
@@ -29,19 +29,19 @@ export class User {
   @Column({ type: 'varchar', length: 255, nullable: true })
   profilePictureFileName?: string
 
-  @OneToMany(() => Project, (project) => project.user)
+  @OneToMany(() => Project, project => project.user)
   projects?: Project[]
 
   @CreateDateColumn({
     type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP(6)'
+    default: () => 'CURRENT_TIMESTAMP(6)',
   })
   createdAt!: Date
 
   @UpdateDateColumn({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP(6)',
-    onUpdate: 'CURRENT_TIMESTAMP(6)'
+    onUpdate: 'CURRENT_TIMESTAMP(6)',
   })
   updatedAt!: Date
 

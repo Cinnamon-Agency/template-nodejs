@@ -1,73 +1,60 @@
-import { autoInjectable } from 'tsyringe'
-import { AppDataSource } from '../../services/typeorm'
-import { Repository } from 'typeorm'
+import { autoInjectable, inject, singleton } from 'tsyringe'
+import { DataSource, Repository } from 'typeorm'
 import { ICreateMediaEntries, IMediaService } from './interface'
 import { Media } from './mediaModel'
-import { getResponseMessage } from '../../services/utils'
-import { logger } from '../../logger'
-import { ResponseCode } from '../../interface'
-import { getSignedURL } from '../../services/google_cloud'
+import { ResponseCode, serviceErrorHandler } from '@common'
+import { getSignedURL } from '@services/google_cloud'
 
+@singleton()
 @autoInjectable()
 export class MediaService implements IMediaService {
   private readonly mediaRepository: Repository<Media>
 
-  constructor() {
-    this.mediaRepository = AppDataSource.manager.getRepository(Media)
+  constructor(@inject(DataSource) private readonly dataSource: DataSource) {
+    this.mediaRepository = dataSource.manager.getRepository(Media)
   }
 
-  createMediaEntries = async ({
+  @serviceErrorHandler()
+  async createMediaEntries({
     mediaFiles,
     projectId,
-    queryRunner
-  }: ICreateMediaEntries) => {
+    queryRunner,
+  }: ICreateMediaEntries) {
     let code: ResponseCode = ResponseCode.OK
 
-    try {
-      const mediaInfo = []
+    const mediaInfo = []
 
-      for (const media of mediaFiles) {
-        const { mediaFileName, mediaType } = media
-        const insertResult = await this.mediaRepository
-          .createQueryBuilder('media', queryRunner)
-          .insert()
-          .into(Media)
-          .values([
-            {
-              mediaFileName,
-              mediaType,
-              projectId
-            }
-          ])
-          .execute()
+    for (const { mediaFileName, mediaType } of mediaFiles) {
+      const insertResult = await this.mediaRepository
+        .createQueryBuilder('media', queryRunner)
+        .insert()
+        .into(Media)
+        .values([
+          {
+            mediaFileName,
+            mediaType,
+            projectId,
+          },
+        ])
+        .execute()
 
-        if (insertResult.raw.affectedRows !== 1) {
-          code = ResponseCode.FAILED_INSERT
-          break
-        }
-
-        const { url, code: googleStorageCode } = await getSignedURL(
-          mediaFileName,
-          'write'
-        )
-
-        mediaInfo.push({
-          url,
-          mediaFileName,
-          googleStorageCode
-        })
+      if (insertResult.raw.affectedRows !== 1) {
+        code = ResponseCode.FAILED_INSERT
+        break
       }
 
-      return { code, mediaInfo }
-    } catch (err: any) {
-      code = ResponseCode.SERVER_ERROR
-      logger.error({
-        code,
-        message: getResponseMessage(code),
-        stack: err.stack
+      const { url, code: googleStorageCode } = await getSignedURL(
+        mediaFileName,
+        'write'
+      )
+
+      mediaInfo.push({
+        url,
+        mediaFileName,
+        googleStorageCode,
       })
     }
 
-    return { code }
+    return { code, mediaInfo }
   }
 }

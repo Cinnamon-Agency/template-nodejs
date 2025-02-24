@@ -1,15 +1,15 @@
 import express from 'express'
 import { AuthController } from './authController'
-import { validate } from '../../middleware/validation'
-import { loginRateLimiter } from '../../middleware/rate_limiter'
+import { validate } from '@middleware/validation'
+import { loginRateLimiter } from '@middleware/rate_limiter'
 import { container } from 'tsyringe'
 import {
   loginSchema,
   registerSchema,
   forgotPasswordSchema,
-  resetPasswordSchema
+  resetPasswordSchema,
 } from './authInput'
-import { requireToken } from '../../middleware/auth'
+import { requireToken } from '@middleware/auth'
 
 const authController = container.resolve(AuthController)
 export const authRouter = express.Router()

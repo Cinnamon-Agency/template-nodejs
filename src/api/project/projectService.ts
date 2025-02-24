@@ -1,37 +1,39 @@
-import { ResponseCode } from '../../interface'
-import { logger } from '../../logger'
-import { getResponseMessage } from '../../services/utils'
-import { autoInjectable, container } from 'tsyringe'
-import { AppDataSource } from '../../services/typeorm'
-import { Repository } from 'typeorm'
+import { ResponseCode, serviceErrorHandler } from '@common'
+import { logger } from '@core/logger'
+import { getResponseMessage } from '@common'
+import { autoInjectable, inject, singleton } from 'tsyringe'
+import { DataSource, Repository } from 'typeorm'
 import {
   ICreateProject,
   IGetProjectById,
   IGetProjects,
-  IProjectService
+  IProjectService,
 } from './interface'
 import { Project } from './projectModel'
-import { MediaService } from '../media/mediaService'
+import { MediaService } from '@api/media/mediaService'
 
-const mediaService = container.resolve(MediaService)
-
+@singleton()
 @autoInjectable()
 export class ProjectService implements IProjectService {
   private readonly projectRepository: Repository<Project>
 
-  constructor() {
-    this.projectRepository = AppDataSource.manager.getRepository(Project)
+  constructor(
+    @inject(DataSource) private readonly dataSource: DataSource,
+    private readonly mediaService: MediaService
+  ) {
+    this.projectRepository = this.dataSource.manager.getRepository(Project)
   }
 
-  createProject = async ({
+  @serviceErrorHandler()
+  async createProject({
     userId,
     name,
     description,
     deadline,
-    mediaFiles
-  }: ICreateProject) => {
+    mediaFiles,
+  }: ICreateProject) {
     let code: ResponseCode = ResponseCode.OK
-    const queryRunner = AppDataSource.createQueryRunner()
+    const queryRunner = this.dataSource.createQueryRunner()
 
     try {
       await queryRunner.connect()
@@ -46,8 +48,8 @@ export class ProjectService implements IProjectService {
             userId,
             name,
             description,
-            deadline
-          }
+            deadline,
+          },
         ])
         .execute()
 
@@ -67,10 +69,10 @@ export class ProjectService implements IProjectService {
       }
 
       const { mediaInfo, code: mediaCode } =
-        await mediaService.createMediaEntries({
+        await this.mediaService.createMediaEntries({
           projectId,
           mediaFiles,
-          queryRunner
+          queryRunner,
         })
       if (mediaCode !== ResponseCode.OK) {
         await queryRunner.rollbackTransaction()
@@ -82,6 +84,7 @@ export class ProjectService implements IProjectService {
       await queryRunner.release()
 
       return { mediaInfo, code }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       await queryRunner.rollbackTransaction()
       await queryRunner.release()
@@ -89,61 +92,37 @@ export class ProjectService implements IProjectService {
       logger.error({
         code,
         message: getResponseMessage(code),
-        stack: err.stack
+        stack: err.stack,
       })
     }
 
     return { code }
   }
 
-  getProjects = async ({ page, perPage }: IGetProjects) => {
-    let code: ResponseCode = ResponseCode.OK
+  @serviceErrorHandler()
+  async getProjects({ page, perPage }: IGetProjects) {
+    const offset = (page - 1) * perPage
 
-    try {
-      const offset = (page - 1) * perPage
+    const projects = await this.projectRepository.find({
+      skip: offset,
+      take: perPage,
+    })
 
-      const projects = await this.projectRepository.find({
-        skip: offset,
-        take: perPage
-      })
-
-      return { projects, code }
-    } catch (err: any) {
-      code = ResponseCode.SERVER_ERROR
-      logger.error({
-        code,
-        message: getResponseMessage(code),
-        stack: err.stack
-      })
-    }
-
-    return { code }
+    return { projects, code: ResponseCode.OK }
   }
 
-  getProjectById = async ({ projectId }: IGetProjectById) => {
-    let code: ResponseCode = ResponseCode.OK
+  @serviceErrorHandler()
+  async getProjectById({ projectId }: IGetProjectById) {
+    const project = await this.projectRepository.findOne({
+      where: {
+        id: projectId,
+      },
+    })
 
-    try {
-      const project = await this.projectRepository.findOne({
-        where: {
-          id: projectId
-        }
-      })
-
-      if (!project) {
-        return { code: ResponseCode.PROJECT_NOT_FOUND }
-      }
-
-      return { project, code }
-    } catch (err: any) {
-      code = ResponseCode.SERVER_ERROR
-      logger.error({
-        code,
-        message: getResponseMessage(code),
-        stack: err.stack
-      })
+    if (!project) {
+      return { code: ResponseCode.PROJECT_NOT_FOUND }
     }
 
-    return { code }
+    return { project, code: ResponseCode.OK }
   }
 }

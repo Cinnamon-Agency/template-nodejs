@@ -1,8 +1,8 @@
 const tags = [
   {
     name: 'Notification',
-    description: 'Notifications related routes'
-  }
+    description: 'Notifications related routes',
+  },
 ]
 
 const paths = {
@@ -16,15 +16,15 @@ const paths = {
           name: 'unread',
           type: 'boolean',
           required: false,
-          description: 'If true fetch only unread messages'
+          description: 'If true fetch only unread messages',
         },
         {
           in: 'query',
           name: 'numberOfFetched',
           type: 'number',
           required: true,
-          description: 'NUmber of entities already fetched'
-        }
+          description: 'NUmber of entities already fetched',
+        },
       ],
       responses: {
         '200': {
@@ -32,12 +32,12 @@ const paths = {
             'Successfully got list of notifications. Fetches 20 at once.',
           content: {
             schema: {
-              $ref: '#/definitions/get_notifications_response'
-            }
-          }
-        }
-      }
-    }
+              $ref: '#/definitions/get_notifications_response',
+            },
+          },
+        },
+      },
+    },
   },
   '/notification/{notificationId}': {
     put: {
@@ -49,28 +49,28 @@ const paths = {
           name: 'notificationId',
           type: 'string',
           required: false,
-          description: 'Notification Id'
-        }
+          description: 'Notification Id',
+        },
       ],
       requestBody: {
         content: {
           'application/json': {
             schema: {
-              $ref: '#/definitions/update_read_status_body'
-            }
-          }
-        }
+              $ref: '#/definitions/update_read_status_body',
+            },
+          },
+        },
       },
       responses: {
         '200': {
           description: 'Succesfully updated read status of notification',
           content: {
             schema: {
-              $ref: '#/definitions/200_response'
-            }
-          }
-        }
-      }
+              $ref: '#/definitions/200_response',
+            },
+          },
+        },
+      },
     },
     delete: {
       tags: ['Notification'],
@@ -81,21 +81,21 @@ const paths = {
           name: 'notificationId',
           type: 'string',
           required: false,
-          description: 'Notification Id'
-        }
+          description: 'Notification Id',
+        },
       ],
       responses: {
         '200': {
           description: 'Successfully Fetched default notifications',
           content: {
             schema: {
-              $ref: '#/definitions/200_response'
-            }
-          }
-        }
-      }
-    }
-  }
+              $ref: '#/definitions/200_response',
+            },
+          },
+        },
+      },
+    },
+  },
 }
 
 const definitions = {
@@ -103,45 +103,45 @@ const definitions = {
     example: {
       data: null,
       code: 200000,
-      message: 'OK'
-    }
+      message: 'OK',
+    },
   },
   '401_response': {
     example: {
       data: null,
       code: 401001,
-      message: 'Invalid token'
-    }
+      message: 'Invalid token',
+    },
   },
   '404': {
     description: 'Notification not found',
     content: {
       schema: {
-        $ref: '#/definitions/notification_not_found_response'
-      }
-    }
+        $ref: '#/definitions/notification_not_found_response',
+      },
+    },
   },
   update_read_status_body: {
     example: {
-      read: true
-    }
+      read: true,
+    },
   },
   get_notifications_response: {
     example: {
       data: {
         notifications: [{}],
         code: 200000,
-        message: 'OK'
-      }
-    }
+        message: 'OK',
+      },
+    },
   },
   notification_not_found_response: {
     example: {
       data: null,
       code: 404003,
-      message: 'Notification not found'
-    }
-  }
+      message: 'Notification not found',
+    },
+  },
 }
 
 export const notificationDocs = { tags, paths, definitions }

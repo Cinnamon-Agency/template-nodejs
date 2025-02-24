@@ -1,9 +1,9 @@
-import { AsyncResponse, IServiceMethod } from '../../interface'
+import { AsyncResponse, ITransactionMethod } from '@common'
 
 export enum MediaType {
   PROJECT_COVER_IMAGE = 'Project cover image',
   PROJECT_TRACK_PREVIEW = 'Project track preview',
-  PROJECT_OTHER = 'Project other'
+  PROJECT_OTHER = 'Project other',
 }
 
 export interface IMediaData {
@@ -11,7 +11,7 @@ export interface IMediaData {
   mediaFileName: string
 }
 
-export interface ICreateMediaEntries extends IServiceMethod {
+export interface ICreateMediaEntries extends ITransactionMethod {
   mediaFiles: IMediaData[]
   projectId: string
 }

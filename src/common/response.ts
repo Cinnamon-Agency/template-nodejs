@@ -13,7 +13,7 @@ export enum StatusCode {
   NOT_ACCEPTABLE = 406,
   RESOURCE_NOT_FOUND = 404,
   UNSUPPORTED_MEDIA_TYPE = 415,
-  SERVICE_UNAVAILABLE = 503
+  SERVICE_UNAVAILABLE = 503,
 }
 
 export enum ResponseCode {
@@ -54,7 +54,7 @@ export enum ResponseCode {
   FAILED_INSERT = 500001,
   BAD_GATEWAY = 502000,
   SERVICE_UNAVAILABLE = 503000,
-  APP_SHUTTING_DOWN = 503001
+  APP_SHUTTING_DOWN = 503001,
 }
 
 export enum ResponseMessage {
@@ -94,5 +94,19 @@ export enum ResponseMessage {
   FAILED_INSERT = 'Failed insert',
   BAD_GATEWAY = 'Bad gateway',
   SERVICE_UNAVAILABLE = 'Service unavailable',
-  APP_SHUTTING_DOWN = 'Application is shutting down'
+  APP_SHUTTING_DOWN = 'Application is shutting down',
+}
+
+export class ResponseError extends Error {
+  public code: ResponseCode
+
+  constructor(responseCode: ResponseCode) {
+    super(getResponseMessage(responseCode))
+    this.code = responseCode
+  }
+}
+
+export function getResponseMessage(code: number): ResponseMessage {
+  const key = ResponseCode[code] as keyof typeof ResponseMessage
+  return ResponseMessage[key] || ResponseMessage.SERVER_ERROR
 }
