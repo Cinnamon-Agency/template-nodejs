@@ -58,7 +58,7 @@ Within the */src* directory, we house the definitions of Express routes, busines
 
 ## **Database and data structure** <a name="database"></a>
 
-Our choice of MySQL as the primary database, complemented by the TypeORM ORM, underscores our commitment to reliability and performance. By deliberately simplifying the number of tables within our database schema, we optimize the template for both ease of use and future scalability. This strategic approach not only enhances the template's flexibility but also accelerates development cycles and minimizes potential complexities associated with database management. Additionally, leveraging TypeORM facilitates seamless integration with TypeScript, further enhancing code maintainability and productivity for our development team.
+Our choice of MySQL as the primary database, complemented by the Prisma ORM, underscores our commitment to reliability and performance. By deliberately simplifying the number of tables within our database schema, we optimize the template for both ease of use and future scalability. This strategic approach not only enhances the template's flexibility but also accelerates development cycles and minimizes potential complexities associated with database management. Additionally, leveraging Prisma facilitates seamless integration with TypeScript, further enhancing code maintainability and productivity for our development team.
 
 ## **Authentication and authorization** <a name="auth"></a>
 

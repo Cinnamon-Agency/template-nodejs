@@ -1,0 +1,127 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+
+enum MediaType {
+  PROJECT_COVER_IMAGE
+  PROJECT_TRACK_PREVIEW
+  PROJECT_OTHER
+}
+
+enum NotificationType {
+  ADDED_TO_FAVORITES
+  COLLABORATION_REQUEST
+}
+
+enum ProjectStatus {
+  ACTIVE
+  FINISHED
+}
+
+enum AuthType {
+  GOOGLE
+  LINKED_IN
+  FACEBOOK
+  USER_PASSWORD
+}
+
+enum UserSessionStatus {
+  ACTIVE
+  EXPIRED
+  LOGGED_OUT
+}
+
+enum VerificationUIDType {
+  REGISTRATION
+  RESET_PASSWORD
+  CHANGE_EMAIL
+}
+
+// Models
+model User {
+  id                      String          @id @default(uuid())
+  email                   String          @unique
+  password                String?         // nullable
+  authType                AuthType
+  notifications           Boolean?        @default(false)
+  profilePictureFileName  String?
+  projects                Project[]
+  notificationsSent       Notification[]  @relation("NotificationSender")
+  notificationsReceived   Notification[]  @relation("NotificationReceiver")
+  sessions                UserSession[]
+  verificationUIDs        VerificationUID[]
+  createdAt               DateTime        @default(now())
+  updatedAt               DateTime        @updatedAt
+}
+
+model Project {
+  id            String     @id @default(uuid())
+  name          String
+  description   String
+  deadline      DateTime
+  userId        String
+  user          User       @relation(fields: [userId], references: [id])
+  projectStatus ProjectStatus @default(ACTIVE)
+  mediaFiles    Media[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model Media {
+  id            String     @id @default(uuid())
+  mediaType     MediaType
+  mediaFileName String     @unique
+  projectId     String
+  project       Project    @relation(fields: [projectId], references: [id])
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model Notification {
+  id               String           @id @default(uuid())
+  senderId         String
+  sender           User             @relation("NotificationSender", fields: [senderId], references: [id])
+  receiverId       String
+  receiver         User             @relation("NotificationReceiver", fields: [receiverId], references: [id])
+  message          String
+  read             Boolean          @default(true)
+  notificationType NotificationType
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+}
+
+model UserSession {
+  id            String            @id @default(uuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id])
+  refreshToken  String
+  expiresAt     DateTime
+  status        UserSessionStatus @default(ACTIVE)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+}
+
+model VerificationUID {
+  id        String              @id @default(uuid())
+  userId    String
+  user      User                @relation(fields: [userId], references: [id])
+  uid       String              @db.VarChar(36)
+  hash      String              @db.VarChar(255)
+  type      VerificationUIDType
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+}
