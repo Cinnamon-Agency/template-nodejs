@@ -3,6 +3,5 @@
 /keys
 .env
 .env.*
-!.env.template
-!.env.production.template
-!.env.staging.template
+
+/src/generated/prisma
