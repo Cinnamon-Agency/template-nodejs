@@ -29,12 +29,11 @@ export const getSignedURL = async (name: string, action: 'read' | 'write') => {
     }
 
     return { code, url }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (err: any) {
+  } catch (err: unknown) {
     logger.error({
       code,
       message: getResponseMessage(code),
-      stack: err.stack,
+      stack: err instanceof Error ? err.stack : undefined,
     })
     return {
       code: ResponseCode.GOOGLE_STORAGE_ERROR,

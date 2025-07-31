@@ -3,7 +3,7 @@ import { DataSource, Repository } from 'typeorm'
 import { ICreateMediaEntries, IMediaService } from './interface'
 import { Media } from './mediaModel'
 import { ResponseCode, serviceErrorHandler } from '@common'
-import { getSignedURL } from '@services/google_cloud'
+import { getSignedURL } from '@services/google_cloud_storage'
 
 @singleton()
 @autoInjectable()
