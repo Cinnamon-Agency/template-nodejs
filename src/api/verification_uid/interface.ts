@@ -1,5 +1,5 @@
-import { AsyncResponse, ITransactionMethod } from '@common'
-import { VerificationUID } from './verificationUIDModel'
+import { AsyncResponse } from '@common'
+import { VerificationUID } from 'generated/prisma'
 
 export enum VerificationUIDType {
   REGISTRATION = 'Registration',
@@ -7,7 +7,7 @@ export enum VerificationUIDType {
   CHANGE_EMAIL = 'ChangeEmail',
 }
 
-export interface ISetVerificationUID extends ITransactionMethod {
+export interface ISetVerificationUID {
   userId: string
   type: VerificationUIDType
 }

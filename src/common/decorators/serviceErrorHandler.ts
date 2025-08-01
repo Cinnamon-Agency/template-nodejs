@@ -1,12 +1,5 @@
 import { ResponseCode, ResponseCodeRequired, getResponseMessage } from '@common'
 import { logger } from '@core/logger'
-import { QueryFailedError } from 'typeorm'
-
-export type MySQLError = QueryFailedError & { errno: number }
-
-export function isMySQLError(error: unknown): error is MySQLError {
-  return error instanceof QueryFailedError && 'errno' in error
-}
 
 interface ErrorHandlerConfig<ReturnType> {
   onError?: (

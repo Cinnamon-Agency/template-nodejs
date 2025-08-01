@@ -1,19 +1,19 @@
-import { AsyncResponse, ITransactionMethod } from '@common'
+import { AsyncResponse } from '@common'
 import { AuthType } from '@api/auth/interface'
-import { User } from './userModel'
+import { User } from 'generated/prisma'
 
-export interface ICreateUser extends ITransactionMethod {
+export interface ICreateUser {
   email: string
   password?: string
   authType: AuthType
 }
 
-export interface IGetUserById extends ITransactionMethod {
+export interface IGetUserById {
   userId: string
   allUsers?: boolean
 }
 
-export interface IGetUserByEmail extends ITransactionMethod {
+export interface IGetUserByEmail {
   email: string
   allUsers?: boolean
 }

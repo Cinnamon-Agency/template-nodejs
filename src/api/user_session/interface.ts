@@ -1,5 +1,5 @@
 import { AsyncResponse } from '@common'
-import { UserSession } from './userSessionModel'
+import { UserSession } from 'generated/prisma'
 
 export enum UserSessionStatus {
   ACTIVE = 'Active',

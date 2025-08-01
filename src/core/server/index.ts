@@ -4,8 +4,9 @@ import { logger } from '@core/logger'
 import config from '@core/config'
 import { serverState } from './state'
 import { container } from 'tsyringe'
-import { DataSource } from 'typeorm'
+
 import { WebSocketService } from '@services/websocket'
+import prisma from '@core/prismaClient'
 
 export class AppServer {
   private server: Server | null = null
@@ -41,16 +42,7 @@ export class AppServer {
 
       const shutdownTasks = []
 
-      const dataSource = container.resolve(DataSource)
-
-      shutdownTasks.push([
-        new Promise<void>((resolve, reject) => {
-          dataSource
-            .destroy()
-            .then(() => resolve())
-            .catch((err) => reject(err))
-        })
-      ])
+      shutdownTasks.push(prisma.$disconnect())
 
       const webSocketService = container.resolve(WebSocketService)
       shutdownTasks.push(webSocketService.close)
@@ -58,7 +50,7 @@ export class AppServer {
       if (this.server) {
         shutdownTasks.push(
           new Promise<void>((resolve, reject) => {
-            this.server?.close((err) => {
+            this.server?.close(err => {
               if (err) {
                 reject(err)
               } else {

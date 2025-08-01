@@ -8,78 +8,51 @@ import {
   IUpdatePassword,
   IGetUserByEmailAndAuthType,
 } from './interface'
-import { User } from './userModel'
-import { DataSource, Repository } from 'typeorm'
-import { autoInjectable, inject, singleton } from 'tsyringe'
+import prisma from '@core/prismaClient'
+import { autoInjectable, singleton } from 'tsyringe'
 import { hashString } from '@services/bcrypt'
 
 @singleton()
 @autoInjectable()
 export class UserService implements IUserService {
-  private readonly userRepository: Repository<User>
-
-  constructor(@inject(DataSource) private readonly dataSource: DataSource) {
-    this.userRepository = this.dataSource.manager.getRepository(User)
-  }
-
   @serviceErrorHandler()
-  async createUser({ email, password, authType, queryRunner }: ICreateUser) {
+  async createUser({ email, password, authType }: ICreateUser) {
     let hashedPassword = null
 
     if (password) {
       hashedPassword = await hashString(password)
     }
 
-    const insertResult = await this.userRepository
-      .createQueryBuilder('user', queryRunner)
-      .insert()
-      .into(User)
-      .values([{ email, password: hashedPassword, authType }])
-      .execute()
+    const created = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        authType,
+      },
+    })
 
-    if (insertResult.raw.affectedRows !== 1) {
+    if (!created) {
       return { code: ResponseCode.FAILED_INSERT }
     }
 
-    const userId = insertResult.identifiers[0].id
+    return { user: created, code: ResponseCode.OK }
+  }
 
-    const user = await this.userRepository
-      .createQueryBuilder('user', queryRunner)
-      .where('user.id = :userId', { userId })
-      .getOne()
-
+  @serviceErrorHandler()
+  async getUserById({ userId }: IGetUserById) {
+    const user = await prisma.user.findUnique({ where: { id: userId } })
     if (!user) {
       return { code: ResponseCode.USER_NOT_FOUND }
     }
-
     return { user, code: ResponseCode.OK }
   }
 
   @serviceErrorHandler()
-  async getUserById({ userId, queryRunner }: IGetUserById) {
-    const query = this.userRepository
-      .createQueryBuilder('user', queryRunner)
-      .where('user.id = :userId', { userId })
-
-    const user = await query.getOne()
-
+  async getUserByEmail({ email }: IGetUserByEmail) {
+    const user = await prisma.user.findUnique({ where: { email } })
     if (!user) {
       return { code: ResponseCode.USER_NOT_FOUND }
     }
-
-    return { user, code: ResponseCode.OK }
-  }
-
-  @serviceErrorHandler()
-  async getUserByEmail({ email, queryRunner }: IGetUserByEmail) {
-    const user = await this.userRepository
-      .createQueryBuilder('user', queryRunner)
-      .where('user.email = :email', { email })
-      .getOne()
-    if (!user) {
-      return { code: ResponseCode.USER_NOT_FOUND }
-    }
-
     return { user, code: ResponseCode.OK }
   }
 
@@ -88,61 +61,38 @@ export class UserService implements IUserService {
     authType,
     email,
   }: IGetUserByEmailAndAuthType) {
-    const user = await this.userRepository.findOne({
-      where: {
-        email,
-        authType,
-      },
-    })
-
+    const user = await prisma.user.findUnique({ where: { email, authType } })
     if (!user) {
       return { code: ResponseCode.USER_NOT_FOUND }
     }
-
     return { user, code: ResponseCode.OK }
   }
 
   @serviceErrorHandler()
   async toggleNotifications({ userId }: IToggleNotifications) {
     let code: ResponseCode = ResponseCode.OK
-
-    const user = await this.userRepository.findOne({
-      where: {
-        id: userId,
-      },
-    })
-
+    const user = await prisma.user.findUnique({ where: { id: userId } })
     if (!user) {
       return { code: ResponseCode.USER_NOT_FOUND }
     }
-
-    user.notifications = !user.notifications
-
-    const updatedUser = await this.userRepository.save(user)
-
-    if (!updatedUser) {
-      code = ResponseCode.FAILED_INSERT
-    }
-
-    return { code }
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { notifications: !user.notifications },
+    })
+    return { code: ResponseCode.OK, user: updatedUser }
   }
 
   @serviceErrorHandler()
   async updatePassword({ userId, password }: IUpdatePassword) {
-    const user = await this.userRepository.findOne({
-      where: {
-        id: userId,
-      },
-    })
-
+    const user = await prisma.user.findUnique({ where: { id: userId } })
     if (!user) {
       return { code: ResponseCode.USER_NOT_FOUND }
     }
-
-    await this.userRepository.update(userId, {
-      password,
+    const hashedPassword = await hashString(password)
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword },
     })
-
     return { code: ResponseCode.OK }
   }
 }

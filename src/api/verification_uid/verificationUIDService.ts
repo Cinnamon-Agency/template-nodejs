@@ -1,10 +1,5 @@
-import { DataSource, Repository } from 'typeorm'
-import {
-  isMySQLError,
-  MySQLError,
-  ResponseCode,
-  serviceErrorHandler,
-} from '@common'
+import prisma from '@core/prismaClient'
+import { ResponseCode, serviceErrorHandler } from '@common'
 import { compare, hashString } from '@services/bcrypt'
 import { generateUUID } from '@services/uuid'
 import {
@@ -14,51 +9,28 @@ import {
   IVerificationUIDService,
   IVerifyUID,
 } from './interface'
-import { VerificationUID } from './verificationUIDModel'
-import { autoInjectable, inject, singleton } from 'tsyringe'
+import { autoInjectable, singleton } from 'tsyringe'
 
 @singleton()
 @autoInjectable()
 export class VerificationUIDService implements IVerificationUIDService {
-  private readonly verificationUIDRepository: Repository<VerificationUID>
-
-  constructor(@inject(DataSource) private readonly dataSource: DataSource) {
-    this.verificationUIDRepository =
-      this.dataSource.manager.getRepository(VerificationUID)
-  }
-
   @serviceErrorHandler({
     onError: async (err: unknown) => {
-      if (isMySQLError(err)) {
-        let code = ResponseCode.SERVER_ERROR
-        const error = err as MySQLError
-        switch (error.errno) {
-          case 1062:
-            code = ResponseCode.DUPLICATE_REGISTRATION_UID
-            break
-          case 1452:
-            code = ResponseCode.USER_NOT_FOUND
-            break
-        }
-        return { code }
-      }
+      return { code: ResponseCode.SERVER_ERROR }
     },
   })
-  async setVerificationUID({ userId, type, queryRunner }: ISetVerificationUID) {
+  async setVerificationUID({ userId, type }: ISetVerificationUID) {
     const uid = generateUUID()
     const hashUID = generateUUID()
     const hash = await hashString(hashUID)
 
     await this.clearVerificationUID({ userId, type })
 
-    const insertResult = await this.verificationUIDRepository
-      .createQueryBuilder('verificationUID', queryRunner)
-      .insert()
-      .into(VerificationUID)
-      .values([{ userId, uid, hash, type }])
-      .execute()
+    const created = await prisma.verificationUID.create({
+      data: { userId, uid, hash, type },
+    })
 
-    if (insertResult.raw.affectedRows !== 1) {
+    if (!created) {
       return { code: ResponseCode.FAILED_INSERT }
     }
 
@@ -67,7 +39,7 @@ export class VerificationUIDService implements IVerificationUIDService {
 
   @serviceErrorHandler()
   async getVerificationUID({ uid }: IGetVerificationUID) {
-    const verificationUID = await this.verificationUIDRepository.findOne({
+    const verificationUID = await prisma.verificationUID.findUnique({
       where: { uid },
     })
     if (!verificationUID) {
@@ -79,15 +51,15 @@ export class VerificationUIDService implements IVerificationUIDService {
 
   @serviceErrorHandler()
   async clearVerificationUID({ userId, type }: IClearVerificationUID) {
-    const verificationUID = await this.verificationUIDRepository.findOne({
+    const verificationUID = await prisma.verificationUID.findUnique({
       where: { userId, type },
     })
     if (!verificationUID) {
       return { code: ResponseCode.VERIFICATION_UID_NOT_FOUND }
     }
 
-    await this.verificationUIDRepository.delete({
-      id: verificationUID.id,
+    await prisma.verificationUID.delete({
+      where: { id: verificationUID.id },
     })
 
     return { code: ResponseCode.OK }
@@ -95,7 +67,7 @@ export class VerificationUIDService implements IVerificationUIDService {
 
   @serviceErrorHandler()
   async verifyUID({ uid, hashUid, type }: IVerifyUID) {
-    const verificationUID = await this.verificationUIDRepository.findOne({
+    const verificationUID = await prisma.verificationUID.findUnique({
       where: { uid, type },
     })
     if (!verificationUID) {

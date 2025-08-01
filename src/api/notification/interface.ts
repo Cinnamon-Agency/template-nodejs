@@ -1,5 +1,5 @@
 import { AsyncResponse } from '@common'
-import { Notification } from './notificationModel'
+import { Notification } from 'generated/prisma'
 
 export enum NotificationType {
   ADDED_TO_FAVORITES = 'Added to favorites',

@@ -1,7 +1,5 @@
 import { ResponseCode, serviceErrorHandler } from '@common'
-import { autoInjectable, container, inject, singleton } from 'tsyringe'
-import { Notification } from './notificationModel'
-import { DataSource, Repository } from 'typeorm'
+import { autoInjectable, container, singleton } from 'tsyringe'
 import {
   ICreateNotification,
   INotificationService,
@@ -11,19 +9,13 @@ import {
 } from './interface'
 import { sendEmail } from '@services/email'
 import { UserService } from '@api/user/userService'
+import prisma from '@core/prismaClient'
 
 const userService = container.resolve(UserService)
 
 @singleton()
 @autoInjectable()
 export class NotificationService implements INotificationService {
-  private readonly notificationRepository: Repository<Notification>
-
-  constructor(@inject(DataSource) private readonly dataSource: DataSource) {
-    this.notificationRepository =
-      this.dataSource.manager.getRepository(Notification)
-  }
-
   @serviceErrorHandler()
   async getNotifications({
     userId,
@@ -36,7 +28,7 @@ export class NotificationService implements INotificationService {
     if (unread) {
       where.read = false
     }
-    const notifications = await this.notificationRepository.find({
+    const notifications = await prisma.notification.findMany({
       where,
       skip: numberOfFetched,
       take: 20,
@@ -47,7 +39,7 @@ export class NotificationService implements INotificationService {
 
   @serviceErrorHandler()
   async toggleReadStatus({ notificationId, userId, read }: IToggleReadStatus) {
-    const notification = await this.notificationRepository.findOne({
+    const notification = await prisma.notification.findUnique({
       where: {
         receiverId: userId,
         id: notificationId,
@@ -60,7 +52,10 @@ export class NotificationService implements INotificationService {
 
     notification.read = read
 
-    await this.notificationRepository.save(notification)
+    await prisma.notification.update({
+      where: { id: notificationId },
+      data: notification,
+    })
 
     return { code: ResponseCode.OK }
   }
@@ -73,7 +68,7 @@ export class NotificationService implements INotificationService {
     type,
   }: ICreateNotification) {
     const notification = { receiverId, senderId, message, read: false, type }
-    await this.notificationRepository.save(notification)
+    await prisma.notification.create({ data: notification })
 
     const { user } = await userService.getUserById({
       userId: receiverId,
@@ -93,7 +88,7 @@ export class NotificationService implements INotificationService {
 
   @serviceErrorHandler()
   async deleteNotification({ userId, notificationId }: IDeleteNotification) {
-    const notification = await this.notificationRepository.findOne({
+    const notification = await prisma.notification.findUnique({
       where: {
         receiverId: userId,
         id: notificationId,
@@ -104,7 +99,7 @@ export class NotificationService implements INotificationService {
       return { code: ResponseCode.NOTIFICATION_NOT_FOUND }
     }
 
-    await this.notificationRepository.remove(notification)
+    await prisma.notification.delete({ where: { id: notificationId } })
 
     return { code: ResponseCode.OK }
   }

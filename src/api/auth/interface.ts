@@ -1,5 +1,5 @@
 import { AsyncResponse } from '@common'
-import { User } from '@api/user/userModel'
+import { User } from 'generated/prisma'
 
 export enum AuthType {
   GOOGLE = 'Google',
