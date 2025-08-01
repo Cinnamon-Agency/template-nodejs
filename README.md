@@ -1,4 +1,4 @@
-# Cinnamon Flutter project Template
+# Cinnamon Node.js/TypeScript Backend Template
 
 ## **Table of Contents**
 
@@ -16,7 +16,13 @@
 
 ## **Running the app** <a name="running"></a>
 
-First you need to provide enviromental variables. You copy/paste variable names from **<em>./.env.example</em>** file and provide your variables.
+First you need to provide environmental variables. You can copy/paste variable names from **<em>./.env.example</em>** file and provide your own values.
+
+---
+
+**Note:** This template is for building backend APIs and services using Node.js and TypeScript. It is not a Flutter project. All references to Flutter in previous versions or documentation are incorrect.
+
+---
 
 Installation is easy and can be done in seconds! Clone this project, make sure you're on the latest Node.js version, open the newly cloned project and run the following commands:
 

@@ -17,6 +17,15 @@ export class AppServer {
     process.on('SIGINT', () => this.shutdown('SIGINT'))
     process.on('SIGTERM', () => this.shutdown('SIGTERM'))
 
+    // Global error monitoring
+    process.on('unhandledRejection', (reason, promise) => {
+      logger.error('Unhandled Rejection at:', promise, 'reason:', reason)
+    })
+    process.on('uncaughtException', error => {
+      logger.error('Uncaught Exception thrown:', error)
+      process.exit(1)
+    })
+
     const port = config.PORT
     const commitHash = config.COMMIT_HASH
 
@@ -45,7 +54,8 @@ export class AppServer {
       shutdownTasks.push(prisma.$disconnect())
 
       const webSocketService = container.resolve(WebSocketService)
-      shutdownTasks.push(webSocketService.close)
+      // Properly invoke close() to get a promise
+      shutdownTasks.push(webSocketService.close())
 
       if (this.server) {
         shutdownTasks.push(
