@@ -32,10 +32,21 @@ export class AuthController {
       id: user.id,
     }
 
+    res.cookie('accessToken', tokens.accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      expires: new Date(tokens.accessTokenExpiresAt),
+    });
+    res.cookie('refreshToken', tokens.refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      expires: new Date(tokens.refreshTokenExpiresAt),
+    });
     return next({
       data: {
         user: responseUser,
-        ...tokens,
       },
       code: ResponseCode.OK,
     })
@@ -66,10 +77,21 @@ export class AuthController {
       id: user.id,
     }
 
+    res.cookie('accessToken', tokens.accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      expires: new Date(tokens.accessTokenExpiresAt),
+    });
+    res.cookie('refreshToken', tokens.refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      expires: new Date(tokens.refreshTokenExpiresAt),
+    });
     return next({
       data: {
         user: responseUser,
-        ...tokens,
       },
       code: ResponseCode.OK,
     })
@@ -86,10 +108,17 @@ export class AuthController {
       return next({ code })
     }
 
-    return next({
-      data: tokens,
-      code: ResponseCode.OK,
-    })
+    if (AuthService.isMobileClient(req)) {
+      return next({
+        data: tokens,
+        code: ResponseCode.OK,
+      });
+    } else {
+      AuthService.setAuthCookies(res, tokens);
+      return next({
+        code: ResponseCode.OK,
+      });
+    }
   }
 
   logout = async (req: Request, res: Response, next: NextFunction) => {
@@ -97,6 +126,9 @@ export class AuthController {
 
     const { code } = await this.authService.logout({ userId: user.id })
 
+    if (!AuthService.isMobileClient(req)) {
+      AuthService.clearAuthCookies(res);
+    }
     return next({ code })
   }
 

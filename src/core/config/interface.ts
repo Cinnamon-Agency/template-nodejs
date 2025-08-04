@@ -32,6 +32,10 @@ export interface ENV {
   TYPEORM_RUN_MIGRATIONS?: boolean
   USE_UNIX_SOCKET?: boolean
   DB_POOL_SIZE?: number
+  AWS_ACCESS_KEY?: string
+  AWS_SECRET?: string
+  AWS_REGION?: string
+  AWS_PHONE_NUMBER?: string
 }
 
 export type Config = Required<ENV>

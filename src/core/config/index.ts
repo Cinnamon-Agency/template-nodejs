@@ -63,6 +63,10 @@ const getConfig = (): Config => {
     GMAIL_PASSWORD: process.env.GMAIL_PASSWORD,
     USE_UNIX_SOCKET: environmentBoolean(process.env.USE_UNIX_SOCKET),
     DB_POOL_SIZE: environmentNumber(process.env.DB_POOL_SIZE),
+    AWS_ACCESS_KEY: process.env.AWS_ACCESS_KEY,
+    AWS_SECRET: process.env.AWS_SECRET,
+    AWS_REGION: process.env.AWS_REGION,
+    AWS_PHONE_NUMBER: process.env.AWS_PHONE_NUMBER,
   }
 
   cachedConfig = getSanitizedConfig(config)

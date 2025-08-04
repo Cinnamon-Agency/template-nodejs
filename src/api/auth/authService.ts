@@ -235,4 +235,30 @@ export class AuthService implements IAuthService {
 
     return { code: ResponseCode.OK }
   }
+
+  static COOKIE_OPTIONS = {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'strict' as const,
+  };
+
+  static setAuthCookies(res: any, tokens: { accessToken: string; refreshToken: string; accessTokenExpiresAt: Date; refreshTokenExpiresAt: Date }) {
+    res.cookie('accessToken', tokens.accessToken, {
+      ...AuthService.COOKIE_OPTIONS,
+      expires: new Date(tokens.accessTokenExpiresAt),
+    });
+    res.cookie('refreshToken', tokens.refreshToken, {
+      ...AuthService.COOKIE_OPTIONS,
+      expires: new Date(tokens.refreshTokenExpiresAt),
+    });
+  }
+
+  static clearAuthCookies(res: any) {
+    res.clearCookie('accessToken', AuthService.COOKIE_OPTIONS);
+    res.clearCookie('refreshToken', AuthService.COOKIE_OPTIONS);
+  }
+
+  static isMobileClient(req: any): boolean {
+    return req.headers['x-client-type'] === 'mobile';
+  }
 }
