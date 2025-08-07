@@ -1,21 +1,10 @@
 export enum EmailTemplate {
-  LOGIN = 'Login',
+  VERIFY_LOGIN = 'VerifyLogin',
   RESET_PASSWORD = 'ResetPassword',
-  REGISTER_PATIENT = 'RegisterPatient',
-  REGISTER_TEAM_MEMBER = 'RegisterTeamMember',
-  REGISTER_PROVIDER = 'RegisterProvider',
-  REGISTER_ADMIN = 'RegisterAdmin',
-  APPOINTMENT_REMINDER = 'AppointmentReminder',
-  ASK_RATING_REMINDER = 'AskRatingReminder',
+  REGISTER = 'Register',
   CONTACT_SUPPORT = 'ContactSupport',
-  APPOINTMENT_CANCELED_PATIENT = 'AppointmentCanceledPatient',
-  APPOINTMENT_CANCELED_PROVIDER = 'AppointmentCanceledProvider',
-  APPOINTMENT_BOOKED_PATIENT = 'AppointmentBookedPatient',
-  APPOINTMENT_BOOKED_PROVIDER = 'AppointmentBookedProvider',
-  YEARLY_REMINDER = 'YearlyReminder',
-  MONTHLY_REPORT = 'MonthlyReport',
   CONTACT_SUPPORT_SUCCESS = 'ContactSupportSuccess',
-  PAYMENT_SUCCESS = 'PaymentSuccess'
+  NOTIFICATION = 'Notification'
 }
 
 export interface IEmailData {

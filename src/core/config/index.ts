@@ -67,6 +67,7 @@ const getConfig = (): Config => {
     AWS_SECRET: process.env.AWS_SECRET,
     AWS_REGION: process.env.AWS_REGION,
     AWS_PHONE_NUMBER: process.env.AWS_PHONE_NUMBER,
+    SES_VERIFIED_MAIL: process.env.SES_VERIFIED_MAIL,
   }
 
   cachedConfig = getSanitizedConfig(config)

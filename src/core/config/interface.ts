@@ -1,5 +1,6 @@
 export interface ENV {
   COMMIT_HASH?: string
+  LOG_TO_CLOUDWATCH?: boolean
   PROJECT_NAME?: string
   NODE_ENV?: string
   PORT?: number
@@ -36,6 +37,7 @@ export interface ENV {
   AWS_SECRET?: string
   AWS_REGION?: string
   AWS_PHONE_NUMBER?: string
+  SES_VERIFIED_MAIL?: string
 }
 
 export type Config = Required<ENV>

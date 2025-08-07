@@ -1,10 +1,10 @@
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
 import fs from 'fs'
 import path from 'path'
-import config from '../../config'
-import { EmailTemplate, IEmailData, SendEmailParams } from './interface'
-import { ResponseCode, ResponseMessage } from '../../interface'
-import { logger } from '../../logger'
+import config from '@core/config'
+import { IEmailData, EmailTemplate } from './interface'
+import { ResponseCode, ResponseMessage } from '@common'
+import { logger } from '@core/logger'
 
 const sesConfig =
   config.NODE_ENV === 'dev'
@@ -35,41 +35,43 @@ export const replacePlaceholders = (
 const header = loadHtmlFile('emailTemplates/default/header.html')
 const footer = loadHtmlFile('emailTemplates/default/footer.html')
 
-export const sendEmail = async (params: SendEmailParams) => {
-  let htmlContent = params.html || ''
-  let textContent = params.text || 'This is the text version of the email.'
+export const sendEmail = async (
+  template: EmailTemplate,
+  toAddress: string,
+  subject: string,
+  dynamicData: IEmailData
+) => {
+  const dynamicContentTemplate = loadHtmlFile(`emailTemplates/${template}.html`)
+  const htmlContent = `${header}${dynamicContentTemplate}${footer}`
 
-  if (params.template) {
-    const dynamicContentTemplate = loadHtmlFile(`emailTemplates/${params.template}.html`)
-    const htmlWithHeaderFooter = `${header}${dynamicContentTemplate}${footer}`
-    htmlContent = replacePlaceholders(htmlWithHeaderFooter, params.dynamicData || {})
-  }
+  const dynamicContent = replacePlaceholders(htmlContent, dynamicData)
 
-  const sesParams = {
+  const params = {
     Destination: {
-      ToAddresses: [params.to]
+      ToAddresses: [toAddress]
     },
     Message: {
       Body: {
         Html: {
           Charset: 'UTF-8',
-          Data: htmlContent
+          Data: dynamicContent
         },
         Text: {
           Charset: 'UTF-8',
-          Data: textContent
+          Data: 'This is the text version of the email.'
         }
       },
       Subject: {
         Charset: 'UTF-8',
-        Data: params.subject
+        Data: subject
       }
     },
     Source: config.SES_VERIFIED_MAIL
   }
 
   try {
-    const emailResponse = await sesClient.send(new SendEmailCommand(sesParams))
+    const emailResponse = await sesClient.send(new SendEmailCommand(params))
+
     if (
       emailResponse.$metadata.httpStatusCode &&
       emailResponse.$metadata.httpStatusCode !== 200
@@ -86,4 +88,3 @@ export const sendEmail = async (params: SendEmailParams) => {
     return { code: ResponseCode.FAILED_DEPENDENCY }
   }
 }
-

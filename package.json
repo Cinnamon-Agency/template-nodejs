@@ -14,7 +14,9 @@
   "author": "Cinnamon Agency",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-cloudwatch-logs": "^3.862.0",
     "@aws-sdk/client-pinpoint-sms-voice-v2": "^3.858.0",
+    "@aws-sdk/client-ses": "^3.862.0",
     "@google-cloud/storage": "^7.16.0",
     "@prisma/client": "^6.13.0",
     "axios": "^1.11.0",

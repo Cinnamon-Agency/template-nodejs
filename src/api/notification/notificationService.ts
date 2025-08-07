@@ -7,9 +7,10 @@ import {
   IDeleteNotification,
   IToggleReadStatus,
 } from './interface'
-import { sendEmail } from '@services/email'
+import { sendEmail } from '@services/ses'
 import { UserService } from '@api/user/userService'
 import prisma from '@core/prismaClient'
+import { EmailTemplate } from '@services/ses/interface'
 
 const userService = container.resolve(UserService)
 
@@ -78,10 +79,12 @@ export class NotificationService implements INotificationService {
       return { code: ResponseCode.USER_NOT_FOUND }
     }
 
-    sendEmail({
-      revieverMail: user.email,
-      message: { title: type, content: message },
-    })
+    sendEmail(
+      EmailTemplate.NOTIFICATION,
+      user.email,
+      type,
+      { title: type, content: message }
+    )
 
     return { code: ResponseCode.OK }
   }

@@ -10,6 +10,7 @@ import {
 } from './interface'
 import prisma from '@core/prismaClient'
 import { autoInjectable, singleton } from 'tsyringe'
+import { logEndpoint } from '@common/decorators/logEndpoint'
 import { hashString } from '@services/bcrypt'
 
 @singleton()
