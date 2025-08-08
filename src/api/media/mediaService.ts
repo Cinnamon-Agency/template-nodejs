@@ -1,5 +1,4 @@
 import { autoInjectable, singleton } from 'tsyringe'
-import { logEndpoint } from '@common/decorators/logEndpoint'
 import prisma from '@core/prismaClient'
 import { ICreateMediaEntries, IMediaService } from './interface'
 
@@ -9,7 +8,6 @@ import { getSignedURL } from '@services/google_cloud_storage'
 @singleton()
 @autoInjectable()
 export class MediaService implements IMediaService {
-  @logEndpoint()
 @serviceErrorHandler()
   async createMediaEntries({ mediaFiles, projectId }: ICreateMediaEntries) {
     let code: ResponseCode = ResponseCode.OK

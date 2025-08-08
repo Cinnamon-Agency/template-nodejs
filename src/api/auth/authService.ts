@@ -16,7 +16,8 @@ import config from '@core/config'
 import { UserSessionService } from '@api/user_session/userSessionService'
 import { UserSessionStatus } from '@api/user_session/interface'
 import { autoInjectable, singleton } from 'tsyringe'
-import { logEndpoint } from '@common/decorators/logEndpoint'
+import { sendEmail } from '@services/ses'
+import { EmailTemplate } from '@services/ses/interface'
 import { VerificationUIDType } from '@api/verification_uid/interface'
 import { VerificationUIDService } from '@api/verification_uid/verificationUIDService'
 import { compare, hashString } from '@services/bcrypt'
@@ -203,6 +204,14 @@ export class AuthService implements IAuthService {
     if (!uids) {
       return { code: uidCode }
     }
+
+    const resetPasswordUrl = `${config.API_BASE_URL}/reset-password?uid=${uids.uid}&hashUid=${uids.hashUID}`
+    await sendEmail(
+      EmailTemplate.RESET_PASSWORD,
+      user.email,
+      'Reset your password',
+      { reset_password_url: resetPasswordUrl }
+    )
 
     return { code: ResponseCode.OK }
   }

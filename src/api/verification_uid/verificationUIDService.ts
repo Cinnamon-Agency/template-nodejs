@@ -10,7 +10,6 @@ import {
   IVerifyUID,
 } from './interface'
 import { autoInjectable, singleton } from 'tsyringe'
-import { logEndpoint } from '@common/decorators/logEndpoint'
 
 @singleton()
 @autoInjectable()

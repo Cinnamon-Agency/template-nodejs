@@ -2,7 +2,6 @@ import { ResponseCode, serviceErrorHandler } from '@common'
 import { logger } from '@core/logger'
 import { getResponseMessage } from '@common'
 import { autoInjectable, container, singleton } from 'tsyringe'
-import { logEndpoint } from '@common/decorators/logEndpoint'
 import prisma from '@core/prismaClient'
 import {
   ICreateProject,

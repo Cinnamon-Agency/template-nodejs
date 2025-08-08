@@ -1,5 +1,6 @@
 import { logger } from '@core/logger'
-import { Request, Response, NextFunction } from 'express'
+import { sendLogEvents } from '@services/cloudwatch'
+import { Request } from 'express'
 
 export function logEndpoint() {
   return function (
@@ -10,37 +11,45 @@ export function logEndpoint() {
     const originalMethod = descriptor.value
 
     descriptor.value = async function (...args: any[]) {
-      // Try to find Express req/res objects
       const req: Request | undefined = args.find(arg => arg && arg.method && arg.url)
-      const res: Response | undefined = args.find(arg => arg && typeof arg.status === 'function' && typeof arg.json === 'function')
       
       if (req) {
-        logger.info({
+        const logData = {
           message: 'Incoming request',
           method: req.method,
           url: req.originalUrl,
+          path: req.path,
           body: req.body,
           params: req.params,
           query: req.query
-        })
+        }
+        logger.info(logData)
+        sendLogEvents(JSON.stringify(logData))
       }
       let responseData
       try {
         responseData = await originalMethod.apply(this, args)
-        logger.info({
+        const responseLogData = {
           message: 'Outgoing response',
           method: req?.method,
           url: req?.originalUrl,
+          path: req?.path,
           response: responseData
-        })
+        }
+        logger.info(responseLogData)
+        sendLogEvents(JSON.stringify(responseLogData))
         return responseData
       } catch (error) {
-        logger.error({
+        const errorLogData = {
           message: 'Endpoint error',
           method: req?.method,
           url: req?.originalUrl,
-          error
-        })
+          path: req?.path,
+          body: req?.body,
+          error: error instanceof Error ? error.stack || error.message : error
+        }
+        logger.error(errorLogData)
+        sendLogEvents(JSON.stringify(errorLogData))
         throw error
       }
     }

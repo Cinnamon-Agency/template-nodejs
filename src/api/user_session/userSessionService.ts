@@ -10,7 +10,6 @@ import {
 import config from '@core/config'
 import { compare, hashString } from '@services/bcrypt'
 import { autoInjectable, singleton } from 'tsyringe'
-import { logEndpoint } from '@common/decorators/logEndpoint'
 import prisma from '@core/prismaClient'
 
 @singleton()

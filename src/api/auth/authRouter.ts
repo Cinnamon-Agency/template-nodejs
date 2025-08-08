@@ -8,6 +8,9 @@ import {
   registerSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
+  resendLoginCodeSchema,
+  verifyLoginCodeSchema,
+  setNewPasswordSchema,
 } from './authInput'
 import { requireToken } from '@middleware/auth'
 
@@ -32,4 +35,23 @@ authRouter.post(
   '/password/reset',
   validate(resetPasswordSchema),
   authController.resetPassword
+)
+
+authRouter.post(
+  '/resendLoginCode',
+  validate(resendLoginCodeSchema),
+  authController.resendLoginCode
+)
+
+authRouter.post(
+  '/verifyLoginCode',
+  validate(verifyLoginCodeSchema),
+  loginRateLimiter,
+  authController.verifyLoginCode
+)
+
+authRouter.post(
+  '/password/setNew',
+  validate(setNewPasswordSchema),
+  authController.setNewPassword
 )

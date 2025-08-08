@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
+import { logEndpoint } from '@common/decorators/logEndpoint'
 import { ResponseCode } from '@common'
 import { autoInjectable, singleton } from 'tsyringe'
 import { NotificationService } from './notificationService'
@@ -12,11 +13,12 @@ export class NotificationController {
     private readonly webSocketService: WebSocketService
   ) {}
 
-  getNotifications = async (
+  @logEndpoint()
+  public async getNotifications(
     req: Request,
     res: Response,
     next: NextFunction
-  ) => {
+  ) {
     const { id } = req.user
     const { unread, numberOfFetched } = res.locals.input
 
@@ -38,11 +40,12 @@ export class NotificationController {
     })
   }
 
-  toogleReadStatus = async (
+  @logEndpoint()
+  public async toogleReadStatus(
     req: Request,
     res: Response,
     next: NextFunction
-  ) => {
+  ) {
     const { id } = req.user
     const { notificationId, read } = res.locals.input
 
@@ -57,11 +60,12 @@ export class NotificationController {
     })
   }
 
-  deleteNotification = async (
+  @logEndpoint()
+  public async deleteNotification(
     req: Request,
     res: Response,
     next: NextFunction
-  ) => {
+  ) {
     const { id } = req.user
     const { notificationId } = res.locals.input
 
