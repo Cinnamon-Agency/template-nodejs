@@ -12,7 +12,7 @@ const levels = {
   error: 2,
   warning: 3,
   info: 4,
-  debug: 5
+  debug: 5,
 }
 
 let transports: any = []
@@ -25,7 +25,7 @@ if (config.LOG_TO_CONSOLE) {
         timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
         errors({ stack: true }),
         consoleLogFormat
-      )
+      ),
     })
   )
 }
@@ -33,7 +33,7 @@ if (config.LOG_TO_CONSOLE) {
 export const logger = createLogger({
   levels,
   transports,
-  defaultMeta: { environment: process.env.NODE_ENV || 'null' }
+  defaultMeta: { environment: process.env.NODE_ENV || 'null' },
 })
 
 export const httpLogger = createLogger({
@@ -46,8 +46,8 @@ export const httpLogger = createLogger({
             timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
             errors({ stack: true }),
             consoleLogFormat
-          )
-        })
+          ),
+        }),
       ]
-    : []
+    : [],
 })

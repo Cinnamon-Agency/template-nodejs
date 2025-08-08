@@ -11,12 +11,12 @@ const sesConfig =
     ? {
         credentials: {
           secretAccessKey: config.AWS_SECRET,
-          accessKeyId: config.AWS_ACCESS_KEY
+          accessKeyId: config.AWS_ACCESS_KEY,
         },
-        region: config.AWS_REGION
+        region: config.AWS_REGION,
       }
     : {
-        region: config.AWS_REGION
+        region: config.AWS_REGION,
       }
 
 const sesClient = new SESClient(sesConfig)
@@ -48,25 +48,25 @@ export const sendEmail = async (
 
   const params = {
     Destination: {
-      ToAddresses: [toAddress]
+      ToAddresses: [toAddress],
     },
     Message: {
       Body: {
         Html: {
           Charset: 'UTF-8',
-          Data: dynamicContent
+          Data: dynamicContent,
         },
         Text: {
           Charset: 'UTF-8',
-          Data: 'This is the text version of the email.'
-        }
+          Data: 'This is the text version of the email.',
+        },
       },
       Subject: {
         Charset: 'UTF-8',
-        Data: subject
-      }
+        Data: subject,
+      },
     },
-    Source: config.SES_VERIFIED_MAIL
+    Source: config.SES_VERIFIED_MAIL,
   }
 
   try {
@@ -83,7 +83,7 @@ export const sendEmail = async (
     logger.error({
       code: ResponseCode.FAILED_DEPENDENCY,
       message: ResponseMessage.FAILED_DEPENDENCY,
-      stack: error.stack
+      stack: error.stack,
     })
     return { code: ResponseCode.FAILED_DEPENDENCY }
   }

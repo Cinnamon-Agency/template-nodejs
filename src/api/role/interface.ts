@@ -3,7 +3,7 @@ import { Role } from './roleModel'
 
 export enum RoleType {
   ADMIN = 'admin',
-  USER = 'user'
+  USER = 'user',
 }
 
 export interface IGetRoleByRoleType {

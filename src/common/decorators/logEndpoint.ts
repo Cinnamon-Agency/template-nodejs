@@ -11,8 +11,10 @@ export function logEndpoint() {
     const originalMethod = descriptor.value
 
     descriptor.value = async function (...args: any[]) {
-      const req: Request | undefined = args.find(arg => arg && arg.method && arg.url)
-      
+      const req: Request | undefined = args.find(
+        arg => arg && arg.method && arg.url
+      )
+
       if (req) {
         const logData = {
           message: 'Incoming request',
@@ -21,7 +23,7 @@ export function logEndpoint() {
           path: req.path,
           body: req.body,
           params: req.params,
-          query: req.query
+          query: req.query,
         }
         logger.info(logData)
         sendLogEvents(JSON.stringify(logData))
@@ -34,7 +36,7 @@ export function logEndpoint() {
           method: req?.method,
           url: req?.originalUrl,
           path: req?.path,
-          response: responseData
+          response: responseData,
         }
         logger.info(responseLogData)
         sendLogEvents(JSON.stringify(responseLogData))
@@ -46,7 +48,7 @@ export function logEndpoint() {
           url: req?.originalUrl,
           path: req?.path,
           body: req?.body,
-          error: error instanceof Error ? error.stack || error.message : error
+          error: error instanceof Error ? error.stack || error.message : error,
         }
         logger.error(errorLogData)
         sendLogEvents(JSON.stringify(errorLogData))

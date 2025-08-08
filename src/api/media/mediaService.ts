@@ -8,7 +8,7 @@ import { getSignedURL } from '@services/google_cloud_storage'
 @singleton()
 @autoInjectable()
 export class MediaService implements IMediaService {
-@serviceErrorHandler()
+  @serviceErrorHandler()
   async createMediaEntries({ mediaFiles, projectId }: ICreateMediaEntries) {
     let code: ResponseCode = ResponseCode.OK
 

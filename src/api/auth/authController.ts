@@ -39,13 +39,13 @@ export class AuthController {
       secure: true,
       sameSite: 'strict',
       expires: new Date(tokens.accessTokenExpiresAt),
-    });
+    })
     res.cookie('refreshToken', tokens.refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
       expires: new Date(tokens.refreshTokenExpiresAt),
-    });
+    })
     return next({
       data: {
         user: responseUser,
@@ -85,13 +85,13 @@ export class AuthController {
       secure: true,
       sameSite: 'strict',
       expires: new Date(tokens.accessTokenExpiresAt),
-    });
+    })
     res.cookie('refreshToken', tokens.refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
       expires: new Date(tokens.refreshTokenExpiresAt),
-    });
+    })
     return next({
       data: {
         user: responseUser,
@@ -116,12 +116,12 @@ export class AuthController {
       return next({
         data: tokens,
         code: ResponseCode.OK,
-      });
+      })
     } else {
-      AuthService.setAuthCookies(res, tokens);
+      AuthService.setAuthCookies(res, tokens)
       return next({
         code: ResponseCode.OK,
-      });
+      })
     }
   }
 
@@ -132,7 +132,7 @@ export class AuthController {
     const { code } = await this.authService.logout({ userId: user.id })
 
     if (!AuthService.isMobileClient(req)) {
-      AuthService.clearAuthCookies(res);
+      AuthService.clearAuthCookies(res)
     }
     return next({ code })
   }
@@ -165,12 +165,16 @@ export class AuthController {
   }
 
   @logEndpoint()
-  public async verifyLoginCode(req: Request, res: Response, next: NextFunction) {
+  public async verifyLoginCode(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
     const { loginCode, email, dontAskOnThisDevice } = res.locals.input
 
     const { data, code: verifyCode } = await this.authService.verifyLoginCode({
       loginCode,
-      email
+      email,
     })
 
     if (!data) {
@@ -183,7 +187,7 @@ export class AuthController {
     }
 
     const { tokens } = await this.authService.signToken({
-      user
+      user,
     })
 
     if (!tokens) {
@@ -247,22 +251,26 @@ export class AuthController {
 
     return next({
       data: { ...data, role: role },
-      code: ResponseCode.OK
+      code: ResponseCode.OK,
     })
   }
 
   @logEndpoint()
-  public async resendLoginCode(req: Request, res: Response, next: NextFunction) {
+  public async resendLoginCode(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
     const { email } = res.locals.input
     const { code } = await this.authService.resendLoginCode({
-      email
+      email,
     })
     if (code !== ResponseCode.OK) {
       return next({ code })
     }
 
     return next({
-      code: ResponseCode.OK
+      code: ResponseCode.OK,
     })
   }
 
@@ -279,14 +287,14 @@ export class AuthController {
       await this.authService.setNewPassword({
         uid: uids[0],
         hashUid: uids[1],
-        password
+        password,
       })
     if (!userId) {
       return next({ code: setPasswordCode })
     }
 
     return next({
-      code: ResponseCode.OK
+      code: ResponseCode.OK,
     })
   }
 }

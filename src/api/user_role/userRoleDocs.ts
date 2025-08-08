@@ -1,8 +1,8 @@
 const tags = [
   {
     name: 'User Role',
-    description: 'User Role related routes'
-  }
+    description: 'User Role related routes',
+  },
 ]
 
 const paths = {
@@ -15,13 +15,13 @@ const paths = {
           description: 'Succefully fetched user roles for user',
           content: {
             schema: {
-              $ref: '#/definitions/get_user_roles_response'
-            }
-          }
-        }
-      }
-    }
-  }
+              $ref: '#/definitions/get_user_roles_response',
+            },
+          },
+        },
+      },
+    },
+  },
 }
 
 const definitions = {
@@ -31,14 +31,14 @@ const definitions = {
         roles: [
           {
             id: 1,
-            name: 'Provider'
-          }
-        ]
+            name: 'Provider',
+          },
+        ],
       },
       code: 200000,
-      message: 'OK'
-    }
-  }
+      message: 'OK',
+    },
+  },
 }
 
 export const userRoleDocs = { tags, paths, definitions }

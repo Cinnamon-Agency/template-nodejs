@@ -79,12 +79,10 @@ export class NotificationService implements INotificationService {
       return { code: ResponseCode.USER_NOT_FOUND }
     }
 
-    sendEmail(
-      EmailTemplate.NOTIFICATION,
-      user.email,
-      type,
-      { title: type, content: message }
-    )
+    sendEmail(EmailTemplate.NOTIFICATION, user.email, type, {
+      title: type,
+      content: message,
+    })
 
     return { code: ResponseCode.OK }
   }

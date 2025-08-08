@@ -3,7 +3,7 @@ import { Repository } from 'typeorm'
 import {
   ICreateUserRole,
   IGetRolesForUser,
-  IUserRoleService
+  IUserRoleService,
 } from './interface'
 import { AppDataSource } from '../../services/typeorm'
 import { autoInjectable, container } from 'tsyringe'
@@ -33,7 +33,7 @@ export class UserRoleService implements IUserRoleService {
 
       const userRole = await this.userRoleRepository.save({
         userId,
-        roleId: role.id
+        roleId: role.id,
       })
 
       if (!userRole) {
@@ -46,7 +46,7 @@ export class UserRoleService implements IUserRoleService {
       logger.error({
         code,
         message: getResponseMessage(code),
-        stack: err.stack
+        stack: err.stack,
       })
     }
 
@@ -58,14 +58,14 @@ export class UserRoleService implements IUserRoleService {
 
     try {
       const userRoles = await this.userRoleRepository.find({
-        where: { userId }
+        where: { userId },
       })
 
       if (!userRoles) {
         return { code: ResponseCode.ROLE_NOT_FOUND }
       }
 
-      const roles = userRoles.map((userRole) => userRole.role)
+      const roles = userRoles.map(userRole => userRole.role)
 
       return { roles, code }
     } catch (err: any) {
@@ -73,12 +73,12 @@ export class UserRoleService implements IUserRoleService {
       logger.error({
         code,
         message: getResponseMessage(code),
-        stack: err.stack
+        stack: err.stack,
       })
     }
 
     return {
-      code
+      code,
     }
   }
 }

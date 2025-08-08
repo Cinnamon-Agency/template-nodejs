@@ -2,7 +2,7 @@ import { AsyncResponse, ResponseCode } from '../../interface'
 
 export enum SupportRequestStatus {
   OPEN = 'OPEN',
-  CLOSED = 'CLOSED'
+  CLOSED = 'CLOSED',
 }
 
 export interface ICreateSupportRequest {

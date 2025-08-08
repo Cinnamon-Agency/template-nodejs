@@ -22,8 +22,8 @@ export class RoleService implements IRoleService {
     try {
       const role = await this.roleRepository.findOne({
         where: {
-          role: roleType
-        }
+          role: roleType,
+        },
       })
 
       if (role === null) {
@@ -36,7 +36,7 @@ export class RoleService implements IRoleService {
       logger.error({
         code,
         message: getResponseMessage(code),
-        stack: err.stack
+        stack: err.stack,
       })
     }
 

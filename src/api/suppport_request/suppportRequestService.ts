@@ -7,7 +7,7 @@ import { SupportRequest } from './supportRequestModel'
 import {
   ICreateSupportRequest,
   ISupportRequestService,
-  IUpdateSupportRequestStatus
+  IUpdateSupportRequestStatus,
 } from './interface'
 import { ResponseCode } from '../../interface'
 import { logger } from '../../logger'
@@ -30,7 +30,7 @@ export class SupportRequestService implements ISupportRequestService {
     lastName,
     email,
     subject,
-    message
+    message,
   }: ICreateSupportRequest) => {
     let code: ResponseCode = ResponseCode.OK
 
@@ -44,7 +44,7 @@ export class SupportRequestService implements ISupportRequestService {
           contact_number: config.CONTACT_NUMBER,
           contact_email: email,
           full_name: `${firstName} ${lastName}`,
-          message
+          message,
         }
       )
 
@@ -61,7 +61,7 @@ export class SupportRequestService implements ISupportRequestService {
           contact_email: email,
           message,
           web_url: config.WEB_URL,
-          contact_number: config.CONTACT_NUMBER
+          contact_number: config.CONTACT_NUMBER,
         }
       )
 
@@ -77,7 +77,7 @@ export class SupportRequestService implements ISupportRequestService {
           lastName,
           email,
           subject,
-          message
+          message,
         })
         .execute()
 
@@ -95,7 +95,7 @@ export class SupportRequestService implements ISupportRequestService {
           logger.error({
             code,
             message: getResponseMessage(code),
-            stack: err.stack
+            stack: err.stack,
           })
       }
     }
@@ -105,16 +105,16 @@ export class SupportRequestService implements ISupportRequestService {
 
   updateSupportRequestStatus = async ({
     status,
-    supportRequestId
+    supportRequestId,
   }: IUpdateSupportRequestStatus) => {
     let code: ResponseCode = ResponseCode.OK
     try {
       const supportRequest = await this.supportRequestRepository.findOneBy({
-        id: supportRequestId
+        id: supportRequestId,
       })
       if (!supportRequest) {
         return {
-          code: ResponseCode.SUPPORT_REQUEST_NOT_FOUND
+          code: ResponseCode.SUPPORT_REQUEST_NOT_FOUND,
         }
       }
 
@@ -122,7 +122,7 @@ export class SupportRequestService implements ISupportRequestService {
         .createQueryBuilder('support_request')
         .update()
         .set({
-          status
+          status,
         })
         .where('id = :id', { id: supportRequestId })
         .execute()
@@ -141,7 +141,7 @@ export class SupportRequestService implements ISupportRequestService {
           logger.error({
             code,
             message: getResponseMessage(code),
-            stack: err.stack
+            stack: err.stack,
           })
       }
     }

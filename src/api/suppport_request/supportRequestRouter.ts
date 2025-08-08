@@ -2,7 +2,7 @@ import express from 'express'
 import { container } from 'tsyringe'
 import {
   createSupportRequestSchemaStatus,
-  updateSupportRequestStatusSchemaStatus
+  updateSupportRequestStatusSchemaStatus,
 } from './supportRequestInput'
 import { validate } from '../../middleware/validation'
 import { SupportRequestController } from './supportRequestController'

@@ -4,7 +4,7 @@ export enum EmailTemplate {
   REGISTER = 'Register',
   CONTACT_SUPPORT = 'ContactSupport',
   CONTACT_SUPPORT_SUCCESS = 'ContactSupportSuccess',
-  NOTIFICATION = 'Notification'
+  NOTIFICATION = 'Notification',
 }
 
 export interface IEmailData {
@@ -12,10 +12,10 @@ export interface IEmailData {
 }
 
 export interface SendEmailParams {
-  to: string;
-  subject: string;
-  html?: string;
-  text?: string;
-  template?: EmailTemplate;
-  dynamicData?: IEmailData;
+  to: string
+  subject: string
+  html?: string
+  text?: string
+  template?: EmailTemplate
+  dynamicData?: IEmailData
 }

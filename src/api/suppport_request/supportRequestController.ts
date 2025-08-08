@@ -24,11 +24,11 @@ export class SupportRequestController {
       lastName,
       email,
       subject,
-      message
+      message,
     })
 
     return next({
-      code
+      code,
     })
   }
 
@@ -43,11 +43,11 @@ export class SupportRequestController {
     const { code } =
       await this.supportRequestService.updateSupportRequestStatus({
         supportRequestId,
-        status
+        status,
       })
 
     return next({
-      code
+      code,
     })
   }
 }

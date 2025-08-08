@@ -12,11 +12,15 @@ export class UserRoleController {
   }
 
   @logEndpoint()
-  public async getRolesForUser(req: Request, res: Response, next: NextFunction) {
+  public async getRolesForUser(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
     const { userId } = res.locals.input
 
     const { roles, code } = await this.userRoleService.getRolesForUser({
-      userId
+      userId,
     })
 
     return next({ roles, code })

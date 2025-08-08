@@ -1,6 +1,6 @@
 import {
   PinpointSMSVoiceV2Client,
-  SendTextMessageCommand
+  SendTextMessageCommand,
 } from '@aws-sdk/client-pinpoint-sms-voice-v2'
 
 import { logger } from '@core/logger'
@@ -12,15 +12,17 @@ const smsUserMessagingClientConfig =
     ? {
         credentials: {
           secretAccessKey: config.AWS_SECRET,
-          accessKeyId: config.AWS_ACCESS_KEY
+          accessKeyId: config.AWS_ACCESS_KEY,
         },
-        region: config.AWS_REGION
+        region: config.AWS_REGION,
       }
     : {
-        region: config.AWS_REGION
+        region: config.AWS_REGION,
       }
 
-const smsUserMessagingClient = new PinpointSMSVoiceV2Client(smsUserMessagingClientConfig)
+const smsUserMessagingClient = new PinpointSMSVoiceV2Client(
+  smsUserMessagingClientConfig
+)
 
 export async function sendSMS(destinationNumber: string, message: string) {
   try {
@@ -28,14 +30,14 @@ export async function sendSMS(destinationNumber: string, message: string) {
       DestinationPhoneNumber: destinationNumber,
       MessageBody: message,
       OriginationIdentity: config.AWS_PHONE_NUMBER,
-      MessageType: 'TRANSACTIONAL'
+      MessageType: 'TRANSACTIONAL',
     })
     const response = await smsUserMessagingClient.send(command)
     if (response.$metadata.httpStatusCode !== 200) {
       logger.error({
         code: ResponseCode.FAILED_DEPENDENCY,
         message: ResponseMessage.FAILED_DEPENDENCY,
-        stack: response.$metadata.httpStatusCode
+        stack: response.$metadata.httpStatusCode,
       })
       return { code: ResponseCode.FAILED_DEPENDENCY }
     }
@@ -44,7 +46,7 @@ export async function sendSMS(destinationNumber: string, message: string) {
     logger.error({
       code: ResponseCode.FAILED_DEPENDENCY,
       message: ResponseMessage.FAILED_DEPENDENCY,
-      stack: error.stack
+      stack: error.stack,
     })
     return { code: ResponseCode.FAILED_DEPENDENCY }
   }

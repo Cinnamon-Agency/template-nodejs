@@ -28,7 +28,11 @@ export class UserController {
   }
 
   @logEndpoint()
-  public async toogleNotifications(req: Request, res: Response, next: NextFunction) {
+  public async toogleNotifications(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
     const { id } = req.user
 
     const { code } = await this.userService.toggleNotifications({ userId: id })
