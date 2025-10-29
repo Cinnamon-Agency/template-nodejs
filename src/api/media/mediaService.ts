@@ -1,5 +1,5 @@
 import { autoInjectable, singleton } from 'tsyringe'
-import prisma from '@core/prismaClient'
+import { prisma } from '@app'
 import { ICreateMediaEntries, IMediaService } from './interface'
 
 import { ResponseCode, serviceErrorHandler } from '@common'

@@ -1,25 +1,21 @@
 import { autoInjectable } from 'tsyringe'
-
-import { ResponseCode } from '../../interface'
-import { logger } from '../../logger'
-import { getResponseMessage } from '../../services/utils'
-import { Role } from './roleModel'
+import { prisma } from '@app'
+import { ResponseCode } from '@common'
+import { logger } from '@core/logger'
+import { getResponseMessage } from '@common/response'
 import { IGetRoleByRoleType, IRoleService } from './interface'
+
 @autoInjectable()
 export class RoleService implements IRoleService {
-  private readonly roleRepository: Repository<Role>
-
-  constructor() {
-    this.roleRepository = AppDataSource.manager.getRepository(Role)
-  }
+  constructor() {}
 
   getRoleByRoleType = async ({ roleType }: IGetRoleByRoleType) => {
     let code: ResponseCode = ResponseCode.OK
 
     try {
-      const role = await this.roleRepository.findOne({
+      const role = await prisma.role.findUnique({
         where: {
-          role: roleType,
+          name: roleType,
         },
       })
 

@@ -1,5 +1,5 @@
 import { autoInjectable, singleton } from 'tsyringe'
-
+import { prisma } from '@app'
 import {
   ICreateSupportRequest,
   ISupportRequestService,
@@ -15,10 +15,7 @@ import config from '@core/config'
 @singleton()
 @autoInjectable()
 export class SupportRequestService implements ISupportRequestService {
-
-  constructor() {
-   
-  }
+  constructor() {}
 
   createSupportRequest = async ({
     firstName,
@@ -64,34 +61,30 @@ export class SupportRequestService implements ISupportRequestService {
         return { code: emailSuccessCode }
       }
 
-      const newSupportRequest = await this.supportRequestRepository
-        .createQueryBuilder('support_request')
-        .insert()
-        .values({
+      const newSupportRequest = await prisma.supportRequest.create({
+        data: {
           firstName,
           lastName,
           email,
           subject,
           message,
-        })
-        .execute()
+        },
+      })
 
-      if (!newSupportRequest.identifiers[0].id) {
+      if (!newSupportRequest.id) {
         return { code: ResponseCode.FAILED_INSERT }
       }
       return { code }
     } catch (err: any) {
-      switch (err.errno) {
-        case 1062:
-          code = ResponseCode.CONFLICT
-          break
-        default:
-          code = ResponseCode.SERVER_ERROR
-          logger.error({
-            code,
-            message: getResponseMessage(code),
-            stack: err.stack,
-          })
+      if (err.code === 'P2002') {
+        code = ResponseCode.CONFLICT
+      } else {
+        code = ResponseCode.SERVER_ERROR
+        logger.error({
+          code,
+          message: getResponseMessage(code),
+          stack: err.stack,
+        })
       }
     }
 
@@ -104,8 +97,8 @@ export class SupportRequestService implements ISupportRequestService {
   }: IUpdateSupportRequestStatus) => {
     let code: ResponseCode = ResponseCode.OK
     try {
-      const supportRequest = await this.supportRequestRepository.findOneBy({
-        id: supportRequestId,
+      const supportRequest = await prisma.supportRequest.findUnique({
+        where: { id: supportRequestId },
       })
       if (!supportRequest) {
         return {
@@ -113,31 +106,25 @@ export class SupportRequestService implements ISupportRequestService {
         }
       }
 
-      const affectedRow = await this.supportRequestRepository
-        .createQueryBuilder('support_request')
-        .update()
-        .set({
-          status,
-        })
-        .where('id = :id', { id: supportRequestId })
-        .execute()
+      const updatedRequest = await prisma.supportRequest.update({
+        where: { id: supportRequestId },
+        data: { status },
+      })
 
-      if (affectedRow.affected === 0) {
+      if (!updatedRequest) {
         return { code: ResponseCode.FAILED_EDIT }
       }
       return { code }
     } catch (err: any) {
-      switch (err.errno) {
-        case 1062:
-          code = ResponseCode.CONFLICT
-          break
-        default:
-          code = ResponseCode.SERVER_ERROR
-          logger.error({
-            code,
-            message: getResponseMessage(code),
-            stack: err.stack,
-          })
+      if (err.code === 'P2002') {
+        code = ResponseCode.CONFLICT
+      } else {
+        code = ResponseCode.SERVER_ERROR
+        logger.error({
+          code,
+          message: getResponseMessage(code),
+          stack: err.stack,
+        })
       }
     }
     return { code }

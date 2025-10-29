@@ -6,7 +6,7 @@ import { serverState } from './state'
 import { container } from 'tsyringe'
 
 import { WebSocketService } from '@services/websocket'
-import prisma from '@core/prismaClient'
+import { prisma } from '@app'
 
 export class AppServer {
   private server: Server | null = null

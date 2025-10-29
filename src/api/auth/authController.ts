@@ -213,13 +213,6 @@ export class AuthController {
       )
     }
 
-    let role = 'teamMember'
-    if (user.patient) {
-      role = 'patient'
-    } else if (user.provider) {
-      role = 'provider'
-    }
-
     if (user.keepMeLoggedIn) {
       this.authService.setCookie(
         res,
@@ -296,5 +289,69 @@ export class AuthController {
     return next({
       code: ResponseCode.OK,
     })
+  }
+
+  @logEndpoint()
+  public async verifyEmail(req: Request, res: Response, next: NextFunction) {
+    const { uid } = res.locals.input
+
+    const uids = uid.split('/')
+    if (uids.length !== 2) {
+      return next({ code: ResponseCode.INVALID_UID })
+    }
+
+    const { code } = await this.authService.verifyEmail({
+      uid: uids[0],
+      hashUid: uids[1],
+    })
+
+    return next({ code })
+  }
+
+  @logEndpoint()
+  public async resendVerificationEmail(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    const { email } = res.locals.input
+
+    const { code } = await this.authService.resendVerificationEmail({ email })
+
+    return next({ code })
+  }
+
+  @logEndpoint()
+  public async sendPhoneVerification(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    const { phoneNumber } = res.locals.input
+    const { user } = req
+
+    const { code } = await this.authService.sendPhoneVerificationCode({
+      phoneNumber,
+      userId: user.id,
+    })
+
+    return next({ code })
+  }
+
+  @logEndpoint()
+  public async verifyPhoneCode(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    const { code: verificationCode } = res.locals.input
+    const { user } = req
+
+    const { code } = await this.authService.verifyPhoneCode({
+      userId: user.id,
+      code: verificationCode,
+    })
+
+    return next({ code })
   }
 }

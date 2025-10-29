@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import helmet from 'helmet'
 import { router } from '@routes'
+import { PrismaClient } from '@prisma/client'
 import { responseFormatter } from '@middleware/response'
 import rateLimiter from '@middleware/rate_limiter'
 import config from '@core/config'
@@ -12,6 +13,7 @@ import { notFound } from '@middleware/not_found'
 import { serverState } from '@core/server/state'
 import { shutdownHandler } from '@middleware/shutdown'
 
+export const prisma = new PrismaClient()
 export class App {
   private app: express.Express
 

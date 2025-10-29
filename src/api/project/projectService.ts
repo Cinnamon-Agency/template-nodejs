@@ -2,7 +2,7 @@ import { ResponseCode, serviceErrorHandler } from '@common'
 import { logger } from '@core/logger'
 import { getResponseMessage } from '@common'
 import { autoInjectable, container, singleton } from 'tsyringe'
-import prisma from '@core/prismaClient'
+import { prisma } from '@app'
 import {
   ICreateProject,
   IGetProjectById,

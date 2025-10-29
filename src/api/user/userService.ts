@@ -7,8 +7,9 @@ import {
   IToggleNotifications,
   IUpdatePassword,
   IGetUserByEmailAndAuthType,
+  IUpdateUser,
 } from './interface'
-import prisma from '@core/prismaClient'
+import { prisma } from '@app'
 import { autoInjectable, singleton } from 'tsyringe'
 import { logEndpoint } from '@common/decorators/logEndpoint'
 import { hashString } from '@services/bcrypt'
@@ -93,6 +94,25 @@ export class UserService implements IUserService {
     await prisma.user.update({
       where: { id: userId },
       data: { password: hashedPassword },
+    })
+    return { code: ResponseCode.OK }
+  }
+
+  @serviceErrorHandler()
+  async updateUser({ userId, emailVerified, phoneNumber, phoneVerified }: IUpdateUser) {
+    const user = await prisma.user.findUnique({ where: { id: userId } })
+    if (!user) {
+      return { code: ResponseCode.USER_NOT_FOUND }
+    }
+    
+    const updateData: any = {}
+    if (emailVerified !== undefined) updateData.emailVerified = emailVerified
+    if (phoneNumber !== undefined) updateData.phoneNumber = phoneNumber
+    if (phoneVerified !== undefined) updateData.phoneVerified = phoneVerified
+    
+    await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
     })
     return { code: ResponseCode.OK }
   }

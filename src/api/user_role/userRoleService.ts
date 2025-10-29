@@ -4,30 +4,32 @@ import {
   IUserRoleService,
 } from './interface'
 import { autoInjectable, container } from 'tsyringe'
-
+import { prisma } from '@app'
 import { ResponseCode } from '@common'
 import { logger } from '@core/logger'
 import { getResponseMessage } from '@common'
 import { RoleService } from '../role/roleService'
+
 const roleService = container.resolve(RoleService)
+
 @autoInjectable()
 export class UserRoleService implements IUserRoleService {
-
-  constructor() {
-  }
+  constructor() {}
 
   createUserRole = async ({ userId, roleType }: ICreateUserRole) => {
     let code: ResponseCode = ResponseCode.OK
 
     try {
-      const { role, code } = await roleService.getRoleByRoleType({ roleType })
-      if (!role) {
-        return { code: ResponseCode.FAILED_INSERT }
+      const { role, code: roleCode } = await roleService.getRoleByRoleType({ roleType })
+      if (roleCode !== ResponseCode.OK) {
+        return { code: roleCode }
       }
 
-      const userRole = await this.userRoleRepository.save({
-        userId,
-        roleId: role.id,
+      const userRole = await prisma.userRole.create({
+        data: {
+          userId,
+          roleId: role.id,
+        },
       })
 
       if (!userRole) {
@@ -51,15 +53,16 @@ export class UserRoleService implements IUserRoleService {
     let code: ResponseCode = ResponseCode.OK
 
     try {
-      const userRoles = await this.userRoleRepository.find({
+      const userRoles = await prisma.userRole.findMany({
         where: { userId },
+        include: { role: true },
       })
 
       if (!userRoles) {
         return { code: ResponseCode.ROLE_NOT_FOUND }
       }
 
-      const roles = userRoles.map(userRole => userRole.role)
+      const roles = userRoles.map((userRole: { role: any }) => userRole.role)
 
       return { roles, code }
     } catch (err: any) {

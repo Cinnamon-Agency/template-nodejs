@@ -9,7 +9,7 @@ import {
 } from './interface'
 import { sendEmail } from '@services/aws-ses'
 import { UserService } from '@api/user/userService'
-import prisma from '@core/prismaClient'
+import { prisma } from '@app'
 import { EmailTemplate } from '@services/aws-ses/interface'
 
 const userService = container.resolve(UserService)

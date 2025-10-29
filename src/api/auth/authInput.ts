@@ -147,3 +147,63 @@ export const setNewPasswordSchema = (req: Request) => {
     },
   }
 }
+
+export const verifyEmailSchema = (req: Request) => {
+  return {
+    schema: Joi.object()
+      .keys({
+        uid: Joi.string()
+          .regex(
+            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
+          )
+          .required(),
+      })
+      .options({ abortEarly: false }),
+    input: {
+      uid: req.body.uid,
+    },
+  }
+}
+
+export const resendVerificationEmailSchema = (req: Request) => {
+  return {
+    schema: Joi.object()
+      .keys({
+        email: Joi.string().email().required(),
+      })
+      .options({ abortEarly: false }),
+    input: {
+      email: req.body.email,
+    },
+  }
+}
+
+export const sendPhoneVerificationSchema = (req: Request) => {
+  return {
+    schema: Joi.object()
+      .keys({
+        phoneNumber: Joi.string()
+          .pattern(/^\+?[1-9]\d{1,14}$/)
+          .required(),
+      })
+      .options({ abortEarly: false }),
+    input: {
+      phoneNumber: req.body.phoneNumber,
+    },
+  }
+}
+
+export const verifyPhoneCodeSchema = (req: Request) => {
+  return {
+    schema: Joi.object()
+      .keys({
+        code: Joi.string()
+          .pattern(/^\d{6}$/)
+          .required(),
+      })
+      .options({ abortEarly: false }),
+    input: {
+      code: req.body.code,
+    },
+  }
+}

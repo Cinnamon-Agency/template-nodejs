@@ -11,6 +11,10 @@ import {
   resendLoginCodeSchema,
   verifyLoginCodeSchema,
   setNewPasswordSchema,
+  verifyEmailSchema,
+  resendVerificationEmailSchema,
+  sendPhoneVerificationSchema,
+  verifyPhoneCodeSchema,
 } from './authInput'
 import { requireToken } from '@middleware/auth'
 
@@ -55,4 +59,30 @@ authRouter.post(
   '/password/setNew',
   validate(setNewPasswordSchema),
   authController.setNewPassword
+)
+
+authRouter.post(
+  '/verify-email',
+  validate(verifyEmailSchema),
+  authController.verifyEmail
+)
+
+authRouter.post(
+  '/resend-verification-email',
+  validate(resendVerificationEmailSchema),
+  authController.resendVerificationEmail
+)
+
+authRouter.post(
+  '/send-phone-verification',
+  requireToken,
+  validate(sendPhoneVerificationSchema),
+  authController.sendPhoneVerification
+)
+
+authRouter.post(
+  '/verify-phone',
+  requireToken,
+  validate(verifyPhoneCodeSchema),
+  authController.verifyPhoneCode
 )

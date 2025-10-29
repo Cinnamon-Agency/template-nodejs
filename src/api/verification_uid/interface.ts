@@ -5,6 +5,8 @@ export enum VerificationUIDType {
   REGISTRATION = 'Registration',
   RESET_PASSWORD = 'ResetPassword',
   CHANGE_EMAIL = 'ChangeEmail',
+  EMAIL_VERIFICATION = 'EmailVerification',
+  PHONE_VERIFICATION = 'PhoneVerification',
 }
 
 export interface ISetVerificationUID {

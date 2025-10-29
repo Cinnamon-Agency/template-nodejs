@@ -88,6 +88,172 @@ const paths = {
       },
     },
   },
+  '/auth/verify-email': {
+    post: {
+      tags: ['Auth'],
+      description: 'Verify user email address with UID from verification email',
+      requestBody: {
+        content: {
+          'application/json': {
+            schema: {
+              $ref: '#/definitions/verify_email_body',
+            },
+          },
+        },
+      },
+      responses: {
+        '200': {
+          description: 'Email successfully verified',
+          content: {
+            schema: {
+              $ref: '#/definitions/200_response',
+            },
+          },
+        },
+        '400': {
+          description: 'Invalid UID',
+          content: {
+            schema: {
+              $ref: '#/definitions/invalid_uid_response',
+            },
+          },
+        },
+        '404': {
+          description: 'Verification UID not found',
+          content: {
+            schema: {
+              $ref: '#/definitions/verification_uid_not_found_response',
+            },
+          },
+        },
+      },
+    },
+  },
+  '/auth/resend-verification-email': {
+    post: {
+      tags: ['Auth'],
+      description: 'Resend email verification link',
+      requestBody: {
+        content: {
+          'application/json': {
+            schema: {
+              $ref: '#/definitions/resend_verification_email_body',
+            },
+          },
+        },
+      },
+      responses: {
+        '200': {
+          description: 'Verification email sent successfully',
+          content: {
+            schema: {
+              $ref: '#/definitions/200_response',
+            },
+          },
+        },
+        '404': {
+          description: 'User not found',
+          content: {
+            schema: {
+              $ref: '#/definitions/user_not_found_response',
+            },
+          },
+        },
+        '401': {
+          description: 'User already verified',
+          content: {
+            schema: {
+              $ref: '#/definitions/user_already_verified_response',
+            },
+          },
+        },
+      },
+    },
+  },
+  '/auth/send-phone-verification': {
+    post: {
+      tags: ['Auth'],
+      description: 'Send SMS verification code to phone number (requires authentication)',
+      security: [{ bearerAuth: [] }],
+      requestBody: {
+        content: {
+          'application/json': {
+            schema: {
+              $ref: '#/definitions/send_phone_verification_body',
+            },
+          },
+        },
+      },
+      responses: {
+        '200': {
+          description: 'Verification code sent successfully',
+          content: {
+            schema: {
+              $ref: '#/definitions/200_response',
+            },
+          },
+        },
+        '401': {
+          description: 'Unauthorized - invalid or missing token',
+          content: {
+            schema: {
+              $ref: '#/definitions/401_response',
+            },
+          },
+        },
+        '424': {
+          description: 'Failed to send SMS',
+          content: {
+            schema: {
+              $ref: '#/definitions/failed_dependency_response',
+            },
+          },
+        },
+      },
+    },
+  },
+  '/auth/verify-phone': {
+    post: {
+      tags: ['Auth'],
+      description: 'Verify phone number with SMS code (requires authentication)',
+      security: [{ bearerAuth: [] }],
+      requestBody: {
+        content: {
+          'application/json': {
+            schema: {
+              $ref: '#/definitions/verify_phone_body',
+            },
+          },
+        },
+      },
+      responses: {
+        '200': {
+          description: 'Phone number verified successfully',
+          content: {
+            schema: {
+              $ref: '#/definitions/200_response',
+            },
+          },
+        },
+        '400': {
+          description: 'Invalid verification code',
+          content: {
+            schema: {
+              $ref: '#/definitions/invalid_code_response',
+            },
+          },
+        },
+        '401': {
+          description: 'Unauthorized or code expired',
+          content: {
+            schema: {
+              $ref: '#/definitions/401_response',
+            },
+          },
+        },
+      },
+    },
+  },
 }
 
 const definitions = {
@@ -173,6 +339,86 @@ const definitions = {
       data: null,
       code: 404001,
       message: 'User not found',
+    },
+  },
+  verify_email_body: {
+    type: 'object',
+    description: 'UID format: uuid1/uuid2 (received from verification email link)',
+    properties: {
+      uid: {
+        type: 'string',
+        example: '94104c89-e04a-41b6-9902-e19c723c1354/a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+      },
+    },
+    required: ['uid'],
+  },
+  resend_verification_email_body: {
+    type: 'object',
+    properties: {
+      email: {
+        type: 'string',
+        format: 'email',
+        example: 'john.doe@email.com',
+      },
+    },
+    required: ['email'],
+  },
+  send_phone_verification_body: {
+    type: 'object',
+    description: 'Phone number in E.164 format (e.g., +1234567890)',
+    properties: {
+      phoneNumber: {
+        type: 'string',
+        example: '+1234567890',
+      },
+    },
+    required: ['phoneNumber'],
+  },
+  verify_phone_body: {
+    type: 'object',
+    properties: {
+      code: {
+        type: 'string',
+        pattern: '^\\d{6}$',
+        example: '123456',
+        description: '6-digit verification code received via SMS',
+      },
+    },
+    required: ['code'],
+  },
+  invalid_uid_response: {
+    example: {
+      data: null,
+      code: 400002,
+      message: 'Invalid UID',
+    },
+  },
+  verification_uid_not_found_response: {
+    example: {
+      data: null,
+      code: 404002,
+      message: 'Verification UID not found',
+    },
+  },
+  user_already_verified_response: {
+    example: {
+      data: null,
+      code: 401405,
+      message: 'User already onboarded',
+    },
+  },
+  invalid_code_response: {
+    example: {
+      data: null,
+      code: 400001,
+      message: 'Invalid input',
+    },
+  },
+  failed_dependency_response: {
+    example: {
+      data: null,
+      code: 424000,
+      message: 'Failed dependency',
     },
   },
 }

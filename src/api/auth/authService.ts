@@ -10,6 +10,10 @@ import {
   ISendForgotPasswordEmail,
   ISignToken,
   IAuthenticatePassword,
+  IVerifyEmail,
+  IResendVerificationEmail,
+  ISendVerificationCode,
+  IVerifyPhoneCode,
 } from './interface'
 import { TokenType, generateToken, verifyToken } from '@services/jsonwebtoken'
 import config from '@core/config'
@@ -21,6 +25,8 @@ import { EmailTemplate } from '@services/aws-ses/interface'
 import { VerificationUIDType } from '@api/verification_uid/interface'
 import { VerificationUIDService } from '@api/verification_uid/verificationUIDService'
 import { compare, hashString } from '@services/bcrypt'
+import { sendSMS } from '@services/aws-end-user-messaging'
+import { prisma } from '@app'
 
 @singleton()
 @autoInjectable()
@@ -50,6 +56,9 @@ export class AuthService implements IAuthService {
     if (!user) {
       return { code: userCode }
     }
+
+    // Send verification email
+    await this.sendVerificationEmail(user.id, user.email)
 
     return { user, code: ResponseCode.OK }
   }
@@ -278,5 +287,139 @@ export class AuthService implements IAuthService {
 
   static isMobileClient(req: any): boolean {
     return req.headers['x-client-type'] === 'mobile'
+  }
+
+  @serviceErrorHandler()
+  async sendVerificationEmail(userId: string, email: string) {
+    const { uids, code: uidCode } =
+      await this.verificationUIDService.setVerificationUID({
+        userId,
+        type: VerificationUIDType.EMAIL_VERIFICATION,
+      })
+    if (!uids) {
+      return { code: uidCode }
+    }
+
+    const verificationUrl = `${config.API_BASE_URL}/auth/verify-email?uid=${uids.uid}&hashUid=${uids.hashUID}`
+    await sendEmail(
+      EmailTemplate.VERIFY_EMAIL,
+      email,
+      'Verify your email address',
+      { verification_url: verificationUrl }
+    )
+
+    return { code: ResponseCode.OK }
+  }
+
+  @serviceErrorHandler()
+  async verifyEmail({ uid, hashUid }: IVerifyEmail) {
+    const { verificationUID, code: verificationUIDCode } =
+      await this.verificationUIDService.verifyUID({
+        uid,
+        hashUid,
+        type: VerificationUIDType.EMAIL_VERIFICATION,
+      })
+    if (!verificationUID) {
+      return { code: verificationUIDCode }
+    }
+
+    const { code: updateCode } = await this.userService.updateUser({
+      userId: verificationUID.userId,
+      emailVerified: true,
+    })
+    if (updateCode !== ResponseCode.OK) {
+      return { code: updateCode }
+    }
+
+    await this.verificationUIDService.clearVerificationUID({
+      userId: verificationUID.userId,
+      type: VerificationUIDType.EMAIL_VERIFICATION,
+    })
+
+    return { code: ResponseCode.OK }
+  }
+
+  @serviceErrorHandler()
+  async resendVerificationEmail({ email }: IResendVerificationEmail) {
+    const { user, code: userCode } = await this.userService.getUserByEmail({
+      email,
+    })
+    if (!user) {
+      return { code: userCode }
+    }
+
+    if (user.emailVerified) {
+      return { code: ResponseCode.USER_ALREADY_ONBOARDED }
+    }
+
+    return await this.sendVerificationEmail(user.id, user.email)
+  }
+
+  @serviceErrorHandler()
+  async sendPhoneVerificationCode({ phoneNumber, userId }: ISendVerificationCode) {
+    // Generate 6-digit code
+    const code = Math.floor(100000 + Math.random() * 900000).toString()
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
+
+    // Delete any existing codes for this user
+    await prisma.phoneVerificationCode.deleteMany({
+      where: { userId },
+    })
+
+    // Store the code
+    await prisma.phoneVerificationCode.create({
+      data: {
+        userId,
+        phoneNumber,
+        code,
+        expiresAt,
+      },
+    })
+
+    // Send SMS
+    const message = `Your verification code is: ${code}. This code will expire in 10 minutes.`
+    const { code: smsCode } = await sendSMS(phoneNumber, message)
+
+    if (smsCode !== ResponseCode.OK) {
+      return { code: smsCode }
+    }
+
+    return { code: ResponseCode.OK }
+  }
+
+  @serviceErrorHandler()
+  async verifyPhoneCode({ userId, code }: IVerifyPhoneCode) {
+    const verificationCode = await prisma.phoneVerificationCode.findFirst({
+      where: {
+        userId,
+        code,
+      },
+    })
+
+    if (!verificationCode) {
+      return { code: ResponseCode.INVALID_INPUT }
+    }
+
+    if (verificationCode.expiresAt < new Date()) {
+      return { code: ResponseCode.SESSION_EXPIRED }
+    }
+
+    // Update user's phone verification status
+    const { code: updateCode } = await this.userService.updateUser({
+      userId,
+      phoneNumber: verificationCode.phoneNumber,
+      phoneVerified: true,
+    })
+
+    if (updateCode !== ResponseCode.OK) {
+      return { code: updateCode }
+    }
+
+    // Delete the verification code
+    await prisma.phoneVerificationCode.delete({
+      where: { id: verificationCode.id },
+    })
+
+    return { code: ResponseCode.OK }
   }
 }

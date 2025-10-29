@@ -1,4 +1,4 @@
-import prisma from '@core/prismaClient'
+import { prisma } from '@app'
 import { ResponseCode, serviceErrorHandler } from '@common'
 import { compare, hashString } from '@services/bcrypt'
 import { generateUUID } from '@services/uuid'

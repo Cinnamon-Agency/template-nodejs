@@ -5,6 +5,7 @@ export enum EmailTemplate {
   CONTACT_SUPPORT = 'ContactSupport',
   CONTACT_SUPPORT_SUCCESS = 'ContactSupportSuccess',
   NOTIFICATION = 'Notification',
+  VERIFY_EMAIL = 'VerifyEmail',
 }
 
 export interface IEmailData {

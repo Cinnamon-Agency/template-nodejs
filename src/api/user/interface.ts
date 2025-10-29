@@ -37,6 +37,13 @@ export interface IUpdatePassword {
   password: string
 }
 
+export interface IUpdateUser {
+  userId: string
+  emailVerified?: boolean
+  phoneNumber?: string
+  phoneVerified?: boolean
+}
+
 export interface IUserService {
   createUser(params: ICreateUser): AsyncResponse<User>
   getUserById(params: IGetUserById): AsyncResponse<User>
@@ -46,4 +53,5 @@ export interface IUserService {
   ): AsyncResponse<User>
   toggleNotifications(params: IToggleNotifications): AsyncResponse<null>
   updatePassword(params: IUpdatePassword): AsyncResponse<null>
+  updateUser(params: IUpdateUser): AsyncResponse<null>
 }

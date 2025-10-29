@@ -48,6 +48,25 @@ export interface IAuthenticatePassword {
   password: string
 }
 
+export interface IVerifyEmail {
+  uid: string
+  hashUid: string
+}
+
+export interface IResendVerificationEmail {
+  email: string
+}
+
+export interface ISendVerificationCode {
+  phoneNumber: string
+  userId: string
+}
+
+export interface IVerifyPhoneCode {
+  userId: string
+  code: string
+}
+
 export interface IAuthService {
   login(params: ILogin): AsyncResponse<User>
   register(params: ILogin): AsyncResponse<User>
@@ -57,4 +76,8 @@ export interface IAuthService {
   sendForgotPasswordEmail(params: ISendForgotPasswordEmail): AsyncResponse<null>
   authenticatePassword(params: IAuthenticatePassword): AsyncResponse<boolean>
   resetPassword(params: IResetPassword): AsyncResponse<null>
+  verifyEmail(params: IVerifyEmail): AsyncResponse<null>
+  resendVerificationEmail(params: IResendVerificationEmail): AsyncResponse<null>
+  sendPhoneVerificationCode(params: ISendVerificationCode): AsyncResponse<null>
+  verifyPhoneCode(params: IVerifyPhoneCode): AsyncResponse<null>
 }
