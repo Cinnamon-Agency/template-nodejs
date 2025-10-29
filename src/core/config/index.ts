@@ -73,7 +73,7 @@ const getConfig = (): Config => {
     AWS_ACCESS_KEY: process.env.AWS_ACCESS_KEY || '',
     AWS_SECRET: process.env.AWS_SECRET || '',
     AWS_REGION: process.env.AWS_REGION || 'us-east-1',
-    
+
     // Email
     SES_VERIFIED_MAIL: process.env.SES_VERIFIED_MAIL || 'noreply@example.com',
 

@@ -64,13 +64,111 @@ Within the */src* directory, we house the definitions of Express routes, busines
 
 ## **Database and data structure** <a name="database"></a>
 
-Our choice of MySQL as the primary database, complemented by the Prisma ORM, underscores our commitment to reliability and performance. By deliberately simplifying the number of tables within our database schema, we optimize the template for both ease of use and future scalability. This strategic approach not only enhances the template's flexibility but also accelerates development cycles and minimizes potential complexities associated with database management. Additionally, leveraging Prisma facilitates seamless integration with TypeScript, further enhancing code maintainability and productivity for our development team.
+Our choice of MySQL as the primary database, complemented by the Prisma ORM, underscores our commitment to reliability and performance. The database schema is designed with scalability and maintainability in mind.
+
+### **Core Tables**
+
+1. **Users**
+   - Stores user account information
+   - Includes authentication details and user preferences
+   - One-to-many relationship with UserRoles
+
+2. **Roles**
+   ```prisma
+   model Role {
+     id    String    @id @default(uuid())
+     name  RoleType  @unique @default(USER)
+     users UserRole[]
+     @@map("roles")
+   }
+   ```
+   - Defines available roles in the system (USER, ADMIN, SUPERADMIN)
+   - Used for role-based access control
+
+3. **UserRoles**
+   ```prisma
+   model UserRole {
+     id        String   @id @default(uuid())
+     user      User     @relation(fields: [userId], references: [id])
+     userId    String
+     role      Role     @relation(fields: [roleId], references: [id])
+     roleId    String
+     createdAt DateTime @default(now())
+     updatedAt DateTime @updatedAt
+     @@unique([userId, roleId])
+     @@map("user_roles")
+   }
+   ```
+   - Junction table for many-to-many relationship between Users and Roles
+   - Tracks role assignments with timestamps
+
+### **Key Features**
+- **Type Safety**: Full TypeScript support through Prisma
+- **Scalability**: Designed to handle growing numbers of users and roles
+- **Flexibility**: Easy to add new roles or modify permissions
+- **Audit Trail**: Timestamps track when roles are assigned
+
+### **Example Queries**
+
+```typescript
+// Get all roles for a user
+const userWithRoles = await prisma.user.findUnique({
+  where: { id: userId },
+  include: {
+    roles: {
+      include: {
+        role: true
+      }
+    }
+  }
+})
+
+// Assign a role to a user
+await prisma.userRole.create({
+  data: {
+    userId: 'user-123',
+    roleId: 'role-admin-456'
+  }
+})
+```
+
+### **Security**
+- Role assignments are protected by authentication middleware
+- All database operations are parameterized to prevent SQL injection
+- Sensitive operations require appropriate role permissions
 
 ## **Authentication and authorization** <a name="auth"></a>
 
 In our template, we've implemented authentication and authorization using JWT tokens, enhancing the security of our application. The integration of refresh tokens further bolsters our app's security posture, providing an additional layer of protection against unauthorized access. Continuously striving to enhance our security measures, we are dedicated to adopting and implementing new, improved approaches. By remaining vigilant and proactive, we prioritize the ongoing protection of our users' data and the integrity of our systems.
 
 Furthermore, we prioritize the security of sensitive data stored within our database by encrypting it thoroughly. Our encryption protocols are designed to ensure that even our developers cannot decrypt this information, underscoring our commitment to safeguarding user privacy and confidentiality. This stringent approach to encryption reinforces the integrity of our data storage practices, providing peace of mind to both our team and our users.
+
+## **Role-Based Access Control (RBAC)** <a name="rbac"></a>
+
+The application implements a flexible Role-Based Access Control (RBAC) system with the following features:
+
+### **Roles**
+- **USER**: Standard user with basic access rights
+- **ADMIN**: Administrative user with extended privileges
+- **SUPERADMIN**: Highest privilege level with full system access
+
+### **Key Components**
+- **Role Management**: Centralized role definitions and permissions
+- **User-Role Assignment**: Multiple roles can be assigned to users
+- **Type-Safe**: Strongly typed interfaces for role management
+- **Scalable**: Easy to add new roles and permissions as needed
+
+### **Usage Example**
+```typescript
+// Assigning a role to a user
+const userRole: ICreateUserRole = {
+  userId: 123,
+  roleType: RoleType.ADMIN
+};
+
+// Getting roles for a user
+const userRoles = await userRoleService.getRolesForUser({ userId: 123 });
+```
 
 ## **Monitor and logging** <a name="monitor"></a>
 

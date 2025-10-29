@@ -20,7 +20,9 @@ export class UserRoleService implements IUserRoleService {
     let code: ResponseCode = ResponseCode.OK
 
     try {
-      const { role, code: roleCode } = await roleService.getRoleByRoleType({ roleType })
+      const { role, code: roleCode } = await roleService.getRoleByRoleType({
+        roleType,
+      })
       if (roleCode !== ResponseCode.OK) {
         return { code: roleCode }
       }

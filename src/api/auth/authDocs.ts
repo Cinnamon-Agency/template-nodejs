@@ -173,7 +173,8 @@ const paths = {
   '/auth/send-phone-verification': {
     post: {
       tags: ['Auth'],
-      description: 'Send SMS verification code to phone number (requires authentication)',
+      description:
+        'Send SMS verification code to phone number (requires authentication)',
       security: [{ bearerAuth: [] }],
       requestBody: {
         content: {
@@ -215,7 +216,8 @@ const paths = {
   '/auth/verify-phone': {
     post: {
       tags: ['Auth'],
-      description: 'Verify phone number with SMS code (requires authentication)',
+      description:
+        'Verify phone number with SMS code (requires authentication)',
       security: [{ bearerAuth: [] }],
       requestBody: {
         content: {
@@ -343,11 +345,13 @@ const definitions = {
   },
   verify_email_body: {
     type: 'object',
-    description: 'UID format: uuid1/uuid2 (received from verification email link)',
+    description:
+      'UID format: uuid1/uuid2 (received from verification email link)',
     properties: {
       uid: {
         type: 'string',
-        example: '94104c89-e04a-41b6-9902-e19c723c1354/a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+        example:
+          '94104c89-e04a-41b6-9902-e19c723c1354/a1b2c3d4-e5f6-7890-abcd-ef1234567890',
       },
     },
     required: ['uid'],

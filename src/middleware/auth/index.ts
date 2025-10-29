@@ -6,7 +6,6 @@ import { UserService } from '@api/user/userService'
 import { TokenType, verifyToken } from '@services/jsonwebtoken'
 import { logger } from '@core/logger'
 
-
 const authenticatedDocUsers: { [key: string]: string } = {
   [config.DOCS_USER]: config.DOCS_PASSWORD,
 }
@@ -42,63 +41,54 @@ export const requireToken =
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       let token = ''
+      if (req.cookies && req.cookies['template-token']) {
+        token = req.cookies['template-token']
+      }
+
+      const decodedToken = await verifyToken<any>(token, TokenType.ACCESS_TOKEN)
       if (
-        req.headers.authorization &&
-        req.headers.authorization.startsWith('Bearer')
+        !decodedToken ||
+        typeof decodedToken.payload === 'string' ||
+        !decodedToken.sub
       ) {
-        token = req.headers.authorization.split(' ')[1]
-      } else {
         return next({
-          code: ResponseCode.AUTH_HEADER_MISSING
+          code: ResponseCode.INVALID_TOKEN,
+          message: getResponseMessage(ResponseCode.INVALID_TOKEN),
         })
       }
 
-      const decodedToken = verifyToken<{
-        sub: string
-        tokenVersion?: number
-      }>(token, TokenType.ACCESS_TOKEN)
-      if (!decodedToken || !decodedToken.sub) {
-        return next({ code: ResponseCode.INVALID_ACCESS_TOKEN })
-      }
-
-      const { user } = await userService.getUserById({ userId: decodedToken.sub })
+      const { user } = await userService.getUserById({
+        userId: decodedToken.sub,
+      })
 
       if (!user) {
         return next({
-          code: ResponseCode.INVALID_ACCESS_TOKEN
+          code: ResponseCode.INVALID_TOKEN,
+          message: getResponseMessage(ResponseCode.INVALID_TOKEN),
         })
       }
 
-      if (
-        decodedToken.tokenVersion === undefined ||
-        user.tokenVersion !== decodedToken.tokenVersion
-      ) {
-        return next({
-          code: ResponseCode.SESSION_REVOKED
-        })
-      }
+      const userRoles = user.roles.map(role => role.role.name)
 
       if (allowedRoles && allowedRoles.length > 0) {
-        if (user.role !== 'SUPERADMIN') {
-          if (!user.role || !allowedRoles.includes(user.role)) {
-            return next({
-              code: ResponseCode.UNAUTHORIZED
-            })
-          }
+        if (userRoles.includes('SUPERADMIN')) {
+          return next()
+        }
+
+        if (!allowedRoles.includes(userRoles[0])) {
+          return next({
+            code: ResponseCode.UNAUTHORIZED,
+          })
         }
       }
 
-      req.user = user
+      req.user = { ...user }
 
       return next()
-    } catch (err) {
-      logger.error({
-        code: ResponseCode.SERVER_ERROR,
-        message: getResponseMessage(ResponseCode.SERVER_ERROR),
-        stack: err instanceof Error ? err.stack : undefined
-      })
+    } catch (e: unknown) {
       return next({
-        code: ResponseCode.SERVER_ERROR
+        code: ResponseCode.INVALID_TOKEN,
+        message: getResponseMessage(ResponseCode.INVALID_TOKEN),
       })
     }
   }

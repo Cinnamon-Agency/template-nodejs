@@ -42,7 +42,10 @@ export class UserService implements IUserService {
 
   @serviceErrorHandler()
   async getUserById({ userId }: IGetUserById) {
-    const user = await prisma.user.findUnique({ where: { id: userId } })
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { roles: { include: { role: true } } },
+    })
     if (!user) {
       return { code: ResponseCode.USER_NOT_FOUND }
     }
@@ -99,17 +102,22 @@ export class UserService implements IUserService {
   }
 
   @serviceErrorHandler()
-  async updateUser({ userId, emailVerified, phoneNumber, phoneVerified }: IUpdateUser) {
+  async updateUser({
+    userId,
+    emailVerified,
+    phoneNumber,
+    phoneVerified,
+  }: IUpdateUser) {
     const user = await prisma.user.findUnique({ where: { id: userId } })
     if (!user) {
       return { code: ResponseCode.USER_NOT_FOUND }
     }
-    
+
     const updateData: any = {}
     if (emailVerified !== undefined) updateData.emailVerified = emailVerified
     if (phoneNumber !== undefined) updateData.phoneNumber = phoneNumber
     if (phoneVerified !== undefined) updateData.phoneVerified = phoneVerified
-    
+
     await prisma.user.update({
       where: { id: userId },
       data: updateData,

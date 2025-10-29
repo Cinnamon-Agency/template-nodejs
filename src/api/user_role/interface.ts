@@ -3,12 +3,12 @@ import { RoleType } from '../role/interface'
 import { Role } from '@prisma/client'
 
 export interface ICreateUserRole {
-  userId: number
+  userId: string
   roleType: RoleType
 }
 
 export interface IGetRolesForUser {
-  userId: number
+  userId: string
 }
 
 export interface IUserRoleService {

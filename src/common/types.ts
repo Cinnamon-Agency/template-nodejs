@@ -1,5 +1,4 @@
 import { ResponseCode, ResponseMessage } from './response'
-import fileUpload from 'express-fileupload'
 import { User } from '@prisma/client'
 
 export type ResponseCodeRequired = { code: ResponseCode }
@@ -20,8 +19,6 @@ declare global {
   namespace Express {
     export interface Request {
       user: User
-      files?: fileUpload.FileArray | null | undefined
-      responseCode: ResponseCode
     }
   }
 }
