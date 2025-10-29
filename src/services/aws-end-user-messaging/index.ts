@@ -29,7 +29,7 @@ export async function sendSMS(destinationNumber: string, message: string) {
     const command = new SendTextMessageCommand({
       DestinationPhoneNumber: destinationNumber,
       MessageBody: message,
-      OriginationIdentity: config.AWS_PHONE_NUMBER,
+      OriginationIdentity: config.SMS_VERIFIED_PHONE_NUMBER,
       MessageType: 'TRANSACTIONAL',
     })
     const response = await smsUserMessagingClient.send(command)

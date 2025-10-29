@@ -1,6 +1,3 @@
-import { Repository } from 'typeorm'
-
-import { AppDataSource } from '../../services/typeorm'
 import { autoInjectable } from 'tsyringe'
 
 import { ResponseCode } from '../../interface'

@@ -1,5 +1,5 @@
-import { AsyncResponse } from '../../interface'
-import { Role } from './roleModel'
+import { AsyncResponse } from '@common'
+import { Role } from '@prisma/client'
 
 export enum RoleType {
   ADMIN = 'admin',

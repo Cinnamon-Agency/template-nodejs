@@ -1,28 +1,23 @@
-import { Repository } from 'typeorm'
+import { autoInjectable, singleton } from 'tsyringe'
 
-import { AppDataSource } from '../../services/typeorm'
-import { autoInjectable } from 'tsyringe'
-
-import { SupportRequest } from './supportRequestModel'
 import {
   ICreateSupportRequest,
   ISupportRequestService,
   IUpdateSupportRequestStatus,
 } from './interface'
-import { ResponseCode } from '../../interface'
-import { logger } from '../../logger'
-import { getResponseMessage } from '../../services/utils'
-import { sendEmail } from '../../services/email'
-import { EmailTemplate } from '../../services/email/interface'
-import config from '../../config'
+import { ResponseCode } from '@common'
+import { logger } from '@core/logger'
+import { getResponseMessage } from '@common/response'
+import { sendEmail } from '@services/aws-ses'
+import { EmailTemplate } from '@services/aws-ses/interface'
+import config from '@core/config'
 
+@singleton()
 @autoInjectable()
 export class SupportRequestService implements ISupportRequestService {
-  private readonly supportRequestRepository: Repository<SupportRequest>
 
   constructor() {
-    this.supportRequestRepository =
-      AppDataSource.manager.getRepository(SupportRequest)
+   
   }
 
   createSupportRequest = async ({
@@ -41,7 +36,7 @@ export class SupportRequestService implements ISupportRequestService {
         subject,
         {
           web_url: config.WEB_URL,
-          contact_number: config.CONTACT_NUMBER,
+          contact_number: config.SMS_VERIFIED_PHONE_NUMBER,
           contact_email: email,
           full_name: `${firstName} ${lastName}`,
           message,
@@ -61,7 +56,7 @@ export class SupportRequestService implements ISupportRequestService {
           contact_email: email,
           message,
           web_url: config.WEB_URL,
-          contact_number: config.CONTACT_NUMBER,
+          contact_number: config.SMS_VERIFIED_PHONE_NUMBER,
         }
       )
 

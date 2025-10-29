@@ -6,7 +6,7 @@ import {
 } from './supportRequestInput'
 import { validate } from '../../middleware/validation'
 import { SupportRequestController } from './supportRequestController'
-import { requireRole, requireToken } from '../../middleware/auth'
+import { requireRole, requireToken } from '@middleware/auth'
 import { RoleType } from '../role/interface'
 
 const supportRequestController = container.resolve(SupportRequestController)

@@ -1,4 +1,4 @@
-import { AsyncResponse, ResponseCode } from '../../interface'
+import { AsyncResponse, ResponseCode } from '@common'
 
 export enum SupportRequestStatus {
   OPEN = 'OPEN',

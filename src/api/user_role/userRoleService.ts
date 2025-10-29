@@ -1,25 +1,19 @@
-import { Repository } from 'typeorm'
-
 import {
   ICreateUserRole,
   IGetRolesForUser,
   IUserRoleService,
 } from './interface'
-import { AppDataSource } from '../../services/typeorm'
 import { autoInjectable, container } from 'tsyringe'
 
-import { UserRole } from './userRoleModel'
-import { ResponseCode } from '../../interface'
-import { logger } from '../../logger'
-import { getResponseMessage } from '../../services/utils'
+import { ResponseCode } from '@common'
+import { logger } from '@core/logger'
+import { getResponseMessage } from '@common'
 import { RoleService } from '../role/roleService'
 const roleService = container.resolve(RoleService)
 @autoInjectable()
 export class UserRoleService implements IUserRoleService {
-  private readonly userRoleRepository: Repository<UserRole>
 
   constructor() {
-    this.userRoleRepository = AppDataSource.manager.getRepository(UserRole)
   }
 
   createUserRole = async ({ userId, roleType }: ICreateUserRole) => {

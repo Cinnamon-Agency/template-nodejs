@@ -26,6 +26,7 @@ authRouter.post(
 )
 authRouter.post('/logout', requireToken, authController.logout)
 authRouter.post('/refresh', authController.refreshToken)
+
 authRouter.post(
   '/password/forgot',
   validate(forgotPasswordSchema),
