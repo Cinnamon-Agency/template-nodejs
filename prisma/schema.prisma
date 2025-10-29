@@ -16,14 +16,12 @@ datasource db {
 // Enums
 
 enum MediaType {
-  PROJECT_COVER_IMAGE
-  PROJECT_TRACK_PREVIEW
-  PROJECT_OTHER
+  IMAGE
+  VIDEO
 }
 
 enum NotificationType {
-  ADDED_TO_FAVORITES
-  COLLABORATION_REQUEST
+  EXAMPLE_NOTIFICATION
 }
 
 enum ProjectStatus {

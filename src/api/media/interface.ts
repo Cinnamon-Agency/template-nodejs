@@ -1,11 +1,5 @@
 import { AsyncResponse } from '@common'
-import { Prisma } from '@prisma/client'
-
-export enum MediaType {
-  PROJECT_COVER_IMAGE = 'Project cover image',
-  PROJECT_TRACK_PREVIEW = 'Project track preview',
-  PROJECT_OTHER = 'Project other',
-}
+import { Prisma, MediaType } from '@prisma/client'
 
 export interface IMediaData {
   mediaType: MediaType

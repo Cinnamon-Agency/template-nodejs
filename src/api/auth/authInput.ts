@@ -1,6 +1,6 @@
 import { Request } from 'express'
 import Joi from 'joi'
-import { AuthType } from './interface'
+import { AuthType } from '@prisma/client'
 
 export const loginSchema = (req: Request) => {
   return {

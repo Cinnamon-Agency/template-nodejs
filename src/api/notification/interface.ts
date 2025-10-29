@@ -1,10 +1,5 @@
 import { AsyncResponse } from '@common'
-import { Notification } from '@prisma/client'
-
-export enum NotificationType {
-  ADDED_TO_FAVORITES = 'Added to favorites',
-  COLLABORATION_REQUEST = 'Collaboration request',
-}
+import { Notification, NotificationType } from '@prisma/client'
 
 export interface IDeleteNotificationEvent {
   notificationId: string

@@ -10,6 +10,7 @@ import {
   IVerifyUID,
 } from './interface'
 import { autoInjectable, singleton } from 'tsyringe'
+import { VerificationUID, VerificationUIDType } from '@prisma/client'
 
 @singleton()
 @autoInjectable()
@@ -39,7 +40,7 @@ export class VerificationUIDService implements IVerificationUIDService {
 
   @serviceErrorHandler()
   async getVerificationUID({ uid }: IGetVerificationUID) {
-    const verificationUID = await prisma.verificationUID.findUnique({
+    const verificationUID = await prisma.verificationUID.findFirst({
       where: { uid },
     })
     if (!verificationUID) {
@@ -51,8 +52,11 @@ export class VerificationUIDService implements IVerificationUIDService {
 
   @serviceErrorHandler()
   async clearVerificationUID({ userId, type }: IClearVerificationUID) {
-    const verificationUID = await prisma.verificationUID.findUnique({
-      where: { userId, type },
+    const verificationUID = await prisma.verificationUID.findFirst({
+      where: { 
+        userId,
+        type: type
+      },
     })
     if (!verificationUID) {
       return { code: ResponseCode.VERIFICATION_UID_NOT_FOUND }
@@ -67,8 +71,11 @@ export class VerificationUIDService implements IVerificationUIDService {
 
   @serviceErrorHandler()
   async verifyUID({ uid, hashUid, type }: IVerifyUID) {
-    const verificationUID = await prisma.verificationUID.findUnique({
-      where: { uid, type },
+    const verificationUID = await prisma.verificationUID.findFirst({
+      where: {
+        uid,
+        type: type
+      },
     })
     if (!verificationUID) {
       return { code: ResponseCode.VERIFICATION_UID_NOT_FOUND }

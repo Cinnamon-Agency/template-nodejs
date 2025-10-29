@@ -66,10 +66,17 @@ export class NotificationService implements INotificationService {
     receiverId,
     senderId,
     message,
-    type,
+    type: notificationType,
   }: ICreateNotification) {
-    const notification = { receiverId, senderId, message, read: false, type }
-    await prisma.notification.create({ data: notification })
+    await prisma.notification.create({ 
+      data: { 
+        receiverId, 
+        senderId, 
+        message, 
+        read: false, 
+        notificationType 
+      } 
+    })
 
     const { user } = await userService.getUserById({
       userId: receiverId,
@@ -79,8 +86,8 @@ export class NotificationService implements INotificationService {
       return { code: ResponseCode.USER_NOT_FOUND }
     }
 
-    sendEmail(EmailTemplate.NOTIFICATION, user.email, type, {
-      title: type,
+    sendEmail(EmailTemplate.NOTIFICATION, user.email, notificationType, {
+      title: notificationType,
       content: message,
     })
 

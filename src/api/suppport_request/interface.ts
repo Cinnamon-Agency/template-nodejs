@@ -14,7 +14,7 @@ export interface ICreateSupportRequest {
 }
 
 export interface IUpdateSupportRequestStatus {
-  supportRequestId: number
+  supportRequestId: string
   status: SupportRequestStatus
 }
 

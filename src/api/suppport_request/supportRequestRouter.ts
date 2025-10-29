@@ -6,8 +6,8 @@ import {
 } from './supportRequestInput'
 import { validate } from '../../middleware/validation'
 import { SupportRequestController } from './supportRequestController'
-import { requireRole, requireToken } from '@middleware/auth'
-import { RoleType } from '../role/interface'
+import { requireToken } from '@middleware/auth'
+import { RoleType } from '@prisma/client'
 
 const supportRequestController = container.resolve(SupportRequestController)
 export const supportRequestRouter = express.Router()
@@ -20,8 +20,7 @@ supportRequestRouter.post(
 
 supportRequestRouter.put(
   '/updateStatus/:supportRequestId',
-  requireToken,
-  requireRole([RoleType.ADMIN]),
+  requireToken([RoleType.ADMIN]),
   validate(updateSupportRequestStatusSchemaStatus),
   supportRequestController.updateSupportRequestStatus
 )

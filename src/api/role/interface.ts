@@ -1,10 +1,6 @@
 import { AsyncResponse } from '@common'
-import { Role } from '@prisma/client'
+import { Role, RoleType } from '@prisma/client'
 
-export enum RoleType {
-  ADMIN = 'admin',
-  USER = 'user',
-}
 
 export interface IGetRoleByRoleType {
   roleType: RoleType

@@ -1,7 +1,6 @@
 import { ResponseCode, serviceErrorHandler } from '@common'
 import { UserService } from '@api/user/userService'
 import {
-  AuthType,
   ILogin,
   IAuthService,
   ILogout,
@@ -27,6 +26,7 @@ import { VerificationUIDService } from '@api/verification_uid/verificationUIDSer
 import { compare, hashString } from '@services/bcrypt'
 import { sendSMS } from '@services/aws-end-user-messaging'
 import { prisma } from '@app'
+import { AuthType } from '@prisma/client'
 
 @singleton()
 @autoInjectable()
