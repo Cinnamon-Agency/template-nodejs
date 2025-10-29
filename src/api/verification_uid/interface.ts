@@ -1,5 +1,5 @@
 import { AsyncResponse } from '@common'
-import { VerificationUID } from 'generated/prisma'
+import { VerificationUID } from '@prisma/client'
 
 export enum VerificationUIDType {
   REGISTRATION = 'Registration',

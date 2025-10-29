@@ -1,8 +1,8 @@
-import { AsyncResponse, IServiceMethod } from '../../interface'
+import { AsyncResponse } from '@common'
 import { RoleType } from '../role/interface'
-import { Role } from '../role/roleModel'
+import { Role } from '@prisma/client'
 
-export interface ICreateUserRole extends IServiceMethod {
+export interface ICreateUserRole {
   userId: number
   roleType: RoleType
 }

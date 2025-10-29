@@ -1,12 +1,5 @@
 import { AsyncResponse } from '@common'
-import { User } from 'generated/prisma'
-
-export enum AuthType {
-  GOOGLE = 'Google',
-  LINKED_IN = 'LinkedIn',
-  FACEBOOK = 'Facebook',
-  USER_PASSWORD = 'UserPassword',
-}
+import { User, AuthType } from '@prisma/client'
 
 interface TokenResponse {
   accessToken: string

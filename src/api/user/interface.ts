@@ -1,6 +1,5 @@
 import { AsyncResponse } from '@common'
-import { AuthType } from '@api/auth/interface'
-import { User } from 'generated/prisma'
+import { AuthType, User } from '@prisma/client'
 
 export interface ICreateUser {
   email: string

@@ -6,11 +6,10 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -35,6 +34,7 @@ enum ProjectStatus {
 enum AuthType {
   GOOGLE
   LINKED_IN
+  APPLE
   FACEBOOK
   USER_PASSWORD
 }
@@ -148,25 +148,31 @@ model Notification {
 }
 
 model UserSession {
-  id            String            @id @default(uuid())
-  userId        String
+  id            String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String            @db.Uuid
   user          User              @relation(fields: [userId], references: [id])
-  refreshToken  String
+  refreshToken  String            @db.VarChar(500)
   expiresAt     DateTime
   status        UserSessionStatus @default(ACTIVE)
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
+  
+  @@index([userId])
+  @@index([refreshToken], name: "refresh_token_idx")
 }
 
 model VerificationUID {
   id        String              @id @default(uuid())
   userId    String
   user      User                @relation(fields: [userId], references: [id])
-  uid       String              @db.VarChar(36)
+  uid       String              @db.Uuid
   hash      String              @db.VarChar(255)
   type      VerificationUIDType
   createdAt DateTime            @default(now())
   updatedAt DateTime            @updatedAt
+  
+  @@index([uid], name: "verification_uid_idx")
+  @@index([userId])
 }
 
 model SupportRequest {

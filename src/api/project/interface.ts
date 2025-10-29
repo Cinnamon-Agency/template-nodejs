@@ -1,6 +1,6 @@
 import { AsyncResponse } from '@common'
 import { IMediaData, MediaInfo } from '@api/media/interface'
-import { Project } from 'generated/prisma'
+import { Project } from '@prisma/client'
 
 export enum ProjectStatus {
   ACTIVE = 'Active',

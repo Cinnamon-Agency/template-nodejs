@@ -1,6 +1,6 @@
 import { ResponseCode, ResponseMessage } from './response'
 import fileUpload from 'express-fileupload'
-import { User } from 'generated/prisma'
+import { User } from '@prisma/client'
 
 export type ResponseCodeRequired = { code: ResponseCode }
 
