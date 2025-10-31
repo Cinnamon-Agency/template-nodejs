@@ -65,7 +65,7 @@ enum SupportRequestStatus {
 }
 
 model Role {
-  id    String      @id @default(uuid())
+  id    String      @id @default(uuid()) @db.Uuid
   name  RoleType    @unique @default(USER)
   users UserRole[]
 
@@ -73,11 +73,11 @@ model Role {
 }
 
 model UserRole {
-  id        String   @id @default(uuid())
+  id        String   @id @default(uuid()) @db.Uuid
   user      User     @relation(fields: [userId], references: [id])
-  userId    String
+  userId    String   @db.Uuid
   role      Role     @relation(fields: [roleId], references: [id])
-  roleId    String
+  roleId    String   @db.Uuid
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -88,7 +88,7 @@ model UserRole {
 
 // Models
 model User {
-  id                      String          @id @default(uuid())
+  id                      String          @id @default(uuid()) @db.Uuid
   email                   String          @unique
   emailVerified           Boolean         @default(false)
   phoneNumber             String?
@@ -110,11 +110,11 @@ model User {
 }
 
 model Project {
-  id            String     @id @default(uuid())
+  id            String     @id @default(uuid()) @db.Uuid
   name          String
   description   String
   deadline      DateTime
-  userId        String
+  userId        String     @db.Uuid
   user          User       @relation(fields: [userId], references: [id])
   projectStatus ProjectStatus @default(ACTIVE)
   mediaFiles    Media[]
@@ -123,20 +123,20 @@ model Project {
 }
 
 model Media {
-  id            String     @id @default(uuid())
+  id            String     @id @default(uuid()) @db.Uuid
   mediaType     MediaType
   mediaFileName String     @unique
-  projectId     String
+  projectId     String     @db.Uuid
   project       Project    @relation(fields: [projectId], references: [id])
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 }
 
 model Notification {
-  id               String           @id @default(uuid())
-  senderId         String
+  id               String           @id @default(uuid()) @db.Uuid
+  senderId         String           @db.Uuid
   sender           User             @relation("NotificationSender", fields: [senderId], references: [id])
-  receiverId       String
+  receiverId       String           @db.Uuid
   receiver         User             @relation("NotificationReceiver", fields: [receiverId], references: [id])
   message          String
   read             Boolean          @default(true)
@@ -160,8 +160,8 @@ model UserSession {
 }
 
 model VerificationUID {
-  id        String              @id @default(uuid())
-  userId    String
+  id        String              @id @default(uuid()) @db.Uuid
+  userId    String              @db.Uuid
   user      User                @relation(fields: [userId], references: [id])
   uid       String              @db.Uuid
   hash      String              @db.VarChar(255)
@@ -188,8 +188,8 @@ model SupportRequest {
 }
 
 model PhoneVerificationCode {
-  id            String   @id @default(uuid())
-  userId        String
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @db.Uuid
   phoneNumber   String
   code          String
   expiresAt     DateTime
@@ -197,4 +197,29 @@ model PhoneVerificationCode {
   updatedAt     DateTime @updatedAt
 
   @@map("phone_verification_codes")
+}
+
+model LoginCode {
+  id        String   @id @default(uuid())
+  email     String
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@map("login_codes")
+}
+
+model DeviceToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([token])
+  @@map("device_tokens")
 }

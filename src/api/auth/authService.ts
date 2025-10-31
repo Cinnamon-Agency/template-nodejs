@@ -13,6 +13,11 @@ import {
   IResendVerificationEmail,
   ISendVerificationCode,
   IVerifyPhoneCode,
+  ISetCookie,
+  IStoreDeviceToken,
+  ISetNewPassword,
+  IResendLoginCode,
+  IVerifyLoginCode,
 } from './interface'
 import { TokenType, generateToken, verifyToken } from '@services/jsonwebtoken'
 import config from '@core/config'
@@ -424,5 +429,193 @@ export class AuthService implements IAuthService {
     })
 
     return { code: ResponseCode.OK }
+  }
+
+  @serviceErrorHandler()
+  async setCookie({res, name, value, maxAge}: ISetCookie) {
+    const cookieOptions: any = {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+    }
+
+    if (maxAge) {
+      if (maxAge instanceof Date) {
+        cookieOptions.expires = maxAge
+      } else {
+        cookieOptions.maxAge = maxAge
+      }
+    }
+
+    res.cookie(name, value, cookieOptions)
+    return { code: ResponseCode.OK }
+  }
+
+  @serviceErrorHandler()
+  async storeDeviceToken({deviceToken, userId, expiresInDays = 30}: IStoreDeviceToken) {
+    const expiresAt = new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000)
+
+    // Delete any existing token for this device
+    await prisma.deviceToken.deleteMany({
+      where: { token: deviceToken },
+    })
+
+    // Store the new device token
+    await prisma.deviceToken.create({
+      data: {
+        userId,
+        token: deviceToken,
+        expiresAt,
+      },
+    })
+
+    return { code: ResponseCode.OK }
+  }
+
+  @serviceErrorHandler()
+  async verifyDeviceToken(deviceToken: string) {
+    const storedToken = await prisma.deviceToken.findUnique({
+      where: { token: deviceToken },
+    })
+
+    if (!storedToken) {
+      return { isValid: false, userId: null, code: ResponseCode.INVALID_INPUT }
+    }
+
+    // Check if token is expired
+    if (storedToken.expiresAt < new Date()) {
+      // Delete expired token
+      await prisma.deviceToken.delete({
+        where: { id: storedToken.id },
+      })
+      return { isValid: false, userId: null, code: ResponseCode.SESSION_EXPIRED }
+    }
+
+    return { isValid: true, userId: storedToken.userId, code: ResponseCode.OK }
+  }
+
+  @serviceErrorHandler()
+  async setNewPassword({uid, hashUid, password}: ISetNewPassword) {
+    const { verificationUID, code: verificationUIDCode } =
+      await this.verificationUIDService.verifyUID({
+        uid,
+        hashUid,
+        type: VerificationUIDType.RESET_PASSWORD,
+      })
+    if (!verificationUID) {
+      return { code: verificationUIDCode }
+    }
+
+    const hashedPassword = await hashString(password)
+
+    const { code: updateCode } = await this.userService.updatePassword({
+      userId: verificationUID.userId,
+      password: hashedPassword,
+    })
+    if (updateCode !== ResponseCode.OK) {
+      return { code: updateCode }
+    }
+
+    await this.verificationUIDService.clearVerificationUID({
+      userId: verificationUID.userId,
+      type: VerificationUIDType.RESET_PASSWORD,
+    })
+
+    return { userId: verificationUID.userId, code: ResponseCode.OK }
+  }
+
+  @serviceErrorHandler()
+  async resendLoginCode ({email}: IResendLoginCode) {
+    // Verify user exists
+    const { user, code: userCode } = await this.userService.getUserByEmail({ email })
+    if (!user) {
+      return { code: userCode }
+    }
+
+    // Generate 4-digit code
+    const code = Math.floor(1000 + Math.random() * 9000).toString()
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
+
+    // Delete any existing codes for this email
+    await prisma.loginCode.deleteMany({
+      where: { email },
+    })
+
+    // Store the code
+    await prisma.loginCode.create({
+      data: {
+        email,
+        code,
+        expiresAt,
+      },
+    })
+
+    // Send email with the code
+    await sendEmail(
+      EmailTemplate.VERIFY_LOGIN,
+      email,
+      'Your login verification code',
+      { login_code: code }
+    )
+
+    return { code: ResponseCode.OK }
+  }
+
+  @serviceErrorHandler()
+  async verifyLoginCode ({loginCode, email, dontAskOnThisDevice, deviceToken}: IVerifyLoginCode) {
+    const { user, code: userCode } = await this.userService.getUserByEmail({ email })
+    if (!user) {
+      return { code: userCode }
+    }
+
+    // Find the login code
+    const storedCode = await prisma.loginCode.findFirst({
+      where: {
+        email,
+        code: loginCode,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    })
+
+    if (!storedCode) {
+      return { code: ResponseCode.INVALID_INPUT }
+    }
+
+    // Check if code is expired
+    if (storedCode.expiresAt < new Date()) {
+      return { code: ResponseCode.SESSION_EXPIRED }
+    }
+
+    // Delete the used code
+    await prisma.loginCode.delete({
+      where: { id: storedCode.id },
+    })
+
+    // If dontAskOnThisDevice is true and deviceToken is provided, store it
+    if (dontAskOnThisDevice && deviceToken) {
+      await this.storeDeviceToken({
+        deviceToken,
+        userId: user.id,
+        expiresInDays: 30,
+      })
+    }
+
+    const { tokens, code: tokenCode } = await this.signToken({
+      user,
+    })
+
+    if (!tokens) {
+      return { code: tokenCode }
+    }
+
+    return { 
+      data: {
+        user,
+        tokens
+      },
+      code: ResponseCode.OK 
+    }
   }
 }

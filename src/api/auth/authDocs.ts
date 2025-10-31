@@ -256,6 +256,90 @@ const paths = {
       },
     },
   },
+  '/auth/resend-login-code': {
+    post: {
+      tags: ['Auth'],
+      description:
+        'Send a 4-digit login verification code to the user\'s email address',
+      requestBody: {
+        content: {
+          'application/json': {
+            schema: {
+              $ref: '#/definitions/resend_login_code_body',
+            },
+          },
+        },
+      },
+      responses: {
+        '200': {
+          description: 'Login code sent successfully',
+          content: {
+            schema: {
+              $ref: '#/definitions/200_response',
+            },
+          },
+        },
+        '404': {
+          description: 'User not found',
+          content: {
+            schema: {
+              $ref: '#/definitions/user_not_found_response',
+            },
+          },
+        },
+      },
+    },
+  },
+  '/auth/verify-login-code': {
+    post: {
+      tags: ['Auth'],
+      description:
+        'Verify login code and authenticate user. Optionally enable "Don\'t ask on this device" for trusted devices.',
+      requestBody: {
+        content: {
+          'application/json': {
+            schema: {
+              $ref: '#/definitions/verify_login_code_body',
+            },
+          },
+        },
+      },
+      responses: {
+        '200': {
+          description: 'Login code verified successfully',
+          content: {
+            schema: {
+              $ref: '#/definitions/verify_login_code_response',
+            },
+          },
+        },
+        '400': {
+          description: 'Invalid login code',
+          content: {
+            schema: {
+              $ref: '#/definitions/invalid_login_code_response',
+            },
+          },
+        },
+        '401': {
+          description: 'Login code expired',
+          content: {
+            schema: {
+              $ref: '#/definitions/login_code_expired_response',
+            },
+          },
+        },
+        '404': {
+          description: 'User not found',
+          content: {
+            schema: {
+              $ref: '#/definitions/user_not_found_response',
+            },
+          },
+        },
+      },
+    },
+  },
 }
 
 const definitions = {
@@ -423,6 +507,82 @@ const definitions = {
       data: null,
       code: 424000,
       message: 'Failed dependency',
+    },
+  },
+  resend_login_code_body: {
+    type: 'object',
+    description: 'Request body for sending a login verification code',
+    properties: {
+      email: {
+        type: 'string',
+        format: 'email',
+        example: 'john.doe@email.com',
+        description: 'User email address to send the login code to',
+      },
+    },
+    required: ['email'],
+  },
+  verify_login_code_body: {
+    type: 'object',
+    description:
+      'Request body for verifying login code. Set dontAskOnThisDevice to true to mark this device as trusted for 30 days.',
+    properties: {
+      email: {
+        type: 'string',
+        format: 'email',
+        example: 'john.doe@email.com',
+        description: 'User email address',
+      },
+      loginCode: {
+        type: 'string',
+        pattern: '^\\d{4}$',
+        example: '1234',
+        description: '4-digit verification code received via email',
+      },
+      dontAskOnThisDevice: {
+        type: 'boolean',
+        example: false,
+        description:
+          'Optional: Set to true to remember this device for 30 days and skip login code verification',
+      },
+    },
+    required: ['email', 'loginCode'],
+  },
+  verify_login_code_response: {
+    example: {
+      data: {
+        user: {
+          id: '94104c89-e04a-41b6-9902-e19c723c1354',
+        },
+        tokens: {
+          accessToken:
+            'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwYTE1MmMyNS04YjY3LTQ1NWUtYTA2Yi03OTNlYTBjOTcwZjQiLCJpYXQiOjE3MDk3MzMxMzQsImV4cCI6MTcwOTczNDAzNH0...',
+          refreshToken:
+            'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwYTE1MmMyNS04YjY3LTQ1NWUtYTA2Yi03OTNlYTBjOTcwZjQiLCJpYXQiOjE3MDk3MzMxMzQsImV4cCI6MTcxMDMzNzkzNH0...',
+          accessTokenExpiresAt: '2024-03-06T14:07:14.922Z',
+          refreshTokenExpiresAt: '2024-03-13T13:52:14.681Z',
+        },
+        deviceToken:
+          'a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6',
+      },
+      code: 200000,
+      message: 'OK',
+    },
+    description:
+      'Returns user data, authentication tokens (for mobile clients), and device token (if dontAskOnThisDevice was true). Web clients receive tokens as HTTP-only cookies.',
+  },
+  invalid_login_code_response: {
+    example: {
+      data: null,
+      code: 400001,
+      message: 'Invalid input',
+    },
+  },
+  login_code_expired_response: {
+    example: {
+      data: null,
+      code: 401002,
+      message: 'Session expired',
     },
   },
 }

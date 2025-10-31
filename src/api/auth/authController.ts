@@ -3,6 +3,9 @@ import { logEndpoint } from '@common/decorators/logEndpoint'
 import { ResponseCode } from '@common'
 import { AuthService } from './authService'
 import { autoInjectable, singleton } from 'tsyringe'
+import { randomBytes } from 'crypto'
+
+
 
 @singleton()
 @autoInjectable()
@@ -172,78 +175,50 @@ export class AuthController {
   ) {
     const { loginCode, email, dontAskOnThisDevice } = res.locals.input
 
-    const { data, code: verifyCode } = await this.authService.verifyLoginCode({
+    // Generate device token if dontAskOnThisDevice is true
+    let deviceToken: string | undefined
+    if (dontAskOnThisDevice) {
+      deviceToken = randomBytes(32).toString('hex')
+    }
+
+    const result = await this.authService.verifyLoginCode({
       loginCode,
       email,
+      dontAskOnThisDevice,
+      deviceToken,
     })
 
-    if (!data) {
-      return next({ code: verifyCode })
+    if (!result.data) {
+      return next({ code: result.code })
     }
 
-    const { user, code: userCode } = await userService.getUserByEmail({ email })
-    if (!user) {
-      return { code: userCode }
+    const { user, tokens } = result.data
+
+    // Set auth cookies if not mobile client
+    if (!AuthService.isMobileClient(req)) {
+      AuthService.setAuthCookies(res, tokens)
     }
 
-    const { tokens } = await this.authService.signToken({
-      user,
-    })
-
-    if (!tokens) {
-      return { code: ResponseCode.SERVER_ERROR }
+    // Set device token cookie if requested
+    if (dontAskOnThisDevice && deviceToken) {
+      res.cookie('deviceToken', deviceToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict',
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      })
     }
 
-    if (dontAskOnThisDevice) {
-      const deviceToken = randomBytes(32).toString('hex')
-
-      const expiresInSeconds = 60 * 24 * 60 * 60 // 60 days
-
-      await this.authService.storeDeviceToken(
-        deviceToken,
-        user.id,
-        expiresInSeconds
-      )
-
-      this.authService.setCookie(
-        res,
-        CookieName.deviceToken,
-        deviceToken,
-        expiresInSeconds
-      )
-    }
-
-    if (user.keepMeLoggedIn) {
-      this.authService.setCookie(
-        res,
-        CookieName.refreshToken,
-        tokens.refreshToken,
-        tokens.refreshTokenExpiresAt
-      )
-      this.authService.setCookie(
-        res,
-        CookieName.accessToken,
-        tokens.accessToken,
-        tokens.accessTokenExpiresAt
-      )
-      this.authService.setCookie(
-        res,
-        CookieName.role,
-        role,
-        tokens.refreshTokenExpiresAt
-      )
-    } else {
-      this.authService.setCookie(
-        res,
-        CookieName.refreshToken,
-        tokens.refreshToken
-      )
-      this.authService.setCookie(res, CookieName.accessToken, data.accessToken)
-      this.authService.setCookie(res, CookieName.role, role)
+    const responseUser = {
+      id: user.id,
     }
 
     return next({
-      data: { ...data, role: role },
+      data: {
+        user: responseUser,
+        ...(AuthService.isMobileClient(req) ? { tokens } : {}),
+        ...(dontAskOnThisDevice && deviceToken ? { deviceToken } : {}),
+      },
       code: ResponseCode.OK,
     })
   }
@@ -272,18 +247,18 @@ export class AuthController {
     const { uid, password } = res.locals.input
 
     const uids = uid.split('/')
-    if (uids.length > 2) {
+    if (uids.length !== 2) {
       return next({ code: ResponseCode.INVALID_UID })
     }
 
-    const { userId, code: setPasswordCode } =
-      await this.authService.setNewPassword({
-        uid: uids[0],
-        hashUid: uids[1],
-        password,
-      })
-    if (!userId) {
-      return next({ code: setPasswordCode })
+    const result = await this.authService.setNewPassword({
+      uid: uids[0],
+      hashUid: uids[1],
+      password,
+    })
+    
+    if (!result.userId) {
+      return next({ code: result.code })
     }
 
     return next({
