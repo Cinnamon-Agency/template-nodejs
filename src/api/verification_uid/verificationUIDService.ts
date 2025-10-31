@@ -53,9 +53,9 @@ export class VerificationUIDService implements IVerificationUIDService {
   @serviceErrorHandler()
   async clearVerificationUID({ userId, type }: IClearVerificationUID) {
     const verificationUID = await prisma.verificationUID.findFirst({
-      where: { 
+      where: {
         userId,
-        type: type
+        type: type,
       },
     })
     if (!verificationUID) {
@@ -74,7 +74,7 @@ export class VerificationUIDService implements IVerificationUIDService {
     const verificationUID = await prisma.verificationUID.findFirst({
       where: {
         uid,
-        type: type
+        type: type,
       },
     })
     if (!verificationUID) {

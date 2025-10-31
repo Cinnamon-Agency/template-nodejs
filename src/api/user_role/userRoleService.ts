@@ -24,7 +24,7 @@ export class UserRoleService implements IUserRoleService {
         roleType,
       })
 
-      if ((!role || roleCode !== ResponseCode.OK)) {
+      if (!role || roleCode !== ResponseCode.OK) {
         return { code: roleCode }
       }
 

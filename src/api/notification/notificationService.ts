@@ -68,14 +68,14 @@ export class NotificationService implements INotificationService {
     message,
     type: notificationType,
   }: ICreateNotification) {
-    await prisma.notification.create({ 
-      data: { 
-        receiverId, 
-        senderId, 
-        message, 
-        read: false, 
-        notificationType 
-      } 
+    await prisma.notification.create({
+      data: {
+        receiverId,
+        senderId,
+        message,
+        read: false,
+        notificationType,
+      },
     })
 
     const { user } = await userService.getUserById({

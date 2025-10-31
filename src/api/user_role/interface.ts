@@ -1,7 +1,6 @@
 import { AsyncResponse } from '@common'
 import { Role, RoleType } from '@prisma/client'
 
-
 export interface ICreateUserRole {
   userId: string
   roleType: RoleType

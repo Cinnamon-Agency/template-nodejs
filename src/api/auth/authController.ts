@@ -5,8 +5,6 @@ import { AuthService } from './authService'
 import { autoInjectable, singleton } from 'tsyringe'
 import { randomBytes } from 'crypto'
 
-
-
 @singleton()
 @autoInjectable()
 export class AuthController {
@@ -37,14 +35,25 @@ export class AuthController {
       id: user.id,
     }
 
-    AuthService.setAuthCookies(res, tokens)
-
-    return next({
-      data: {
-        user: responseUser,
-      },
-      code: ResponseCode.OK,
-    })
+    // For mobile clients, return tokens in response body (bearer token)
+    // For web clients, set tokens in cookies
+    if (AuthService.isMobileClient(req)) {
+      return next({
+        data: {
+          user: responseUser,
+          tokens,
+        },
+        code: ResponseCode.OK,
+      })
+    } else {
+      AuthService.setAuthCookies(res, tokens)
+      return next({
+        data: {
+          user: responseUser,
+        },
+        code: ResponseCode.OK,
+      })
+    }
   }
 
   @logEndpoint()
@@ -73,14 +82,25 @@ export class AuthController {
       id: user.id,
     }
 
-    AuthService.setAuthCookies(res, tokens)
-
-    return next({
-      data: {
-        user: responseUser,
-      },
-      code: ResponseCode.OK,
-    })
+    // For mobile clients, return tokens in response body (bearer token)
+    // For web clients, set tokens in cookies
+    if (AuthService.isMobileClient(req)) {
+      return next({
+        data: {
+          user: responseUser,
+          tokens,
+        },
+        code: ResponseCode.OK,
+      })
+    } else {
+      AuthService.setAuthCookies(res, tokens)
+      return next({
+        data: {
+          user: responseUser,
+        },
+        code: ResponseCode.OK,
+      })
+    }
   }
 
   @logEndpoint()
@@ -231,7 +251,7 @@ export class AuthController {
       hashUid: uids[1],
       password,
     })
-    
+
     if (!result.userId) {
       return next({ code: result.code })
     }

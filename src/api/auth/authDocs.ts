@@ -6,10 +6,71 @@ const tags = [
 ]
 
 const paths = {
+  '/auth/register': {
+    post: {
+      tags: ['Auth'],
+      description:
+        'Register a new user. Mobile clients (with header x-client-type: mobile) receive tokens in response body. Web clients receive tokens as HTTP-only cookies.',
+      parameters: [
+        {
+          in: 'header',
+          name: 'x-client-type',
+          schema: {
+            type: 'string',
+            enum: ['mobile'],
+          },
+          required: false,
+          description:
+            'Set to "mobile" for mobile clients to receive bearer tokens in response. Omit for web clients to use cookies.',
+        },
+      ],
+      requestBody: {
+        content: {
+          'application/json': {
+            schema: {
+              $ref: '#/definitions/auth_register_body',
+            },
+          },
+        },
+      },
+      responses: {
+        '200': {
+          description: 'Successfully registered',
+          content: {
+            schema: {
+              $ref: '#/definitions/auth_register_response',
+            },
+          },
+        },
+        '400': {
+          description: 'User already registered',
+          content: {
+            schema: {
+              $ref: '#/definitions/user_already_registered_response',
+            },
+          },
+        },
+      },
+    },
+  },
   '/auth/login': {
     post: {
       tags: ['Auth'],
-      description: 'Login.',
+      description:
+        'Login. Mobile clients (with header x-client-type: mobile) receive tokens in response body. Web clients receive tokens as HTTP-only cookies.',
+      parameters: [
+        {
+          in: 'header',
+          name: 'x-client-type',
+          schema: {
+            type: 'string',
+            enum: ['mobile'],
+          },
+          required: false,
+          description:
+            'Set to "mobile" for mobile clients to receive bearer tokens in response. Omit for web clients to use cookies.',
+        },
+      ],
       requestBody: {
         content: {
           'application/json': {
@@ -260,7 +321,7 @@ const paths = {
     post: {
       tags: ['Auth'],
       description:
-        'Send a 4-digit login verification code to the user\'s email address',
+        "Send a 4-digit login verification code to the user's email address",
       requestBody: {
         content: {
           'application/json': {
@@ -363,22 +424,74 @@ const definitions = {
         user: {
           id: '94104c89-e04a-41b6-9902-e19c723c1354',
         },
-        accessToken:
-          'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwYTE1MmMyNS04YjY3LTQ1NWUtYTA2Yi03OTNlYTBjOTcwZjQiLCJpYXQiOjE3MDk3MzMxMzQsImV4cCI6MTcwOTczNDAzNH0.XIKDtSlSu4fMeeA0aT4rfipTTFTSoAbKKykQIUkp2vAFtb71PwLkQPrT3GkBpIZxWKwg2FWDeWfJuM3shUshjm2YV0MaLoIAbGbeRlXIwdlVEcSDykTriEMDJxBWL1Fo13YhGmJ0pnWJFwMztpwwXZ6RP1zSAYvTTj5l8TN8TdE4FH1XyTGjo-T1J2SnmA7_G4J1YueXafHvn9Nd863Ek3o2nMhvSOlL5d1dUsLLwaSL3AtdVYFFQ7gP4K31z_AstI0jFB_SXE0EikvEnnjc__we17A0j5u16p_r3nI5_aqRAan7UkGgw3nfGAz4qiXU9fjDfMfCgQRJkxTbCLHGQQ',
-        refreshToken:
-          'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwYTE1MmMyNS04YjY3LTQ1NWUtYTA2Yi03OTNlYTBjOTcwZjQiLCJpYXQiOjE3MDk3MzMxMzQsImV4cCI6MTcxMDMzNzkzNH0.ash2Qt6Bvmco72hEe2_HVtONamC9UMkVG2KLjjOsXPKl2GPG8Jx8tgykcnBkjRTLO22uFyBqHxzIsxcYBvb-5fA3GIbfqzvnRxrL26SvP6n23-lL0q0aFLmka_iFjOjanZGUTCLTmVVhmnYtNrlqiRNJ3adXN3iN3kPiKdgydQXO9LOgtIA48fq2SyC4_foU2uCxtU1ZDHwXOkamN6G9RO-GlOE3Q9KTHEblnuPMlCOGPcScVEDW_l13MO2vPETdkfitUyxo2_iMSBtTqUHhq57gp07dnni6xnJjcL6miwnS-uo-Npa5qz3F64JH2q28LGoUZ4SoiSZQgriZD1Xg8w',
-        accessTokenExpiresAt: '2024-03-06T14:07:14.922Z',
-        refreshTokenExpiresAt: '2024-03-13T13:52:14.681Z',
+        tokens: {
+          accessToken:
+            'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwYTE1MmMyNS04YjY3LTQ1NWUtYTA2Yi03OTNlYTBjOTcwZjQiLCJpYXQiOjE3MDk3MzMxMzQsImV4cCI6MTcwOTczNDAzNH0.XIKDtSlSu4fMeeA0aT4rfipTTFTSoAbKKykQIUkp2vAFtb71PwLkQPrT3GkBpIZxWKwg2FWDeWfJuM3shUshjm2YV0MaLoIAbGbeRlXIwdlVEcSDykTriEMDJxBWL1Fo13YhGmJ0pnWJFwMztpwwXZ6RP1zSAYvTTj5l8TN8TdE4FH1XyTGjo-T1J2SnmA7_G4J1YueXafHvn9Nd863Ek3o2nMhvSOlL5d1dUsLLwaSL3AtdVYFFQ7gP4K31z_AstI0jFB_SXE0EikvEnnjc__we17A0j5u16p_r3nI5_aqRAan7UkGgw3nfGAz4qiXU9fjDfMfCgQRJkxTbCLHGQQ',
+          refreshToken:
+            'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwYTE1MmMyNS04YjY3LTQ1NWUtYTA2Yi03OTNlYTBjOTcwZjQiLCJpYXQiOjE3MDk3MzMxMzQsImV4cCI6MTcxMDMzNzkzNH0.ash2Qt6Bvmco72hEe2_HVtONamC9UMkVG2KLjjOsXPKl2GPG8Jx8tgykcnBkjRTLO22uFyBqHxzIsxcYBvb-5fA3GIbfqzvnRxrL26SvP6n23-lL0q0aFLmka_iFjOjanZGUTCLTmVVhmnYtNrlqiRNJ3adXN3iN3kPiKdgydQXO9LOgtIA48fq2SyC4_foU2uCxtU1ZDHwXOkamN6G9RO-GlOE3Q9KTHEblnuPMlCOGPcScVEDW_l13MO2vPETdkfitUyxo2_iMSBtTqUHhq57gp07dnni6xnJjcL6miwnS-uo-Npa5qz3F64JH2q28LGoUZ4SoiSZQgriZD1Xg8w',
+          accessTokenExpiresAt: '2024-03-06T14:07:14.922Z',
+          refreshTokenExpiresAt: '2024-03-13T13:52:14.681Z',
+        },
       },
       code: 200000,
       message: 'OK',
     },
+    description:
+      'For mobile clients (x-client-type: mobile), tokens are returned in response body. For web clients, tokens are set as HTTP-only cookies and not included in response body.',
   },
   auth_login_response_404: {
     example: {
       data: null,
       code: 400002,
       message: 'Wrong email or password',
+    },
+  },
+  auth_register_body: {
+    type: 'object',
+    description:
+      'Password is required if authType is UserPassword. If authType is Google, Facebook or LinkedIn, password should not be passed',
+    properties: {
+      email: {
+        type: 'string',
+        example: 'john.doe@email.com',
+      },
+      password: {
+        type: 'string',
+        example: 'Test123',
+      },
+      authType: {
+        type: 'string',
+        enum: ['Google', 'Facebook', 'LinkedIn', 'UserPassword'],
+      },
+    },
+    required: ['email', 'authType'],
+  },
+  auth_register_response: {
+    example: {
+      data: {
+        user: {
+          id: '94104c89-e04a-41b6-9902-e19c723c1354',
+        },
+        tokens: {
+          accessToken:
+            'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwYTE1MmMyNS04YjY3LTQ1NWUtYTA2Yi03OTNlYTBjOTcwZjQiLCJpYXQiOjE3MDk3MzMxMzQsImV4cCI6MTcwOTczNDAzNH0...',
+          refreshToken:
+            'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwYTE1MmMyNS04YjY3LTQ1NWUtYTA2Yi03OTNlYTBjOTcwZjQiLCJpYXQiOjE3MDk3MzMxMzQsImV4cCI6MTcxMDMzNzkzNH0...',
+          accessTokenExpiresAt: '2024-03-06T14:07:14.922Z',
+          refreshTokenExpiresAt: '2024-03-13T13:52:14.681Z',
+        },
+      },
+      code: 200000,
+      message: 'OK',
+    },
+    description:
+      'For mobile clients (x-client-type: mobile), tokens are returned in response body. For web clients, tokens are set as HTTP-only cookies and not included in response body.',
+  },
+  user_already_registered_response: {
+    example: {
+      data: null,
+      code: 400003,
+      message: 'User already registered',
     },
   },
   auth_login_body: {
@@ -562,8 +675,7 @@ const definitions = {
           accessTokenExpiresAt: '2024-03-06T14:07:14.922Z',
           refreshTokenExpiresAt: '2024-03-13T13:52:14.681Z',
         },
-        deviceToken:
-          'a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6',
+        deviceToken: 'a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6',
       },
       code: 200000,
       message: 'OK',

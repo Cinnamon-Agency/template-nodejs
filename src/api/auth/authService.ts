@@ -453,7 +453,11 @@ export class AuthService implements IAuthService {
   }
 
   @serviceErrorHandler()
-  async storeDeviceToken({deviceToken, userId, expiresInDays = 30}: IStoreDeviceToken) {
+  async storeDeviceToken({
+    deviceToken,
+    userId,
+    expiresInDays = 30,
+  }: IStoreDeviceToken) {
     const expiresAt = new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000)
 
     // Delete any existing token for this device
@@ -489,14 +493,18 @@ export class AuthService implements IAuthService {
       await prisma.deviceToken.delete({
         where: { id: storedToken.id },
       })
-      return { isValid: false, userId: null, code: ResponseCode.SESSION_EXPIRED }
+      return {
+        isValid: false,
+        userId: null,
+        code: ResponseCode.SESSION_EXPIRED,
+      }
     }
 
     return { isValid: true, userId: storedToken.userId, code: ResponseCode.OK }
   }
 
   @serviceErrorHandler()
-  async setNewPassword({uid, hashUid, password}: ISetNewPassword) {
+  async setNewPassword({ uid, hashUid, password }: ISetNewPassword) {
     const { verificationUID, code: verificationUIDCode } =
       await this.verificationUIDService.verifyUID({
         uid,
@@ -526,9 +534,11 @@ export class AuthService implements IAuthService {
   }
 
   @serviceErrorHandler()
-  async resendLoginCode ({email}: IResendLoginCode) {
+  async resendLoginCode({ email }: IResendLoginCode) {
     // Verify user exists
-    const { user, code: userCode } = await this.userService.getUserByEmail({ email })
+    const { user, code: userCode } = await this.userService.getUserByEmail({
+      email,
+    })
     if (!user) {
       return { code: userCode }
     }
@@ -563,8 +573,15 @@ export class AuthService implements IAuthService {
   }
 
   @serviceErrorHandler()
-  async verifyLoginCode ({loginCode, email, dontAskOnThisDevice, deviceToken}: IVerifyLoginCode) {
-    const { user, code: userCode } = await this.userService.getUserByEmail({ email })
+  async verifyLoginCode({
+    loginCode,
+    email,
+    dontAskOnThisDevice,
+    deviceToken,
+  }: IVerifyLoginCode) {
+    const { user, code: userCode } = await this.userService.getUserByEmail({
+      email,
+    })
     if (!user) {
       return { code: userCode }
     }
@@ -611,12 +628,12 @@ export class AuthService implements IAuthService {
       return { code: tokenCode }
     }
 
-    return { 
+    return {
       data: {
         user,
-        tokens
+        tokens,
       },
-      code: ResponseCode.OK 
+      code: ResponseCode.OK,
     }
   }
 }

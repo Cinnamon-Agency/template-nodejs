@@ -110,5 +110,7 @@ export interface IAuthService {
   storeDeviceToken(params: IStoreDeviceToken): AsyncResponse<null>
   resendLoginCode(params: IResendLoginCode): AsyncResponse<null>
   setNewPassword(params: ISetNewPassword): AsyncResponse<{ userId: string }>
-  verifyLoginCode(params: IVerifyLoginCode): AsyncResponse<IVerifyLoginCodeResponse>
+  verifyLoginCode(
+    params: IVerifyLoginCode
+  ): AsyncResponse<IVerifyLoginCodeResponse>
 }

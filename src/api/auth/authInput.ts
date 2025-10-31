@@ -9,7 +9,7 @@ export const loginSchema = (req: Request) => {
         authType: Joi.string()
           .valid(...Object.values(AuthType))
           .required(),
-        email: Joi.string().required(),
+        email: Joi.string().email().required(),
         password: Joi.alternatives().conditional('authType', {
           is: 'UserPassword',
           then: Joi.string().required(),
@@ -17,9 +17,9 @@ export const loginSchema = (req: Request) => {
       })
       .options({ abortEarly: false }),
     input: {
-      token: req.body.token,
-      type: req.body.type,
-      userCredentials: req.body.userCredentials,
+      authType: req.body.authType,
+      email: req.body.email,
+      password: req.body.password,
     },
   }
 }
@@ -31,17 +31,17 @@ export const registerSchema = (req: Request) => {
         authType: Joi.string()
           .valid(...Object.values(AuthType))
           .required(),
-        email: Joi.string().required(),
+        email: Joi.string().email().required(),
         password: Joi.alternatives().conditional('authType', {
           is: 'UserPassword',
-          then: Joi.string().required(),
+          then: Joi.string().min(8).max(24).required(),
         }),
       })
       .options({ abortEarly: false }),
     input: {
-      token: req.body.token,
-      type: req.body.type,
-      userCredentials: req.body.userCredentials,
+      authType: req.body.authType,
+      email: req.body.email,
+      password: req.body.password,
     },
   }
 }

@@ -4,7 +4,7 @@ import {
   IGetUserSession,
   IStoreUserSession,
   IUpdateUserSession,
-  IUserSessionService
+  IUserSessionService,
 } from './interface'
 import config from '@core/config'
 import { compare, hashString } from '@services/bcrypt'
@@ -25,9 +25,9 @@ export class UserSessionService implements IUserSessionService {
     }
 
     const existingSession = await prisma.userSession.findFirst({
-      where: { 
+      where: {
         userId,
-        status: UserSessionStatus.ACTIVE 
+        status: UserSessionStatus.ACTIVE,
       },
     })
     if (existingSession) {
@@ -79,9 +79,9 @@ export class UserSessionService implements IUserSessionService {
     }
 
     const userSession = await prisma.userSession.findFirst({
-      where: { 
+      where: {
         userId,
-        status: UserSessionStatus.ACTIVE 
+        status: UserSessionStatus.ACTIVE,
       },
     })
     if (!userSession) {
@@ -119,9 +119,9 @@ export class UserSessionService implements IUserSessionService {
     }
 
     const userSession = await prisma.userSession.findFirst({
-      where: { 
+      where: {
         userId,
-        status: UserSessionStatus.ACTIVE 
+        status: UserSessionStatus.ACTIVE,
       },
     })
     if (!userSession) {
