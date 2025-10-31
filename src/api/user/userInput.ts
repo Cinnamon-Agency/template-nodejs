@@ -9,11 +9,11 @@ export const getUserProfileSchema = (req: Request) => {
           .regex(
             /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/
           )
-          .required()
+          .required(),
       })
       .options({ abortEarly: false }),
     input: {
-      id: req.params.id
-    }
+      id: req.params.id,
+    },
   }
 }

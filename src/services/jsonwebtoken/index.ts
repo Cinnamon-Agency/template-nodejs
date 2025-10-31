@@ -1,8 +1,8 @@
 import { sign, SignOptions, verify } from 'jsonwebtoken'
-import config from '../../config'
+import config from '@core/config'
 export enum TokenType {
   ACCESS_TOKEN = 'ACCESS_TOKEN',
-  REFRESH_TOKEN = 'REFRESH_TOKEN'
+  REFRESH_TOKEN = 'REFRESH_TOKEN',
 }
 export const generateToken = (
   payload: object,
@@ -12,7 +12,7 @@ export const generateToken = (
   const secret = config[`${type}_SECRET`]
   const token = sign(payload, secret, {
     expiresIn: `${config[`${type}_EXPIRES_IN`]}m`,
-    ...(options && options)
+    ...(options && options),
   })
   return token
 }

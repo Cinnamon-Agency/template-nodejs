@@ -1,10 +1,10 @@
-import { AsyncResponse } from '../../interface'
-import { UserSession } from './userSessionModel'
+import { AsyncResponse } from '@common'
+import { UserSession } from '@prisma/client'
 
 export enum UserSessionStatus {
   ACTIVE = 'Active',
   EXPIRED = 'Expired',
-  LOGGED_OUT = 'LoggedOut'
+  LOGGED_OUT = 'LoggedOut',
 }
 
 export interface IStoreUserSession {

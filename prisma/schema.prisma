@@ -1,0 +1,225 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+enum NotificationType {
+  EXAMPLE_NOTIFICATION
+}
+
+enum ProjectStatus {
+  ACTIVE
+  FINISHED
+}
+
+enum AuthType {
+  GOOGLE
+  LINKED_IN
+  APPLE
+  FACEBOOK
+  USER_PASSWORD
+}
+
+enum UserSessionStatus {
+  ACTIVE
+  EXPIRED
+  LOGGED_OUT
+}
+
+enum VerificationUIDType {
+  REGISTRATION
+  RESET_PASSWORD
+  CHANGE_EMAIL
+  EMAIL_VERIFICATION
+  PHONE_VERIFICATION
+}
+
+enum RoleType {
+  USER
+  ADMIN
+  SUPERADMIN
+}
+
+enum SupportRequestStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model Role {
+  id    String      @id @default(uuid()) @db.Uuid
+  name  RoleType    @unique @default(USER)
+  users UserRole[]
+
+  @@map("roles")
+}
+
+model UserRole {
+  id        String   @id @default(uuid()) @db.Uuid
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @db.Uuid
+  role      Role     @relation(fields: [roleId], references: [id])
+  roleId    String   @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, roleId])
+  @@map("user_roles")
+}
+
+
+// Models
+model User {
+  id                      String          @id @default(uuid()) @db.Uuid
+  email                   String          @unique
+  emailVerified           Boolean         @default(false)
+  phoneNumber             String?
+  phoneVerified           Boolean         @default(false)
+  password                String?         // nullable
+  authType                AuthType
+  roles                 UserRole[]
+  notifications           Boolean?        @default(false)
+  profilePictureFileName  String?
+  projects                Project[]
+  notificationsSent       Notification[]  @relation("NotificationSender")
+  notificationsReceived   Notification[]  @relation("NotificationReceiver")
+  sessions                UserSession[]
+  verificationUIDs        VerificationUID[]
+  createdAt               DateTime        @default(now())
+  updatedAt               DateTime        @updatedAt
+
+  @@map("users")
+}
+
+model Project {
+  id            String     @id @default(uuid()) @db.Uuid
+  name          String
+  description   String
+  deadline      DateTime
+  userId        String     @db.Uuid
+  user          User       @relation(fields: [userId], references: [id])
+  projectStatus ProjectStatus @default(ACTIVE)
+  mediaFiles    Media[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model Media {
+  id            String     @id @default(uuid()) @db.Uuid
+  mediaType     MediaType
+  mediaFileName String     @unique
+  projectId     String     @db.Uuid
+  project       Project    @relation(fields: [projectId], references: [id])
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model Notification {
+  id               String           @id @default(uuid()) @db.Uuid
+  senderId         String           @db.Uuid
+  sender           User             @relation("NotificationSender", fields: [senderId], references: [id])
+  receiverId       String           @db.Uuid
+  receiver         User             @relation("NotificationReceiver", fields: [receiverId], references: [id])
+  message          String
+  read             Boolean          @default(true)
+  notificationType NotificationType
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+}
+
+model UserSession {
+  id            String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String            @db.Uuid
+  user          User              @relation(fields: [userId], references: [id])
+  refreshToken  String            @db.VarChar(500)
+  expiresAt     DateTime
+  status        UserSessionStatus @default(ACTIVE)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  
+  @@index([userId])
+  @@index([refreshToken], name: "refresh_token_idx")
+}
+
+model VerificationUID {
+  id        String              @id @default(uuid()) @db.Uuid
+  userId    String              @db.Uuid
+  user      User                @relation(fields: [userId], references: [id])
+  uid       String              @db.Uuid
+  hash      String              @db.VarChar(255)
+  type      VerificationUIDType
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+  
+  @@index([uid], name: "verification_uid_idx")
+  @@index([userId])
+}
+
+model SupportRequest {
+  id        String                @id @default(uuid())
+  firstName String
+  lastName  String
+  email     String
+  subject   String
+  message   String                @db.Text
+  status    SupportRequestStatus  @default(OPEN)
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
+
+  @@map("support_requests")
+}
+
+model PhoneVerificationCode {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @db.Uuid
+  phoneNumber   String
+  code          String
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("phone_verification_codes")
+}
+
+model LoginCode {
+  id        String   @id @default(uuid())
+  email     String
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@map("login_codes")
+}
+
+model DeviceToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([token])
+  @@map("device_tokens")
+}

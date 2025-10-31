@@ -1,17 +1,16 @@
 import { NextFunction, Request, Response } from 'express'
-import { ResponseCode } from '../../interface'
-import { autoInjectable } from 'tsyringe'
+import { ResponseCode } from '@common'
+import { autoInjectable, singleton } from 'tsyringe'
 import { UserService } from './userService'
+import { logEndpoint } from '@common/decorators/logEndpoint'
 
+@singleton()
 @autoInjectable()
 export class UserController {
-  private readonly userService: UserService
+  constructor(private readonly userService: UserService) {}
 
-  constructor(userService: UserService) {
-    this.userService = userService
-  }
-
-  getUser = async (req: Request, res: Response, next: NextFunction) => {
+  @logEndpoint()
+  public async getUser(req: Request, res: Response, next: NextFunction) {
     const { id } = req.user
 
     const { user, code } = await this.userService.getUserById({ userId: id })
@@ -22,27 +21,29 @@ export class UserController {
 
     return next({
       data: {
-        user
+        user,
       },
-      code: ResponseCode.OK
+      code: ResponseCode.OK,
     })
   }
 
-  toogleNotifications = async (
+  @logEndpoint()
+  public async toogleNotifications(
     req: Request,
     res: Response,
     next: NextFunction
-  ) => {
+  ) {
     const { id } = req.user
 
-    const { code } = await this.userService.toogleNotifications({ userId: id })
+    const { code } = await this.userService.toggleNotifications({ userId: id })
 
     return next({
-      code
+      code,
     })
   }
 
-  getUserProfile = async (req: Request, res: Response, next: NextFunction) => {
+  @logEndpoint()
+  public async getUserProfile(req: Request, res: Response, next: NextFunction) {
     const { id } = res.locals.input
 
     const { user, code } = await this.userService.getUserById({ userId: id })
@@ -53,9 +54,9 @@ export class UserController {
 
     return next({
       data: {
-        user
+        user,
       },
-      code: ResponseCode.OK
+      code: ResponseCode.OK,
     })
   }
 }

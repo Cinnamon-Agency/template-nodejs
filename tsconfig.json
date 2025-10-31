@@ -11,7 +11,23 @@
     "experimentalDecorators": true,
     "resolveJsonModule": true,
     "inlineSourceMap": true,
-    "typeRoots": ["node_modules/@types", "types"]
+    "typeRoots": ["node_modules/@types", "types"],
+    "baseUrl": "src",
+    "paths": {
+      "@api/*": ["api/*"],
+      "@app": ["core/app"],
+      "@common": ["common"],
+      "@common/*": ["common/*"],
+      "@config": ["config"],
+      "@core/*": ["core/*"],
+      "@documentation": ["documentation"],
+      "@generated/*": ["generated/*"],
+      "@logger": ["logger"],
+      "@middleware/*": ["middleware/*"],
+      "@models": ["models"],
+      "@routes": ["routes"],
+      "@services/*": ["services/*"]
+    }
   },
-  "include": ["src/**/*.ts", "src/app..ts"]
+  "include": ["src/**/*.ts", "src/app.ts"]
 }

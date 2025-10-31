@@ -1,16 +1,17 @@
 import _ from 'lodash'
-import { authDocs } from '../api/auth/authDocs'
-import { userDocs } from '../api/user/userDocs'
-import config from './../config'
-import { projectDocs } from '../api/project/projectDocs'
-import { notificationDocs } from '../api/notification/notificationDocs'
+import { authDocs } from '@api/auth/authDocs'
+import { userDocs } from '@api/user/userDocs'
+import config from '@core/config'
+import { projectDocs } from '@api/project/projectDocs'
+import { notificationDocs } from '@api/notification/notificationDocs'
+import { genericDocs } from './genericDocs'
 
 export const APIDocumentation = {
   openapi: '3.0.1',
   info: {
     title: config.PROJECT_NAME,
     description: `${config.PROJECT_NAME} API`,
-    version: '0.1'
+    version: '0.1',
   },
   basePath: '/',
   components: {
@@ -18,21 +19,22 @@ export const APIDocumentation = {
       bearerAuth: {
         type: 'http',
         scheme: 'bearer',
-        bearerFormat: 'JWT'
-      }
-    }
+        bearerFormat: 'JWT',
+      },
+    },
   },
   security: [
     {
-      bearerAuth: []
-    }
+      bearerAuth: [],
+    },
   ],
   servers: [
     {
-      url: config.API_BASE_URL
-    }
+      url: config.API_BASE_URL,
+    },
   ],
   ..._.mergeWith(
+    genericDocs,
     authDocs,
     userDocs,
     projectDocs,
@@ -42,5 +44,7 @@ export const APIDocumentation = {
         return a.concat(b)
       }
     }
-  )
+  ),
 }
+
+export * from './router'

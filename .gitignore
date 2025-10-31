@@ -3,4 +3,4 @@
 /keys
 .env
 .env.*
-!.env.template
+

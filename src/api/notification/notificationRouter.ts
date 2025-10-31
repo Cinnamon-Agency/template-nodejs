@@ -1,12 +1,12 @@
 import express from 'express'
-import { validate } from '../../middleware/validation'
+import { validate } from '@middleware/validation'
 import { container } from 'tsyringe'
-import { requireToken } from '../../middleware/auth'
+import { requireToken } from '@middleware/auth'
 import { NotificationController } from './notificationController'
 import {
   getNotificationSchema,
   toogleReadStatusSchema,
-  deleteNotificationSchema
+  deleteNotificationSchema,
 } from './notificationInput'
 
 const notificationController = container.resolve(NotificationController)

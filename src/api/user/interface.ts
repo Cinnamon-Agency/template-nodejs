@@ -1,19 +1,18 @@
-import { AsyncResponse, IServiceMethod } from '../../interface'
-import { AuthType } from '../auth/interface'
-import { User } from './userModel'
+import { AsyncResponse } from '@common'
+import { AuthType, User } from '@prisma/client'
 
-export interface ICreateUser extends IServiceMethod {
+export interface ICreateUser {
   email: string
   password?: string
   authType: AuthType
 }
 
-export interface IGetUserById extends IServiceMethod {
+export interface IGetUserById {
   userId: string
   allUsers?: boolean
 }
 
-export interface IGetUserByEmail extends IServiceMethod {
+export interface IGetUserByEmail {
   email: string
   allUsers?: boolean
 }
@@ -28,13 +27,20 @@ export interface UserSkill {
   skillId: string
 }
 
-export interface IToogleNotifications {
+export interface IToggleNotifications {
   userId: string
 }
 
 export interface IUpdatePassword {
   userId: string
   password: string
+}
+
+export interface IUpdateUser {
+  userId: string
+  emailVerified?: boolean
+  phoneNumber?: string
+  phoneVerified?: boolean
 }
 
 export interface IUserService {
@@ -44,6 +50,7 @@ export interface IUserService {
   getUserByEmailAndAuthType(
     params: IGetUserByEmailAndAuthType
   ): AsyncResponse<User>
-  toogleNotifications(params: IToogleNotifications): AsyncResponse<null>
+  toggleNotifications(params: IToggleNotifications): AsyncResponse<null>
   updatePassword(params: IUpdatePassword): AsyncResponse<null>
+  updateUser(params: IUpdateUser): AsyncResponse<null>
 }

@@ -1,24 +1,24 @@
 import { NextFunction, Request, Response } from 'express'
-import { ResponseCode } from '../../interface'
-import { autoInjectable, container } from 'tsyringe'
+import { logEndpoint } from '@common/decorators/logEndpoint'
+import { ResponseCode } from '@common'
+import { autoInjectable, singleton } from 'tsyringe'
 import { NotificationService } from './notificationService'
-import { WebSocketService } from '../../services/websocket'
+import { WebSocketService } from '@services/websocket'
 
-const webSocketService = container.resolve(WebSocketService)
-
+@singleton()
 @autoInjectable()
 export class NotificationController {
-  private readonly notificationService: NotificationService
+  constructor(
+    private readonly notificationService: NotificationService,
+    private readonly webSocketService: WebSocketService
+  ) {}
 
-  constructor(notificationService: NotificationService) {
-    this.notificationService = notificationService
-  }
-
-  getNotifications = async (
+  @logEndpoint()
+  public async getNotifications(
     req: Request,
     res: Response,
     next: NextFunction
-  ) => {
+  ) {
     const { id } = req.user
     const { unread, numberOfFetched } = res.locals.input
 
@@ -26,7 +26,7 @@ export class NotificationController {
       await this.notificationService.getNotifications({
         userId: id,
         unread,
-        numberOfFetched
+        numberOfFetched,
       })
     if (!notifications) {
       return next({ code })
@@ -34,45 +34,47 @@ export class NotificationController {
 
     return next({
       data: {
-        notifications
+        notifications,
       },
-      code: ResponseCode.OK
+      code: ResponseCode.OK,
     })
   }
 
-  toogleReadStatus = async (
+  @logEndpoint()
+  public async toogleReadStatus(
     req: Request,
     res: Response,
     next: NextFunction
-  ) => {
+  ) {
     const { id } = req.user
     const { notificationId, read } = res.locals.input
 
-    const { code } = await this.notificationService.toogleReadStatus({
+    const { code } = await this.notificationService.toggleReadStatus({
       notificationId,
       userId: id,
-      read
+      read,
     })
 
     return next({
-      code
+      code,
     })
   }
 
-  deleteNotification = async (
+  @logEndpoint()
+  public async deleteNotification(
     req: Request,
     res: Response,
     next: NextFunction
-  ) => {
+  ) {
     const { id } = req.user
     const { notificationId } = res.locals.input
 
     const { code } = await this.notificationService.deleteNotification({
       notificationId,
-      userId: id
+      userId: id,
     })
 
-    webSocketService.emit(`${id}_delete_notif`, { notificationId })
+    this.webSocketService.emit(`${id}_delete_notif`, { notificationId })
 
     return next({ code })
   }

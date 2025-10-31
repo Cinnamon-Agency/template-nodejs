@@ -1,38 +1,37 @@
 import { WebSocketServer } from 'ws'
 import { IWebSocketEventData } from './interface'
-import { autoInjectable } from 'tsyringe'
+import { autoInjectable, singleton } from 'tsyringe'
+import { logger } from '@core/logger'
 
+@singleton()
 @autoInjectable()
 export class WebSocketService {
   private websocket: WebSocketServer
   constructor() {
-    this.websocket = new WebSocketServer({ noServer: true });
-
+    this.websocket = new WebSocketServer({ noServer: true })
   }
 
   connect() {
-
-    this.websocket.on('open', (event) => {
-      console.log('WebSocket connection opened:', event)
+    this.websocket.on('open', event => {
+      logger.info('WebSocket connection opened:', event)
     })
 
-    this.websocket.on('error', (error) => {
-      console.error('WebSocket error:', error)
+    this.websocket.on('error', error => {
+      logger.error('WebSocket error:', error)
     })
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.websocket.on('close', (event: any) => {
-      console.log('WebSocket connection closed:', event)
+      logger.info('WebSocket connection closed:', event)
     })
   }
 
   emit(event: string, data: IWebSocketEventData) {
     if (this.websocket) {
       this.websocket.emit(event, data)
-    } else if (this.websocket) {
-      console.error(
-        `WebSocket is not open. Ready state is: Ready`
-      )
-    } else console.error(`Error on websocket initialization`)
+    } else if (!this.websocket) {
+      logger.error(`WebSocket is not open. Ready state is: Ready`)
+    } else logger.error(`Error on websocket initialization`)
   }
 
   close() {

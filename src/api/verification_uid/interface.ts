@@ -1,13 +1,10 @@
-import { AsyncResponse, IServiceMethod } from '../../interface'
-import { VerificationUID } from './verificationUIDModel'
+import { AsyncResponse } from '@common'
+import { VerificationUID, VerificationUIDType } from '@prisma/client'
 
-export enum VerificationUIDType {
-  REGISTRATION = 'Registration',
-  RESET_PASSWORD = 'ResetPassword',
-  CHANGE_EMAIL = 'ChangeEmail'
-}
+// Re-export the VerificationUIDType from Prisma
+export { VerificationUIDType } from '@prisma/client'
 
-export interface ISetVerificationUID extends IServiceMethod {
+export interface ISetVerificationUID {
   userId: string
   type: VerificationUIDType
 }

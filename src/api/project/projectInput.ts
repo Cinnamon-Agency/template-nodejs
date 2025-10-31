@@ -11,17 +11,17 @@ export const createProjectSchema = (req: Request) => {
         mediaFiles: Joi.array()
           .items({
             mediaType: Joi.string().required(),
-            mediaFileName: Joi.string().required()
+            mediaFileName: Joi.string().required(),
           })
-          .required()
+          .required(),
       })
       .options({ abortEarly: false }),
     input: {
       name: req.body.name,
       description: req.body.description,
       deadline: req.body.deadline,
-      mediaFiles: req.body.mediaFiles
-    }
+      mediaFiles: req.body.mediaFiles,
+    },
   }
 }
 
@@ -30,13 +30,13 @@ export const getProjectsSchema = (req: Request) => {
     schema: Joi.object()
       .keys({
         page: Joi.number().required(),
-        perPage: Joi.number().required()
+        perPage: Joi.number().required(),
       })
       .options({ abortEarly: false }),
     input: {
       page: req.query.page,
-      perPage: req.query.perPage
-    }
+      perPage: req.query.perPage,
+    },
   }
 }
 
@@ -48,11 +48,11 @@ export const getProjectByIdSchema = (req: Request) => {
           .regex(
             /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/
           )
-          .required()
+          .required(),
       })
       .options({ abortEarly: false }),
     input: {
-      id: req.params.id
-    }
+      id: req.params.id,
+    },
   }
 }

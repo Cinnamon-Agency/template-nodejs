@@ -1,10 +1,5 @@
-import { AsyncResponse } from '../../interface'
-import { Notification } from './notificationModel'
-
-export enum NotificationType {
-  ADDED_TO_FAVORITES = 'Added to favorites',
-  COLLABORATION_REQUEST = 'Collaboration request'
-}
+import { AsyncResponse } from '@common'
+import { Notification, NotificationType } from '@prisma/client'
 
 export interface IDeleteNotificationEvent {
   notificationId: string
@@ -23,7 +18,7 @@ export interface IGetNotifications {
   numberOfFetched: number
 }
 
-export interface IToogleReadStatus {
+export interface IToggleReadStatus {
   notificationId: string
   read: boolean
   userId: string
@@ -37,6 +32,6 @@ export interface IDeleteNotification {
 export interface INotificationService {
   createNotification(params: ICreateNotification): AsyncResponse<null>
   getNotifications(params: IGetNotifications): AsyncResponse<Notification[]>
-  toogleReadStatus(params: IToogleReadStatus): AsyncResponse<null>
+  toggleReadStatus(params: IToggleReadStatus): AsyncResponse<null>
   deleteNotification(params: IDeleteNotification): AsyncResponse<null>
 }

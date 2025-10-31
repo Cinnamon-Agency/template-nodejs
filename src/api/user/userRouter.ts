@@ -1,7 +1,7 @@
 import express from 'express'
-import { validate } from '../../middleware/validation'
+import { validate } from '@middleware/validation'
 import { container } from 'tsyringe'
-import { requireToken } from '../../middleware/auth'
+import { requireToken } from '@middleware/auth'
 import { UserController } from './userController'
 import { getUserProfileSchema } from './userInput'
 

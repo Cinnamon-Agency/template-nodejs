@@ -1,12 +1,12 @@
 import express from 'express'
 import { container } from 'tsyringe'
-import { requireToken } from '../../middleware/auth'
+import { requireToken } from '@middleware/auth'
 import {
   createProjectSchema,
   getProjectsSchema,
-  getProjectByIdSchema
+  getProjectByIdSchema,
 } from './projectInput'
-import { validate } from '../../middleware/validation'
+import { validate } from '@middleware/validation'
 import { ProjectController } from './projectController'
 
 const projectController = container.resolve(ProjectController)
