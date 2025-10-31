@@ -1,5 +1,6 @@
 import { ResponseCode, serviceErrorHandler } from '@common'
 import { UserService } from '@api/user/userService'
+import { Response } from 'express'
 import {
   ILogin,
   IAuthService,
@@ -13,7 +14,6 @@ import {
   IResendVerificationEmail,
   ISendVerificationCode,
   IVerifyPhoneCode,
-  ISetCookie,
   IStoreDeviceToken,
   ISetNewPassword,
   IResendLoginCode,
@@ -260,37 +260,58 @@ export class AuthService implements IAuthService {
     return { code: ResponseCode.OK }
   }
 
-  static COOKIE_OPTIONS = {
+  private static readonly COOKIE_OPTIONS = {
     httpOnly: true,
     secure: true,
     sameSite: 'strict' as const,
   }
 
+  private static readonly DEVICE_TOKEN_MAX_AGE = 30 * 24 * 60 * 60 * 1000 // 30 days in milliseconds
+
+  /**
+   * Sets authentication cookies (access and refresh tokens) on the response
+   */
   static setAuthCookies(
-    res: any,
+    res: Response,
     tokens: {
       accessToken: string
       refreshToken: string
       accessTokenExpiresAt: Date
       refreshTokenExpiresAt: Date
     }
-  ) {
+  ): void {
     res.cookie('accessToken', tokens.accessToken, {
       ...AuthService.COOKIE_OPTIONS,
-      expires: new Date(tokens.accessTokenExpiresAt),
+      expires: tokens.accessTokenExpiresAt,
     })
     res.cookie('refreshToken', tokens.refreshToken, {
       ...AuthService.COOKIE_OPTIONS,
-      expires: new Date(tokens.refreshTokenExpiresAt),
+      expires: tokens.refreshTokenExpiresAt,
     })
   }
 
-  static clearAuthCookies(res: any) {
+  /**
+   * Sets device token cookie on the response
+   */
+  static setDeviceTokenCookie(res: Response, deviceToken: string): void {
+    res.cookie('deviceToken', deviceToken, {
+      ...AuthService.COOKIE_OPTIONS,
+      maxAge: AuthService.DEVICE_TOKEN_MAX_AGE,
+    })
+  }
+
+  /**
+   * Clears authentication cookies from the response
+   */
+  static clearAuthCookies(res: Response): void {
     res.clearCookie('accessToken', AuthService.COOKIE_OPTIONS)
     res.clearCookie('refreshToken', AuthService.COOKIE_OPTIONS)
   }
 
-  static isMobileClient(req: any): boolean {
+  /**
+   * Checks if the request is from a mobile client
+   */
+  static isMobileClient(req: { headers: Record<string, any> }): boolean {
     return req.headers['x-client-type'] === 'mobile'
   }
 
@@ -428,26 +449,6 @@ export class AuthService implements IAuthService {
       where: { id: verificationCode.id },
     })
 
-    return { code: ResponseCode.OK }
-  }
-
-  @serviceErrorHandler()
-  async setCookie({res, name, value, maxAge}: ISetCookie) {
-    const cookieOptions: any = {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-    }
-
-    if (maxAge) {
-      if (maxAge instanceof Date) {
-        cookieOptions.expires = maxAge
-      } else {
-        cookieOptions.maxAge = maxAge
-      }
-    }
-
-    res.cookie(name, value, cookieOptions)
     return { code: ResponseCode.OK }
   }
 

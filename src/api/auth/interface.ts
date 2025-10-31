@@ -61,13 +61,6 @@ export interface IVerifyPhoneCode {
   code: string
 }
 
-export interface ISetCookie {
-  res: Response
-  name: string
-  value: string
-  maxAge?: number | Date
-}
-
 export interface IStoreDeviceToken {
   deviceToken: string
   userId: string
@@ -114,7 +107,6 @@ export interface IAuthService {
   resendVerificationEmail(params: IResendVerificationEmail): AsyncResponse<null>
   sendPhoneVerificationCode(params: ISendVerificationCode): AsyncResponse<null>
   verifyPhoneCode(params: IVerifyPhoneCode): AsyncResponse<null>
-  setCookie(params: ISetCookie): AsyncResponse<null>
   storeDeviceToken(params: IStoreDeviceToken): AsyncResponse<null>
   resendLoginCode(params: IResendLoginCode): AsyncResponse<null>
   setNewPassword(params: ISetNewPassword): AsyncResponse<{ userId: string }>

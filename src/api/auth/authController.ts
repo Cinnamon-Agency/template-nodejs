@@ -37,18 +37,8 @@ export class AuthController {
       id: user.id,
     }
 
-    res.cookie('accessToken', tokens.accessToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      expires: new Date(tokens.accessTokenExpiresAt),
-    })
-    res.cookie('refreshToken', tokens.refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      expires: new Date(tokens.refreshTokenExpiresAt),
-    })
+    AuthService.setAuthCookies(res, tokens)
+
     return next({
       data: {
         user: responseUser,
@@ -83,18 +73,8 @@ export class AuthController {
       id: user.id,
     }
 
-    res.cookie('accessToken', tokens.accessToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      expires: new Date(tokens.accessTokenExpiresAt),
-    })
-    res.cookie('refreshToken', tokens.refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      expires: new Date(tokens.refreshTokenExpiresAt),
-    })
+    AuthService.setAuthCookies(res, tokens)
+
     return next({
       data: {
         user: responseUser,
@@ -201,12 +181,7 @@ export class AuthController {
 
     // Set device token cookie if requested
     if (dontAskOnThisDevice && deviceToken) {
-      res.cookie('deviceToken', deviceToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'strict',
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      })
+      AuthService.setDeviceTokenCookie(res, deviceToken)
     }
 
     const responseUser = {
