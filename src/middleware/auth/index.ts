@@ -1,11 +1,10 @@
-import { NextFunction, Request, Response } from 'express'
+import { NextFunction, Request, RequestHandler, Response } from 'express'
 import { container } from 'tsyringe'
 import config from 'core/config'
-import { StatusCode, ResponseCode, ResponseMessage } from '@common'
-
+import { getResponseMessage, ResponseCode } from '@common'
 import { UserService } from '@api/user/userService'
 import { TokenType, verifyToken } from '@services/jsonwebtoken'
-import { JwtPayload } from 'jsonwebtoken'
+import { logger } from '@core/logger'
 
 const authenticatedDocUsers: { [key: string]: string } = {
   [config.DOCS_USER]: config.DOCS_PASSWORD,
@@ -37,56 +36,59 @@ export const authenticateDocs = (
   res.status(401).send('Authentication required')
 }
 
-export const requireToken = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    let token = ''
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.startsWith('Bearer')
-    ) {
-      token = req.headers.authorization.split(' ')[1]
-    }
+export const requireToken =
+  (allowedRoles?: string[]): RequestHandler =>
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      let token = ''
+      if (req.cookies && req.cookies['template-token']) {
+        token = req.cookies['template-token']
+      }
 
-    const decodedToken = await verifyToken<JwtPayload>(
-      token,
-      TokenType.ACCESS_TOKEN
-    )
-    if (
-      !decodedToken ||
-      typeof decodedToken.payload === 'string' ||
-      !decodedToken.sub
-    ) {
-      return res.status(StatusCode.UNAUTHORIZED).send({
-        data: null,
+      const decodedToken = await verifyToken<any>(token, TokenType.ACCESS_TOKEN)
+      if (
+        !decodedToken ||
+        typeof decodedToken.payload === 'string' ||
+        !decodedToken.sub
+      ) {
+        return next({
+          code: ResponseCode.INVALID_TOKEN,
+          message: getResponseMessage(ResponseCode.INVALID_TOKEN),
+        })
+      }
+
+      const { user } = await userService.getUserById({
+        userId: decodedToken.sub,
+      })
+
+      if (!user) {
+        return next({
+          code: ResponseCode.INVALID_TOKEN,
+          message: getResponseMessage(ResponseCode.INVALID_TOKEN),
+        })
+      }
+
+      const userRoles = user.roles.map(role => role.role.name)
+
+      if (allowedRoles && allowedRoles.length > 0) {
+        if (userRoles.includes('SUPERADMIN')) {
+          return next()
+        }
+
+        if (!allowedRoles.includes(userRoles[0])) {
+          return next({
+            code: ResponseCode.UNAUTHORIZED,
+          })
+        }
+      }
+
+      req.user = { ...user }
+
+      return next()
+    } catch (e: unknown) {
+      return next({
         code: ResponseCode.INVALID_TOKEN,
-        message: ResponseMessage.INVALID_TOKEN,
+        message: getResponseMessage(ResponseCode.INVALID_TOKEN),
       })
     }
-
-    const { user } = await userService.getUserById({
-      userId: decodedToken.sub,
-    })
-
-    if (!user) {
-      return res.status(StatusCode.UNAUTHORIZED).send({
-        data: null,
-        code: ResponseCode.INVALID_TOKEN,
-        message: ResponseMessage.INVALID_TOKEN,
-      })
-    }
-
-    req.user = { ...user }
-
-    return next()
-  } catch (e: unknown) {
-    return res.status(StatusCode.UNAUTHORIZED).send({
-      data: null,
-      code: ResponseCode.INVALID_TOKEN,
-      message: ResponseMessage.INVALID_TOKEN,
-    })
   }
-}

@@ -1,19 +1,18 @@
-import { AsyncResponse, ITransactionMethod } from '@common'
-import { AuthType } from '@api/auth/interface'
-import { User } from './userModel'
+import { AsyncResponse } from '@common'
+import { AuthType, User } from '@prisma/client'
 
-export interface ICreateUser extends ITransactionMethod {
+export interface ICreateUser {
   email: string
   password?: string
   authType: AuthType
 }
 
-export interface IGetUserById extends ITransactionMethod {
+export interface IGetUserById {
   userId: string
   allUsers?: boolean
 }
 
-export interface IGetUserByEmail extends ITransactionMethod {
+export interface IGetUserByEmail {
   email: string
   allUsers?: boolean
 }
@@ -37,6 +36,13 @@ export interface IUpdatePassword {
   password: string
 }
 
+export interface IUpdateUser {
+  userId: string
+  emailVerified?: boolean
+  phoneNumber?: string
+  phoneVerified?: boolean
+}
+
 export interface IUserService {
   createUser(params: ICreateUser): AsyncResponse<User>
   getUserById(params: IGetUserById): AsyncResponse<User>
@@ -46,4 +52,5 @@ export interface IUserService {
   ): AsyncResponse<User>
   toggleNotifications(params: IToggleNotifications): AsyncResponse<null>
   updatePassword(params: IUpdatePassword): AsyncResponse<null>
+  updateUser(params: IUpdateUser): AsyncResponse<null>
 }

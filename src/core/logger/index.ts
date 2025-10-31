@@ -1,5 +1,5 @@
 import winston, { createLogger, format } from 'winston'
-import config from '@core/config'
+import config from '../config'
 const { timestamp, combine, printf, errors } = format
 
 const consoleLogFormat = printf(({ level, message, timestamp, stack }) => {
@@ -15,7 +15,7 @@ const levels = {
   debug: 5,
 }
 
-const transports: winston.transport[] = []
+let transports: any = []
 
 if (config.LOG_TO_CONSOLE) {
   transports.push(
@@ -33,15 +33,14 @@ if (config.LOG_TO_CONSOLE) {
 export const logger = createLogger({
   levels,
   transports,
-  defaultMeta: { environment: config.NODE_ENV || 'null' },
+  defaultMeta: { environment: process.env.NODE_ENV || 'null' },
 })
 
 export const httpLogger = createLogger({
   levels: { http: 1 },
-  transports: config.LOG_REQUESTS
+  transports: process.env.LOG_REQUESTS
     ? [
         new winston.transports.Console({
-          level: 'http',
           format: combine(
             format.colorize(),
             timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),

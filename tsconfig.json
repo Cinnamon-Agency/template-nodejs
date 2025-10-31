@@ -15,11 +15,13 @@
     "baseUrl": "src",
     "paths": {
       "@api/*": ["api/*"],
+      "@app": ["core/app"],
       "@common": ["common"],
       "@common/*": ["common/*"],
       "@config": ["config"],
       "@core/*": ["core/*"],
       "@documentation": ["documentation"],
+      "@generated/*": ["generated/*"],
       "@logger": ["logger"],
       "@middleware/*": ["middleware/*"],
       "@models": ["models"],

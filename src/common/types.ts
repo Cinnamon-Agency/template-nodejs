@@ -1,9 +1,6 @@
-import { QueryRunner } from 'typeorm'
-import { User } from '@api/user/userModel'
 import { ResponseCode, ResponseMessage } from './response'
-import fileUpload from 'express-fileupload'
+import { User } from '@prisma/client'
 
-// Response related types
 export type ResponseCodeRequired = { code: ResponseCode }
 
 export type AsyncResponse<T> =
@@ -18,19 +15,10 @@ export type ResponseParams = {
   message?: ResponseMessage
 }
 
-// Service related types
-export interface ITransactionMethod {
-  queryRunner?: QueryRunner
-}
-
-// Express type extensions
 declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     export interface Request {
       user: User
-      files?: fileUpload.FileArray | null | undefined
-      responseCode: ResponseCode
     }
   }
 }

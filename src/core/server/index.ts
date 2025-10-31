@@ -4,8 +4,9 @@ import { logger } from '@core/logger'
 import config from '@core/config'
 import { serverState } from './state'
 import { container } from 'tsyringe'
-import { DataSource } from 'typeorm'
+
 import { WebSocketService } from '@services/websocket'
+import { prisma } from '@app'
 
 export class AppServer {
   private server: Server | null = null
@@ -15,6 +16,15 @@ export class AppServer {
   public start(): void {
     process.on('SIGINT', () => this.shutdown('SIGINT'))
     process.on('SIGTERM', () => this.shutdown('SIGTERM'))
+
+    // Global error monitoring
+    process.on('unhandledRejection', (reason, promise) => {
+      logger.error('Unhandled Rejection at:', promise, 'reason:', reason)
+    })
+    process.on('uncaughtException', error => {
+      logger.error('Uncaught Exception thrown:', error)
+      process.exit(1)
+    })
 
     const port = config.PORT
     const commitHash = config.COMMIT_HASH
@@ -41,24 +51,16 @@ export class AppServer {
 
       const shutdownTasks = []
 
-      const dataSource = container.resolve(DataSource)
-
-      shutdownTasks.push([
-        new Promise<void>((resolve, reject) => {
-          dataSource
-            .destroy()
-            .then(() => resolve())
-            .catch((err) => reject(err))
-        })
-      ])
+      shutdownTasks.push(prisma.$disconnect())
 
       const webSocketService = container.resolve(WebSocketService)
-      shutdownTasks.push(webSocketService.close)
+      // Properly invoke close() to get a promise
+      shutdownTasks.push(webSocketService.close())
 
       if (this.server) {
         shutdownTasks.push(
           new Promise<void>((resolve, reject) => {
-            this.server?.close((err) => {
+            this.server?.close(err => {
               if (err) {
                 reject(err)
               } else {
