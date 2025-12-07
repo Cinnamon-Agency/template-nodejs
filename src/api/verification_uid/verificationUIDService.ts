@@ -1,5 +1,5 @@
 import { prisma } from '@app'
-import { ResponseCode, serviceErrorHandler } from '@common'
+import { ResponseCode, serviceMethod } from '@common'
 import { compare, hashString } from '@services/bcrypt'
 import { generateUUID } from '@services/uuid'
 import {
@@ -15,7 +15,7 @@ import { VerificationUID, VerificationUIDType } from '@prisma/client'
 @singleton()
 @autoInjectable()
 export class VerificationUIDService implements IVerificationUIDService {
-  @serviceErrorHandler({
+  @serviceMethod({
     onError: async (err: unknown) => {
       return { code: ResponseCode.SERVER_ERROR }
     },
@@ -38,7 +38,7 @@ export class VerificationUIDService implements IVerificationUIDService {
     return { uids: { uid, hashUID }, code: ResponseCode.OK }
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async getVerificationUID({ uid }: IGetVerificationUID) {
     const verificationUID = await prisma.verificationUID.findFirst({
       where: { uid },
@@ -50,7 +50,7 @@ export class VerificationUIDService implements IVerificationUIDService {
     return { verificationUID, code: ResponseCode.OK }
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async clearVerificationUID({ userId, type }: IClearVerificationUID) {
     const verificationUID = await prisma.verificationUID.findFirst({
       where: {
@@ -69,7 +69,7 @@ export class VerificationUIDService implements IVerificationUIDService {
     return { code: ResponseCode.OK }
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async verifyUID({ uid, hashUid, type }: IVerifyUID) {
     const verificationUID = await prisma.verificationUID.findFirst({
       where: {

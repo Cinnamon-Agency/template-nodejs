@@ -1,4 +1,4 @@
-import { ResponseCode, serviceErrorHandler } from '@common'
+import { ResponseCode, serviceMethod } from '@common'
 import {
   IUserService,
   ICreateUser,
@@ -11,13 +11,12 @@ import {
 } from './interface'
 import { prisma } from '@app'
 import { autoInjectable, singleton } from 'tsyringe'
-import { logEndpoint } from '@common/decorators/logEndpoint'
 import { hashString } from '@services/bcrypt'
 
 @singleton()
 @autoInjectable()
 export class UserService implements IUserService {
-  @serviceErrorHandler()
+  @serviceMethod()
   async createUser({ email, password, authType }: ICreateUser) {
     let hashedPassword = null
 
@@ -40,7 +39,7 @@ export class UserService implements IUserService {
     return { user: created, code: ResponseCode.OK }
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async getUserById({ userId }: IGetUserById) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -52,7 +51,7 @@ export class UserService implements IUserService {
     return { user, code: ResponseCode.OK }
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async getUserByEmail({ email }: IGetUserByEmail) {
     const user = await prisma.user.findUnique({ where: { email } })
     if (!user) {
@@ -61,7 +60,7 @@ export class UserService implements IUserService {
     return { user, code: ResponseCode.OK }
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async getUserByEmailAndAuthType({
     authType,
     email,
@@ -73,7 +72,7 @@ export class UserService implements IUserService {
     return { user, code: ResponseCode.OK }
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async toggleNotifications({ userId }: IToggleNotifications) {
     let code: ResponseCode = ResponseCode.OK
     const user = await prisma.user.findUnique({ where: { id: userId } })
@@ -87,7 +86,7 @@ export class UserService implements IUserService {
     return { code: ResponseCode.OK, user: updatedUser }
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async updatePassword({ userId, password }: IUpdatePassword) {
     const user = await prisma.user.findUnique({ where: { id: userId } })
     if (!user) {
@@ -101,7 +100,7 @@ export class UserService implements IUserService {
     return { code: ResponseCode.OK }
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async updateUser({
     userId,
     emailVerified,

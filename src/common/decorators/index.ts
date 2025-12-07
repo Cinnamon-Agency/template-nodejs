@@ -1,1 +1,1 @@
-export * from './serviceErrorHandler'
+export * from './serviceMethod'

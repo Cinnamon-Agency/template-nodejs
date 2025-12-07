@@ -1,4 +1,4 @@
-import { ResponseCode, serviceErrorHandler } from '@common'
+import { ResponseCode, serviceMethod } from '@common'
 import { logger } from '@core/logger'
 import { getResponseMessage } from '@common'
 import { autoInjectable, container, singleton } from 'tsyringe'
@@ -17,7 +17,7 @@ const mediaService = container.resolve(MediaService)
 @singleton()
 @autoInjectable()
 export class ProjectService implements IProjectService {
-  @serviceErrorHandler()
+  @serviceMethod()
   async createProject({
     userId,
     name,
@@ -64,7 +64,7 @@ export class ProjectService implements IProjectService {
     return { code }
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async getProjects({ page, perPage }: IGetProjects) {
     const offset = (page - 1) * perPage
 
@@ -76,7 +76,7 @@ export class ProjectService implements IProjectService {
     return { projects, code: ResponseCode.OK }
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async getProjectById({ projectId }: IGetProjectById) {
     const project = await prisma.project.findUnique({
       where: {

@@ -1,4 +1,4 @@
-import { ResponseCode, serviceErrorHandler } from '@common'
+import { ResponseCode, serviceMethod } from '@common'
 import { UserService } from '@api/user/userService'
 import { Response } from 'express'
 import {
@@ -42,7 +42,7 @@ export class AuthService implements IAuthService {
     private readonly verificationUIDService: VerificationUIDService
   ) {}
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async register({ authType, email, password }: ILogin) {
     const { user: existingUser } = await this.userService.getUserByEmail({
       email,
@@ -68,7 +68,7 @@ export class AuthService implements IAuthService {
     return { user, code: ResponseCode.OK }
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async login({ authType, email, password }: ILogin) {
     const { user, code: userCode } =
       await this.userService.getUserByEmailAndAuthType({
@@ -94,7 +94,7 @@ export class AuthService implements IAuthService {
     return { user, code: ResponseCode.OK }
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async authenticatePassword({ user, password }: IAuthenticatePassword) {
     const passwordCorrect = await compare(password, user.password!)
     if (!passwordCorrect) {
@@ -104,7 +104,7 @@ export class AuthService implements IAuthService {
     return { passwordCorrect, code: ResponseCode.OK }
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async signToken({ user }: ISignToken) {
     const accessToken = generateToken(
       {
@@ -138,7 +138,7 @@ export class AuthService implements IAuthService {
     }
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async refreshToken({ refreshToken }: IRefreshToken) {
     const decodedToken = verifyToken<{ sub: string; exp: number }>(
       refreshToken,
@@ -190,7 +190,7 @@ export class AuthService implements IAuthService {
     }
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async logout({ userId }: ILogout) {
     const { code: userSessionCode } =
       await this.userSessionService.expireUserSession({
@@ -201,7 +201,7 @@ export class AuthService implements IAuthService {
     return { code: userSessionCode }
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async sendForgotPasswordEmail({ email }: ISendForgotPasswordEmail) {
     const { user, code: userCode } = await this.userService.getUserByEmail({
       email,
@@ -230,7 +230,7 @@ export class AuthService implements IAuthService {
     return { code: ResponseCode.OK }
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async resetPassword({ uid, hashUid, password }: IResetPassword) {
     const { verificationUID, code: verificationUIDCode } =
       await this.verificationUIDService.verifyUID({
@@ -315,7 +315,7 @@ export class AuthService implements IAuthService {
     return req.headers['x-client-type'] === 'mobile'
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async sendVerificationEmail(userId: string, email: string) {
     const { uids, code: uidCode } =
       await this.verificationUIDService.setVerificationUID({
@@ -337,7 +337,7 @@ export class AuthService implements IAuthService {
     return { code: ResponseCode.OK }
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async verifyEmail({ uid, hashUid }: IVerifyEmail) {
     const { verificationUID, code: verificationUIDCode } =
       await this.verificationUIDService.verifyUID({
@@ -365,7 +365,7 @@ export class AuthService implements IAuthService {
     return { code: ResponseCode.OK }
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async resendVerificationEmail({ email }: IResendVerificationEmail) {
     const { user, code: userCode } = await this.userService.getUserByEmail({
       email,
@@ -381,7 +381,7 @@ export class AuthService implements IAuthService {
     return await this.sendVerificationEmail(user.id, user.email)
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async sendPhoneVerificationCode({
     phoneNumber,
     userId,
@@ -416,7 +416,7 @@ export class AuthService implements IAuthService {
     return { code: ResponseCode.OK }
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async verifyPhoneCode({ userId, code }: IVerifyPhoneCode) {
     const verificationCode = await prisma.phoneVerificationCode.findFirst({
       where: {
@@ -452,7 +452,7 @@ export class AuthService implements IAuthService {
     return { code: ResponseCode.OK }
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async storeDeviceToken({
     deviceToken,
     userId,
@@ -477,7 +477,7 @@ export class AuthService implements IAuthService {
     return { code: ResponseCode.OK }
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async verifyDeviceToken(deviceToken: string) {
     const storedToken = await prisma.deviceToken.findUnique({
       where: { token: deviceToken },
@@ -503,7 +503,7 @@ export class AuthService implements IAuthService {
     return { isValid: true, userId: storedToken.userId, code: ResponseCode.OK }
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async setNewPassword({ uid, hashUid, password }: ISetNewPassword) {
     const { verificationUID, code: verificationUIDCode } =
       await this.verificationUIDService.verifyUID({
@@ -533,7 +533,7 @@ export class AuthService implements IAuthService {
     return { userId: verificationUID.userId, code: ResponseCode.OK }
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async resendLoginCode({ email }: IResendLoginCode) {
     // Verify user exists
     const { user, code: userCode } = await this.userService.getUserByEmail({
@@ -572,7 +572,7 @@ export class AuthService implements IAuthService {
     return { code: ResponseCode.OK }
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async verifyLoginCode({
     loginCode,
     email,

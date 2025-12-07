@@ -1,4 +1,4 @@
-import { ResponseCode, serviceErrorHandler } from '@common'
+import { ResponseCode, serviceMethod } from '@common'
 import { autoInjectable, container, singleton } from 'tsyringe'
 import {
   ICreateNotification,
@@ -17,7 +17,7 @@ const userService = container.resolve(UserService)
 @singleton()
 @autoInjectable()
 export class NotificationService implements INotificationService {
-  @serviceErrorHandler()
+  @serviceMethod()
   async getNotifications({
     userId,
     unread,
@@ -38,7 +38,7 @@ export class NotificationService implements INotificationService {
     return { notifications, code: ResponseCode.OK }
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async toggleReadStatus({ notificationId, userId, read }: IToggleReadStatus) {
     const notification = await prisma.notification.findUnique({
       where: {
@@ -61,7 +61,7 @@ export class NotificationService implements INotificationService {
     return { code: ResponseCode.OK }
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async createNotification({
     receiverId,
     senderId,
@@ -94,7 +94,7 @@ export class NotificationService implements INotificationService {
     return { code: ResponseCode.OK }
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async deleteNotification({ userId, notificationId }: IDeleteNotification) {
     const notification = await prisma.notification.findUnique({
       where: {

@@ -1,4 +1,4 @@
-import { ResponseCode, serviceErrorHandler } from '@common'
+import { ResponseCode, serviceMethod } from '@common'
 import {
   IExpireUserSession,
   IGetUserSession,
@@ -15,7 +15,7 @@ import { UserSessionStatus } from '@prisma/client'
 @singleton()
 @autoInjectable()
 export class UserSessionService implements IUserSessionService {
-  @serviceErrorHandler()
+  @serviceMethod()
   async storeUserSession({ userId, refreshToken }: IStoreUserSession) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -49,7 +49,7 @@ export class UserSessionService implements IUserSessionService {
     return { userSession, code: ResponseCode.OK }
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async getUserSession({ userId }: IGetUserSession) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -69,7 +69,7 @@ export class UserSessionService implements IUserSessionService {
     return { userSession, code: ResponseCode.OK }
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async updateUserSession({ userId, refreshToken }: IUpdateUserSession) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -109,7 +109,7 @@ export class UserSessionService implements IUserSessionService {
     return { userSession, code: ResponseCode.OK }
   }
 
-  @serviceErrorHandler()
+  @serviceMethod()
   async expireUserSession({ userId, status }: IExpireUserSession) {
     const user = await prisma.user.findUnique({
       where: { id: userId },

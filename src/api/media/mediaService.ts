@@ -2,13 +2,13 @@ import { autoInjectable, singleton } from 'tsyringe'
 import { prisma } from '@app'
 import { ICreateMediaEntries, IMediaService } from './interface'
 
-import { ResponseCode, serviceErrorHandler } from '@common'
+import { ResponseCode, serviceMethod } from '@common'
 import { getSignedURL } from '@services/google_cloud_storage'
 
 @singleton()
 @autoInjectable()
 export class MediaService implements IMediaService {
-  @serviceErrorHandler()
+  @serviceMethod()
   async createMediaEntries({ mediaFiles, projectId }: ICreateMediaEntries) {
     let code: ResponseCode = ResponseCode.OK
 
