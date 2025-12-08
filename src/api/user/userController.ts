@@ -2,14 +2,12 @@ import { NextFunction, Request, Response } from 'express'
 import { ResponseCode } from '@common'
 import { autoInjectable, singleton } from 'tsyringe'
 import { UserService } from './userService'
-import { logEndpoint } from '@common/decorators/logEndpoint'
 
 @singleton()
 @autoInjectable()
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @logEndpoint()
   public async getUser(req: Request, res: Response, next: NextFunction) {
     const { id } = req.user
 
@@ -27,7 +25,6 @@ export class UserController {
     })
   }
 
-  @logEndpoint()
   public async toogleNotifications(
     req: Request,
     res: Response,
@@ -42,7 +39,6 @@ export class UserController {
     })
   }
 
-  @logEndpoint()
   public async getUserProfile(req: Request, res: Response, next: NextFunction) {
     const { id } = res.locals.input
 

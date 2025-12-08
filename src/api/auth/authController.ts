@@ -1,5 +1,4 @@
 import { NextFunction, Request, Response } from 'express'
-import { logEndpoint } from '@common/decorators/logEndpoint'
 import { ResponseCode } from '@common'
 import { AuthService } from './authService'
 import { autoInjectable, singleton } from 'tsyringe'
@@ -10,7 +9,6 @@ import { randomBytes } from 'crypto'
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @logEndpoint()
   public async login(req: Request, res: Response, next: NextFunction) {
     const { authType, email, password } = res.locals.input
 
@@ -56,7 +54,6 @@ export class AuthController {
     }
   }
 
-  @logEndpoint()
   public async register(req: Request, res: Response, next: NextFunction) {
     const { authType, email, password } = res.locals.input
 
@@ -103,7 +100,6 @@ export class AuthController {
     }
   }
 
-  @logEndpoint()
   public async refreshToken(req: Request, res: Response, next: NextFunction) {
     const refreshToken = req.headers['refresh-token'] as string
 
@@ -128,7 +124,6 @@ export class AuthController {
     }
   }
 
-  @logEndpoint()
   public async logout(req: Request, res: Response, next: NextFunction) {
     const { user } = req
 
@@ -140,7 +135,6 @@ export class AuthController {
     return next({ code })
   }
 
-  @logEndpoint()
   public async forgotPassword(req: Request, res: Response, next: NextFunction) {
     const { email } = res.locals.input
 
@@ -149,7 +143,6 @@ export class AuthController {
     return next({ code })
   }
 
-  @logEndpoint()
   public async resetPassword(req: Request, res: Response, next: NextFunction) {
     const { uid, password } = res.locals.input
 
@@ -167,7 +160,6 @@ export class AuthController {
     return next({ code })
   }
 
-  @logEndpoint()
   public async verifyLoginCode(
     req: Request,
     res: Response,
@@ -218,7 +210,6 @@ export class AuthController {
     })
   }
 
-  @logEndpoint()
   public async resendLoginCode(
     req: Request,
     res: Response,
@@ -237,7 +228,6 @@ export class AuthController {
     })
   }
 
-  @logEndpoint()
   public async setNewPassword(req: Request, res: Response, next: NextFunction) {
     const { uid, password } = res.locals.input
 
@@ -261,7 +251,6 @@ export class AuthController {
     })
   }
 
-  @logEndpoint()
   public async verifyEmail(req: Request, res: Response, next: NextFunction) {
     const { uid } = res.locals.input
 
@@ -278,7 +267,6 @@ export class AuthController {
     return next({ code })
   }
 
-  @logEndpoint()
   public async resendVerificationEmail(
     req: Request,
     res: Response,
@@ -291,7 +279,6 @@ export class AuthController {
     return next({ code })
   }
 
-  @logEndpoint()
   public async sendPhoneVerification(
     req: Request,
     res: Response,
@@ -308,7 +295,6 @@ export class AuthController {
     return next({ code })
   }
 
-  @logEndpoint()
   public async verifyPhoneCode(
     req: Request,
     res: Response,

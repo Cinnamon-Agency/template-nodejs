@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import { autoInjectable } from 'tsyringe'
 import { UserRoleService } from './userRoleService'
-import { logEndpoint } from '@common/decorators/logEndpoint'
 
 @autoInjectable()
 export class UserRoleController {
@@ -11,7 +10,6 @@ export class UserRoleController {
     this.userRoleService = userRoleService
   }
 
-  @logEndpoint()
   public async getRolesForUser(
     req: Request,
     res: Response,

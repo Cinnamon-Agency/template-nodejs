@@ -1,7 +1,6 @@
 import { autoInjectable } from 'tsyringe'
 import { SupportRequestService } from './suppportRequestService'
 import { NextFunction, Request, Response } from 'express'
-import { logEndpoint } from '@common/decorators/logEndpoint'
 
 @autoInjectable()
 export class SupportRequestController {
@@ -11,7 +10,6 @@ export class SupportRequestController {
     this.supportRequestService = supportRequestService
   }
 
-  @logEndpoint()
   public async createSupportRequest(
     req: Request,
     res: Response,
@@ -32,7 +30,6 @@ export class SupportRequestController {
     })
   }
 
-  @logEndpoint()
   public async updateSupportRequestStatus(
     req: Request,
     res: Response,

@@ -2,14 +2,12 @@ import { NextFunction, Request, Response } from 'express'
 import { autoInjectable, singleton } from 'tsyringe'
 import { ProjectService } from './projectService'
 import { ResponseMessage } from '@common'
-import { logEndpoint } from '@common/decorators/logEndpoint'
 
 @singleton()
 @autoInjectable()
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
-  @logEndpoint()
   public async createProject(req: Request, res: Response, next: NextFunction) {
     const { id } = req.user
     const { name, description, deadline, mediaFiles } = res.locals.input
@@ -26,7 +24,6 @@ export class ProjectController {
     return next({ mediaInfo, code: adminCode })
   }
 
-  @logEndpoint()
   public async getProjects(req: Request, res: Response, next: NextFunction) {
     const { page, perPage } = res.locals.input
     const { projects, code: projectCode } =
@@ -38,7 +35,6 @@ export class ProjectController {
     return next({ projects, code: projectCode })
   }
 
-  @logEndpoint()
   public async getProjectById(req: Request, res: Response, next: NextFunction) {
     const { id: projectId } = res.locals.input
 

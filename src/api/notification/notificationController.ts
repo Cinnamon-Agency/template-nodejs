@@ -1,5 +1,4 @@
 import { NextFunction, Request, Response } from 'express'
-import { logEndpoint } from '@common/decorators/logEndpoint'
 import { ResponseCode } from '@common'
 import { autoInjectable, singleton } from 'tsyringe'
 import { NotificationService } from './notificationService'
@@ -13,7 +12,6 @@ export class NotificationController {
     private readonly webSocketService: WebSocketService
   ) {}
 
-  @logEndpoint()
   public async getNotifications(
     req: Request,
     res: Response,
@@ -40,7 +38,6 @@ export class NotificationController {
     })
   }
 
-  @logEndpoint()
   public async toogleReadStatus(
     req: Request,
     res: Response,
@@ -60,7 +57,6 @@ export class NotificationController {
     })
   }
 
-  @logEndpoint()
   public async deleteNotification(
     req: Request,
     res: Response,
