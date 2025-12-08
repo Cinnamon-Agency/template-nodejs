@@ -23,7 +23,7 @@ export const verifyToken = <T>(
   try {
     const secret = config[`${type}_SECRET`]
     return verify(token, secret) as T
-  } catch (err) {
+  } catch {
     return
   }
 }

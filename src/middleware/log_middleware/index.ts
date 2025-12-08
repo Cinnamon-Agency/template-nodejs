@@ -4,6 +4,7 @@ import { sendLogEvents } from '../../services/cloudwatch'
 /**
  * Mask sensitive information in objects
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function maskSensitiveData(obj: any): any {
   if (obj === null || obj === undefined) return obj
   if (typeof obj !== 'object') return obj
@@ -17,6 +18,7 @@ function maskSensitiveData(obj: any): any {
     'apiKey',
     'apikey',
   ]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const masked: any = Array.isArray(obj) ? [] : {}
 
   for (const key in obj) {
@@ -52,11 +54,12 @@ const cloudWatchMiddleware = async (
     `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 
   const originalSend = res.send
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let responseBody: any = null
 
   res.send = function (body) {
     responseBody = body
-    return originalSend.apply(res, arguments as any)
+    return originalSend.call(res, body)
   }
 
   res.on('finish', async () => {
@@ -132,11 +135,13 @@ const cloudWatchMiddleware = async (
       // Also log to console in development
       if (process.env.NODE_ENV === 'development') {
         const logMethod = res.statusCode >= 400 ? 'error' : 'info'
+        // eslint-disable-next-line no-console
         console[logMethod](
           `[${requestId}] ${req.method} ${req.originalUrl} - ${res.statusCode} (${responseTimeMs.toFixed(2)}ms)`
         )
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error in cloudWatchMiddleware:', error)
     }
   })
@@ -145,10 +150,11 @@ const cloudWatchMiddleware = async (
 }
 
 // Helper function to safely parse JSON
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function safeJsonParse(str: string): any {
   try {
     return JSON.parse(str)
-  } catch (e) {
+  } catch {
     return str
   }
 }

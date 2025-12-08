@@ -4,11 +4,7 @@ import { UserRoleService } from './userRoleService'
 
 @autoInjectable()
 export class UserRoleController {
-  private userRoleService: UserRoleService
-
-  constructor(userRoleService: UserRoleService) {
-    this.userRoleService = userRoleService
-  }
+  constructor(private readonly userRoleService: UserRoleService) {}
 
   public async getRolesForUser(
     req: Request,

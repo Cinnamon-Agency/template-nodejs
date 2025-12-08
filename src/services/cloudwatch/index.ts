@@ -11,7 +11,7 @@ import { logger } from '@core/logger'
 const logGroupName = `${config.NODE_ENV}-api`
 const logStreamName = `${config.NODE_ENV}-api`
 
-const cloudwatchConfog =
+const cloudwatchConfig =
   config.NODE_ENV === 'dev'
     ? {
         credentials: {
@@ -24,14 +24,14 @@ const cloudwatchConfog =
         region: config.AWS_REGION,
       }
 
-const client = new CloudWatchLogsClient(cloudwatchConfog)
+const client = new CloudWatchLogsClient(cloudwatchConfig)
 
 const createLogGroupAndStream = async () => {
   try {
     await client.send(new CreateLogGroupCommand({ logGroupName }))
     logger.info(`Log group ${logGroupName} created.`)
-  } catch (err: any) {
-    if (err.name !== 'ResourceAlreadyExistsException') {
+  } catch (err: unknown) {
+    if (err instanceof Error && err.name !== 'ResourceAlreadyExistsException') {
       logger.error(`Error creating log group: ${err}`)
       return
     }
@@ -42,8 +42,8 @@ const createLogGroupAndStream = async () => {
       new CreateLogStreamCommand({ logGroupName, logStreamName })
     )
     logger.info(`Log stream ${logStreamName} created.`)
-  } catch (err: any) {
-    if (err.name !== 'ResourceAlreadyExistsException') {
+  } catch (err: unknown) {
+    if (err instanceof Error && err.name !== 'ResourceAlreadyExistsException') {
       logger.error(`Error creating log stream: ${err}`)
     }
   }
@@ -52,17 +52,17 @@ const createLogGroupAndStream = async () => {
 export const sendLogEvents = async (message: string) => {
   try {
     await createLogGroupAndStream()
-    const describeLogStreamsResponse: any = await client.send(
+    const describeLogStreamsResponse = await client.send(
       new DescribeLogStreamsCommand({
         logGroupName,
         logStreamNamePrefix: logStreamName,
       })
     )
 
-    const logStream = describeLogStreamsResponse.logStreams.find(
-      (stream: any) => stream.logStreamName === logStreamName
+    const logStream = describeLogStreamsResponse.logStreams?.find(
+      stream => stream.logStreamName === logStreamName
     )
-    const sequenceToken = logStream.uploadSequenceToken
+    const sequenceToken = logStream?.uploadSequenceToken
 
     const logEvents = [
       {

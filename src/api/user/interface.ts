@@ -50,7 +50,7 @@ export interface IUserService {
   getUserByEmailAndAuthType(
     params: IGetUserByEmailAndAuthType
   ): AsyncResponse<User>
-  toggleNotifications(params: IToggleNotifications): AsyncResponse<null>
-  updatePassword(params: IUpdatePassword): AsyncResponse<null>
-  updateUser(params: IUpdateUser): AsyncResponse<null>
+  toggleNotifications(params: IToggleNotifications): AsyncResponse<void>
+  updatePassword(params: IUpdatePassword): AsyncResponse<void>
+  updateUser(params: IUpdateUser): AsyncResponse<void>
 }

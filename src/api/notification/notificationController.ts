@@ -38,7 +38,7 @@ export class NotificationController {
     })
   }
 
-  public async toogleReadStatus(
+  public async toggleReadStatus(
     req: Request,
     res: Response,
     next: NextFunction

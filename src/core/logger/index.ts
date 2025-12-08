@@ -15,7 +15,7 @@ const levels = {
   debug: 5,
 }
 
-let transports: any = []
+const transports: winston.transport[] = []
 
 if (config.LOG_TO_CONSOLE) {
   transports.push(

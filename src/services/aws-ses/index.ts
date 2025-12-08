@@ -79,11 +79,11 @@ export const sendEmail = async (
       return { code: ResponseCode.FAILED_DEPENDENCY }
     }
     return { code: ResponseCode.OK }
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error({
       code: ResponseCode.FAILED_DEPENDENCY,
       message: ResponseMessage.FAILED_DEPENDENCY,
-      stack: error.stack,
+      stack: error instanceof Error ? error.stack : undefined,
     })
     return { code: ResponseCode.FAILED_DEPENDENCY }
   }

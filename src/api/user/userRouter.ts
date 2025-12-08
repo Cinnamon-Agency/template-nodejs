@@ -10,9 +10,9 @@ export const userRouter = express.Router()
 
 userRouter.get('/', requireToken, userController.getUser)
 userRouter.get(
-  '/toogleNotifications',
+  '/toggleNotifications',
   requireToken,
-  userController.toogleNotifications
+  userController.toggleNotifications
 )
 userRouter.get(
   '/:id',

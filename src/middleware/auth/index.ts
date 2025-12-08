@@ -4,7 +4,12 @@ import config from 'core/config'
 import { getResponseMessage, ResponseCode } from '@common'
 import { UserService } from '@api/user/userService'
 import { TokenType, verifyToken } from '@services/jsonwebtoken'
-import { logger } from '@core/logger'
+
+interface DecodedToken {
+  sub: string
+  exp: number
+  iat: number
+}
 
 const authenticatedDocUsers: { [key: string]: string } = {
   [config.DOCS_USER]: config.DOCS_PASSWORD,
@@ -45,12 +50,12 @@ export const requireToken =
         token = req.cookies['template-token']
       }
 
-      const decodedToken = await verifyToken<any>(token, TokenType.ACCESS_TOKEN)
-      if (
-        !decodedToken ||
-        typeof decodedToken.payload === 'string' ||
-        !decodedToken.sub
-      ) {
+      const decodedToken = verifyToken<DecodedToken>(
+        token,
+        TokenType.ACCESS_TOKEN
+      )
+
+      if (!decodedToken || !decodedToken.sub) {
         return next({
           code: ResponseCode.INVALID_TOKEN,
           message: getResponseMessage(ResponseCode.INVALID_TOKEN),
@@ -85,7 +90,7 @@ export const requireToken =
       req.user = { ...user }
 
       return next()
-    } catch (e: unknown) {
+    } catch {
       return next({
         code: ResponseCode.INVALID_TOKEN,
         message: getResponseMessage(ResponseCode.INVALID_TOKEN),

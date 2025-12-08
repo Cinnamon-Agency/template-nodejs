@@ -5,7 +5,7 @@ import { requireToken } from '@middleware/auth'
 import { NotificationController } from './notificationController'
 import {
   getNotificationSchema,
-  toogleReadStatusSchema,
+  toggleReadStatusSchema,
   deleteNotificationSchema,
 } from './notificationInput'
 
@@ -21,8 +21,8 @@ notificationRouter.get(
 notificationRouter.put(
   '/:notificationId',
   requireToken,
-  validate(toogleReadStatusSchema),
-  notificationController.toogleReadStatus
+  validate(toggleReadStatusSchema),
+  notificationController.toggleReadStatus
 )
 notificationRouter.delete(
   '/:notificationId',

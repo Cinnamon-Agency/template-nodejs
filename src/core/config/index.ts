@@ -98,7 +98,6 @@ const getConfig = (): Config => {
 }
 
 const getSanitizedConfig = (config: ENV) => {
-  // eslint-disable-next-line no-restricted-syntax
   for (const [key, value] of Object.entries(config)) {
     if (value === undefined) {
       throw new Error(`Missing value for ${key} in .env`)

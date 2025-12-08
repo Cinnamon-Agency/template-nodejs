@@ -3,82 +3,53 @@ import {
   IGetRolesForUser,
   IUserRoleService,
 } from './interface'
-import { autoInjectable, container } from 'tsyringe'
+import { autoInjectable, singleton } from 'tsyringe'
 import { prisma } from '@app'
-import { ResponseCode } from '@common'
-import { logger } from '@core/logger'
-import { getResponseMessage } from '@common'
+import { ResponseCode, serviceMethod } from '@common'
 import { RoleService } from '../role/roleService'
 
-const roleService = container.resolve(RoleService)
-
+@singleton()
 @autoInjectable()
 export class UserRoleService implements IUserRoleService {
-  constructor() {}
+  constructor(private readonly roleService: RoleService) {}
 
-  createUserRole = async ({ userId, roleType }: ICreateUserRole) => {
-    let code: ResponseCode = ResponseCode.OK
+  @serviceMethod()
+  async createUserRole({ userId, roleType }: ICreateUserRole) {
+    const { role, code: roleCode } = await this.roleService.getRoleByRoleType({
+      roleType,
+    })
 
-    try {
-      const { role, code: roleCode } = await roleService.getRoleByRoleType({
-        roleType,
-      })
-
-      if (!role || roleCode !== ResponseCode.OK) {
-        return { code: roleCode }
-      }
-
-      const userRole = await prisma.userRole.create({
-        data: {
-          userId,
-          roleId: role.id,
-        },
-      })
-
-      if (!userRole) {
-        return { code: ResponseCode.FAILED_INSERT }
-      }
-
-      return { code }
-    } catch (err: any) {
-      code = ResponseCode.SERVER_ERROR
-      logger.error({
-        code,
-        message: getResponseMessage(code),
-        stack: err.stack,
-      })
+    if (!role || roleCode !== ResponseCode.OK) {
+      return { code: roleCode }
     }
 
-    return { code }
+    const userRole = await prisma.userRole.create({
+      data: {
+        userId,
+        roleId: role.id,
+      },
+    })
+
+    if (!userRole) {
+      return { code: ResponseCode.FAILED_INSERT }
+    }
+
+    return { code: ResponseCode.OK }
   }
 
-  getRolesForUser = async ({ userId }: IGetRolesForUser) => {
-    let code: ResponseCode = ResponseCode.OK
+  @serviceMethod()
+  async getRolesForUser({ userId }: IGetRolesForUser) {
+    const userRoles = await prisma.userRole.findMany({
+      where: { userId },
+      include: { role: true },
+    })
 
-    try {
-      const userRoles = await prisma.userRole.findMany({
-        where: { userId },
-        include: { role: true },
-      })
-
-      if (!userRoles) {
-        return { code: ResponseCode.ROLE_NOT_FOUND }
-      }
-
-      const roles = userRoles.map((userRole: { role: any }) => userRole.role)
-
-      return { roles, code }
-    } catch (err: any) {
-      code = ResponseCode.SERVER_ERROR
-      logger.error({
-        code,
-        message: getResponseMessage(code),
-        stack: err.stack,
-      })
+    if (!userRoles) {
+      return { code: ResponseCode.ROLE_NOT_FOUND }
     }
 
-    return {
-      code,
-    }
+    const roles = userRoles.map(userRole => userRole.role)
+
+    return { roles, code: ResponseCode.OK }
   }
 }

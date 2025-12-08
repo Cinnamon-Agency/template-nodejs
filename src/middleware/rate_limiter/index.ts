@@ -18,7 +18,7 @@ export const rateLimiter = async (
   try {
     await limiterInMemory.consume(req.ip!)
     next()
-  } catch (error) {
+  } catch {
     return next({ code: ResponseCode.TOO_MANY_REQUESTS })
   }
 }
@@ -39,7 +39,7 @@ export const loginRateLimiter = async (
   try {
     await loginLimiterInMemory.consume(req.ip!)
     next()
-  } catch (error) {
+  } catch {
     return next({ code: ResponseCode.TOO_MANY_REQUESTS })
   }
 }

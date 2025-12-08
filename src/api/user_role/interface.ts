@@ -11,6 +11,6 @@ export interface IGetRolesForUser {
 }
 
 export interface IUserRoleService {
-  createUserRole(params: ICreateUserRole): AsyncResponse<null>
+  createUserRole(params: ICreateUserRole): AsyncResponse<void>
   getRolesForUser(params: IGetRolesForUser): AsyncResponse<Role[]>
 }

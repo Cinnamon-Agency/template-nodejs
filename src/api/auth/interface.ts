@@ -1,6 +1,5 @@
 import { AsyncResponse } from '@common'
 import { User, AuthType } from '@prisma/client'
-import { Response } from 'express'
 
 interface TokenResponse {
   accessToken: string
@@ -100,15 +99,15 @@ export interface IAuthService {
   signToken(params: ISignToken): AsyncResponse<TokenResponse>
   refreshToken(params: IRefreshToken): AsyncResponse<TokenResponse>
   logout(params: ILogout): AsyncResponse<boolean>
-  sendForgotPasswordEmail(params: ISendForgotPasswordEmail): AsyncResponse<null>
+  sendForgotPasswordEmail(params: ISendForgotPasswordEmail): AsyncResponse<void>
   authenticatePassword(params: IAuthenticatePassword): AsyncResponse<boolean>
-  resetPassword(params: IResetPassword): AsyncResponse<null>
-  verifyEmail(params: IVerifyEmail): AsyncResponse<null>
-  resendVerificationEmail(params: IResendVerificationEmail): AsyncResponse<null>
-  sendPhoneVerificationCode(params: ISendVerificationCode): AsyncResponse<null>
-  verifyPhoneCode(params: IVerifyPhoneCode): AsyncResponse<null>
-  storeDeviceToken(params: IStoreDeviceToken): AsyncResponse<null>
-  resendLoginCode(params: IResendLoginCode): AsyncResponse<null>
+  resetPassword(params: IResetPassword): AsyncResponse<void>
+  verifyEmail(params: IVerifyEmail): AsyncResponse<void>
+  resendVerificationEmail(params: IResendVerificationEmail): AsyncResponse<void>
+  sendPhoneVerificationCode(params: ISendVerificationCode): AsyncResponse<void>
+  verifyPhoneCode(params: IVerifyPhoneCode): AsyncResponse<void>
+  storeDeviceToken(params: IStoreDeviceToken): AsyncResponse<void>
+  resendLoginCode(params: IResendLoginCode): AsyncResponse<void>
   setNewPassword(params: ISetNewPassword): AsyncResponse<{ userId: string }>
   verifyLoginCode(
     params: IVerifyLoginCode

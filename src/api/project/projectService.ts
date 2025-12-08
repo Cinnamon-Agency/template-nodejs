@@ -1,7 +1,5 @@
 import { ResponseCode, serviceMethod } from '@common'
-import { logger } from '@core/logger'
-import { getResponseMessage } from '@common'
-import { autoInjectable, container, singleton } from 'tsyringe'
+import { autoInjectable, singleton } from 'tsyringe'
 import { prisma } from '@app'
 import {
   ICreateProject,
@@ -12,11 +10,11 @@ import {
 import { MediaService } from '@api/media/mediaService'
 import { Prisma } from '@prisma/client'
 
-const mediaService = container.resolve(MediaService)
-
 @singleton()
 @autoInjectable()
 export class ProjectService implements IProjectService {
+  constructor(private readonly mediaService: MediaService) {}
+
   @serviceMethod()
   async createProject({
     userId,
@@ -25,43 +23,30 @@ export class ProjectService implements IProjectService {
     deadline,
     mediaFiles,
   }: ICreateProject) {
-    let code: ResponseCode = ResponseCode.OK
-    try {
-      const result = await prisma.$transaction(
-        async (tx: Prisma.TransactionClient) => {
-          const project = await tx.project.create({
-            data: {
-              userId,
-              name,
-              description,
-              deadline,
-            },
-          })
-          if (!project) {
-            return { code: ResponseCode.FAILED_INSERT }
-          }
-          const { mediaInfo, code: mediaCode } =
-            await mediaService.createMediaEntries({
-              projectId: project.id,
-              mediaFiles,
-              prisma: tx,
-            })
-          if (mediaCode !== ResponseCode.OK) {
-            throw new Error('Media creation failed')
-          }
-          return { mediaInfo, code }
-        }
-      )
-      return result
-    } catch (err: any) {
-      code = ResponseCode.SERVER_ERROR
-      logger.error({
-        code,
-        message: getResponseMessage(code),
-        stack: err.stack,
+    return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const project = await tx.project.create({
+        data: {
+          userId,
+          name,
+          description,
+          deadline,
+        },
       })
-    }
-    return { code }
+      if (!project) {
+        return { code: ResponseCode.FAILED_INSERT }
+      }
+      const { mediaInfo, code: mediaCode } =
+        await this.mediaService.createMediaEntries({
+          projectId: project.id,
+          mediaFiles,
+          prisma: tx,
+        })
+      if (mediaCode !== ResponseCode.OK) {
+        throw new Error('Media creation failed')
+      }
+
+      return { mediaInfo, code: ResponseCode.OK }
+    })
   }
 
   @serviceMethod()

@@ -10,6 +10,7 @@ import {
   IUpdateUser,
 } from './interface'
 import { prisma } from '@app'
+import { User } from '@prisma/client'
 import { autoInjectable, singleton } from 'tsyringe'
 import { hashString } from '@services/bcrypt'
 
@@ -74,15 +75,16 @@ export class UserService implements IUserService {
 
   @serviceMethod()
   async toggleNotifications({ userId }: IToggleNotifications) {
-    let code: ResponseCode = ResponseCode.OK
     const user = await prisma.user.findUnique({ where: { id: userId } })
     if (!user) {
       return { code: ResponseCode.USER_NOT_FOUND }
     }
+
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: { notifications: !user.notifications },
     })
+
     return { code: ResponseCode.OK, user: updatedUser }
   }
 
@@ -112,7 +114,9 @@ export class UserService implements IUserService {
       return { code: ResponseCode.USER_NOT_FOUND }
     }
 
-    const updateData: any = {}
+    const updateData: Partial<
+      Pick<User, 'emailVerified' | 'phoneNumber' | 'phoneVerified'>
+    > = {}
     if (emailVerified !== undefined) updateData.emailVerified = emailVerified
     if (phoneNumber !== undefined) updateData.phoneNumber = phoneNumber
     if (phoneVerified !== undefined) updateData.phoneVerified = phoneVerified

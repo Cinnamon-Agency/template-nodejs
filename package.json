@@ -4,19 +4,19 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "lint": "eslint . --ext .ts",
-    "lint:fix": "eslint . --ext .ts --fix",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
     "format": "prettier --write \"src/**/*.ts\"",
     "build": "tsc",
     "start": "node -r dotenv/config build/server.js",
     "dev": "ts-node-dev --respawn -r dotenv/config src/server.ts",
     "postinstall": "prisma generate",
     "seed": "prisma db seed",
-    "prisma:generate": "npx prisma generate",
-    "migrate:deploy": "npx prisma migrate deploy",
-    "migrate:status": "npx prisma migrate status",
-    "migrate:dev": "npx prisma migrate dev",
-    "db:bootstrap": "npx prisma generate && npx prisma migrate deploy && npm run seed"
+    "prisma:generate": "prisma generate",
+    "migrate:deploy": "prisma migrate deploy",
+    "migrate:status": "prisma migrate status",
+    "migrate:dev": "prisma migrate dev",
+    "db:bootstrap": "prisma generate && prisma migrate deploy && yarn seed"
   },
   "author": "Cinnamon Agency",
   "license": "ISC",
@@ -51,6 +51,7 @@
     "ws": "^8.18.3"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.1",
     "@types/bcrypt": "^6.0.0",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
@@ -73,6 +74,7 @@
     "prettier": "^3.6.2",
     "ts-node-dev": "^2.0.0",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.48.1"
   }
 }

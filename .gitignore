@@ -2,5 +2,13 @@
 /build
 /keys
 .env
-.env.*
+!.env.template
 
+# IDE
+.idea/
+
+# Logs
+*.log
+
+# OS
+.DS_Store

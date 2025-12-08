@@ -47,10 +47,10 @@ const paths = {
       },
     },
   },
-  '/user/toogleNotifications': {
+  '/user/toggleNotifications': {
     get: {
       tags: ['User'],
-      description: 'Tooggle notification permission',
+      description: 'Toggle notification permission',
 
       responses: {
         '200': {

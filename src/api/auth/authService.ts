@@ -311,7 +311,7 @@ export class AuthService implements IAuthService {
   /**
    * Checks if the request is from a mobile client
    */
-  static isMobileClient(req: { headers: Record<string, any> }): boolean {
+  static isMobileClient(req: { headers: Record<string, unknown> }): boolean {
     return req.headers['x-client-type'] === 'mobile'
   }
 

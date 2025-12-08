@@ -10,7 +10,6 @@ import {
   IVerifyUID,
 } from './interface'
 import { autoInjectable, singleton } from 'tsyringe'
-import { VerificationUID, VerificationUIDType } from '@prisma/client'
 
 @singleton()
 @autoInjectable()

@@ -1,14 +1,10 @@
 import { autoInjectable } from 'tsyringe'
-import { SupportRequestService } from './suppportRequestService'
+import { SupportRequestService } from './supportRequestService'
 import { NextFunction, Request, Response } from 'express'
 
 @autoInjectable()
 export class SupportRequestController {
-  private readonly supportRequestService: SupportRequestService
-
-  constructor(supportRequestService: SupportRequestService) {
-    this.supportRequestService = supportRequestService
-  }
+  constructor(private readonly supportRequestService: SupportRequestService) {}
 
   public async createSupportRequest(
     req: Request,

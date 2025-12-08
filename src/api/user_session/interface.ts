@@ -30,5 +30,5 @@ export interface IUserSessionService {
   getUserSession(params: IGetUserSession): AsyncResponse<UserSession>
   storeUserSession(params: IStoreUserSession): AsyncResponse<UserSession>
   updateUserSession(params: IUpdateUserSession): AsyncResponse<UserSession>
-  expireUserSession(params: IExpireUserSession): AsyncResponse<null>
+  expireUserSession(params: IExpireUserSession): AsyncResponse<void>
 }

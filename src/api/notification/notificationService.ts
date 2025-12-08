@@ -1,5 +1,5 @@
 import { ResponseCode, serviceMethod } from '@common'
-import { autoInjectable, container, singleton } from 'tsyringe'
+import { autoInjectable, singleton } from 'tsyringe'
 import {
   ICreateNotification,
   INotificationService,
@@ -12,11 +12,11 @@ import { UserService } from '@api/user/userService'
 import { prisma } from '@app'
 import { EmailTemplate } from '@services/aws-ses/interface'
 
-const userService = container.resolve(UserService)
-
 @singleton()
 @autoInjectable()
 export class NotificationService implements INotificationService {
+  constructor(private readonly userService: UserService) {}
+
   @serviceMethod()
   async getNotifications({
     userId,
@@ -78,7 +78,7 @@ export class NotificationService implements INotificationService {
       },
     })
 
-    const { user } = await userService.getUserById({
+    const { user } = await this.userService.getUserById({
       userId: receiverId,
     })
 
@@ -86,7 +86,7 @@ export class NotificationService implements INotificationService {
       return { code: ResponseCode.USER_NOT_FOUND }
     }
 
-    sendEmail(EmailTemplate.NOTIFICATION, user.email, notificationType, {
+    await sendEmail(EmailTemplate.NOTIFICATION, user.email, notificationType, {
       title: notificationType,
       content: message,
     })

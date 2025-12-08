@@ -30,8 +30,8 @@ export interface IDeleteNotification {
 }
 
 export interface INotificationService {
-  createNotification(params: ICreateNotification): AsyncResponse<null>
+  createNotification(params: ICreateNotification): AsyncResponse<void>
   getNotifications(params: IGetNotifications): AsyncResponse<Notification[]>
-  toggleReadStatus(params: IToggleReadStatus): AsyncResponse<null>
-  deleteNotification(params: IDeleteNotification): AsyncResponse<null>
+  toggleReadStatus(params: IToggleReadStatus): AsyncResponse<void>
+  deleteNotification(params: IDeleteNotification): AsyncResponse<void>
 }

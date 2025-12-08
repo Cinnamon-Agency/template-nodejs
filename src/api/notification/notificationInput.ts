@@ -33,7 +33,7 @@ export const deleteNotificationSchema = (req: Request) => {
   }
 }
 
-export const toogleReadStatusSchema = (req: Request) => {
+export const toggleReadStatusSchema = (req: Request) => {
   return {
     schema: Joi.object()
       .keys({

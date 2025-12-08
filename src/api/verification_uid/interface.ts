@@ -31,6 +31,6 @@ export interface IVerificationUIDService {
   getVerificationUID(
     params: IGetVerificationUID
   ): AsyncResponse<VerificationUID>
-  clearVerificationUID(params: IClearVerificationUID): AsyncResponse<null>
+  clearVerificationUID(params: IClearVerificationUID): AsyncResponse<void>
   verifyUID(params: IVerifyUID): AsyncResponse<VerificationUID>
 }

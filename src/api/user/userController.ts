@@ -25,7 +25,7 @@ export class UserController {
     })
   }
 
-  public async toogleNotifications(
+  public async toggleNotifications(
     req: Request,
     res: Response,
     next: NextFunction
