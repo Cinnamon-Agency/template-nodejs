@@ -55,7 +55,7 @@ export class SupportRequestService implements ISupportRequestService {
       return { code: emailSuccessCode }
     }
 
-    const newSupportRequest = await prisma.supportRequest.create({
+    await prisma.supportRequest.create({
       data: {
         firstName,
         lastName,
@@ -64,10 +64,6 @@ export class SupportRequestService implements ISupportRequestService {
         message,
       },
     })
-
-    if (!newSupportRequest.id) {
-      return { code: ResponseCode.FAILED_INSERT }
-    }
 
     return { code: ResponseCode.OK }
   }
@@ -86,14 +82,10 @@ export class SupportRequestService implements ISupportRequestService {
       }
     }
 
-    const updatedRequest = await prisma.supportRequest.update({
+    await prisma.supportRequest.update({
       where: { id: supportRequestId },
       data: { status },
     })
-
-    if (!updatedRequest) {
-      return { code: ResponseCode.FAILED_EDIT }
-    }
 
     return { code: ResponseCode.OK }
   }

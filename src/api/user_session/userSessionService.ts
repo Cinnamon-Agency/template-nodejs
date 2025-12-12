@@ -70,7 +70,11 @@ export class UserSessionService implements IUserSessionService {
   }
 
   @serviceMethod()
-  async updateUserSession({ userId, refreshToken }: IUpdateUserSession) {
+  async updateUserSession({
+    userId,
+    oldRefreshToken,
+    newRefreshToken,
+  }: IUpdateUserSession) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
     })
@@ -88,25 +92,26 @@ export class UserSessionService implements IUserSessionService {
       return { code: ResponseCode.SESSION_EXPIRED }
     }
 
-    const matches = await compare(refreshToken, userSession.refreshToken)
+    const matches = await compare(oldRefreshToken, userSession.refreshToken)
     if (!matches) {
       return { code: ResponseCode.INVALID_TOKEN }
     }
 
-    const refreshTokenHash = await hashString(refreshToken)
+    const refreshTokenHash = await hashString(newRefreshToken)
 
     const expiresAt = new Date(
       Date.now() + Number(config.REFRESH_TOKEN_EXPIRES_IN) * 60 * 1000
     )
 
-    userSession.refreshToken = refreshTokenHash
-    userSession.expiresAt = expiresAt
     await prisma.userSession.update({
       where: { id: userSession.id },
-      data: userSession,
+      data: {
+        refreshToken: refreshTokenHash,
+        expiresAt,
+      },
     })
 
-    return { userSession, code: ResponseCode.OK }
+    return { userSession: { ...userSession, expiresAt }, code: ResponseCode.OK }
   }
 
   @serviceMethod()

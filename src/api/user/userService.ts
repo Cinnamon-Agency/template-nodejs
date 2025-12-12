@@ -33,10 +33,6 @@ export class UserService implements IUserService {
       },
     })
 
-    if (!created) {
-      return { code: ResponseCode.FAILED_INSERT }
-    }
-
     return { user: created, code: ResponseCode.OK }
   }
 

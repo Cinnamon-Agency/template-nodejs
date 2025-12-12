@@ -14,7 +14,8 @@ export interface IStoreUserSession {
 
 export interface IUpdateUserSession {
   userId: string
-  refreshToken: string
+  oldRefreshToken: string
+  newRefreshToken: string
 }
 
 export interface IExpireUserSession {

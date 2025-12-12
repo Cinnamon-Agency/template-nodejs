@@ -18,10 +18,12 @@ export interface ICreateProject {
 export interface IGetProjects {
   page: 1
   perPage: 10
+  userId: string
 }
 
 export interface IGetProjectById {
   projectId: string
+  userId: string
 }
 
 export interface IProjectService {

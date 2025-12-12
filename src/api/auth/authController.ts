@@ -101,7 +101,13 @@ export class AuthController {
   }
 
   public async refreshToken(req: Request, res: Response, next: NextFunction) {
-    const refreshToken = req.headers['refresh-token'] as string
+    const refreshToken =
+      (req.cookies?.refreshToken as string) ||
+      (req.headers['refresh-token'] as string)
+
+    if (!refreshToken) {
+      return next({ code: ResponseCode.INVALID_TOKEN })
+    }
 
     const { tokens, code } = await this.authService.refreshToken({
       refreshToken,
@@ -147,7 +153,7 @@ export class AuthController {
     const { uid, password } = res.locals.input
 
     const uids = uid.split('/')
-    if (uids.length > 2) {
+    if (uids.length !== 2) {
       return next({ code: ResponseCode.INVALID_UID })
     }
 

@@ -28,7 +28,7 @@ import { sendEmail } from '@services/aws-ses'
 import { EmailTemplate } from '@services/aws-ses/interface'
 import { VerificationUIDType } from '@api/verification_uid/interface'
 import { VerificationUIDService } from '@api/verification_uid/verificationUIDService'
-import { compare, hashString } from '@services/bcrypt'
+import { compare } from '@services/bcrypt'
 import { sendSMS } from '@services/aws-end-user-messaging'
 import { prisma } from '@app'
 import { AuthType } from '@prisma/client'
@@ -49,7 +49,7 @@ export class AuthService implements IAuthService {
     })
 
     if (existingUser) {
-      return { code: ResponseCode.USER_ALREADY_REGISTRED }
+      return { code: ResponseCode.USER_ALREADY_REGISTERED }
     }
 
     const { user, code: userCode } = await this.userService.createUser({
@@ -163,7 +163,8 @@ export class AuthService implements IAuthService {
     const { userSession, code: updateUserSessionCode } =
       await this.userSessionService.updateUserSession({
         userId: decodedToken.sub,
-        refreshToken: newRefreshToken,
+        oldRefreshToken: refreshToken,
+        newRefreshToken,
       })
     if (!userSession) {
       return { code: updateUserSessionCode }
@@ -182,7 +183,7 @@ export class AuthService implements IAuthService {
     return {
       tokens: {
         accessToken,
-        refreshToken,
+        refreshToken: newRefreshToken,
         accessTokenExpiresAt: expiresAt,
         refreshTokenExpiresAt: userSession.expiresAt,
       },
@@ -242,11 +243,9 @@ export class AuthService implements IAuthService {
       return { code: verificationUIDCode }
     }
 
-    const hashedPassword = await hashString(password)
-
     const { code: editCode } = await this.userService.updatePassword({
       userId: verificationUID.userId,
-      password: hashedPassword,
+      password,
     })
     if (editCode != ResponseCode.OK) {
       return { code: editCode }
@@ -515,11 +514,9 @@ export class AuthService implements IAuthService {
       return { code: verificationUIDCode }
     }
 
-    const hashedPassword = await hashString(password)
-
     const { code: updateCode } = await this.userService.updatePassword({
       userId: verificationUID.userId,
-      password: hashedPassword,
+      password,
     })
     if (updateCode !== ResponseCode.OK) {
       return { code: updateCode }

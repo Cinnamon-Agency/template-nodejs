@@ -50,10 +50,11 @@ export class ProjectService implements IProjectService {
   }
 
   @serviceMethod()
-  async getProjects({ page, perPage }: IGetProjects) {
+  async getProjects({ page, perPage, userId }: IGetProjects) {
     const offset = (page - 1) * perPage
 
     const projects = await prisma.project.findMany({
+      where: { userId },
       skip: offset,
       take: perPage,
     })
@@ -62,7 +63,7 @@ export class ProjectService implements IProjectService {
   }
 
   @serviceMethod()
-  async getProjectById({ projectId }: IGetProjectById) {
+  async getProjectById({ projectId, userId }: IGetProjectById) {
     const project = await prisma.project.findUnique({
       where: {
         id: projectId,
@@ -71,6 +72,10 @@ export class ProjectService implements IProjectService {
 
     if (!project) {
       return { code: ResponseCode.PROJECT_NOT_FOUND }
+    }
+
+    if (project.userId !== userId) {
+      return { code: ResponseCode.UNAUTHORIZED }
     }
 
     return { project, code: ResponseCode.OK }

@@ -40,7 +40,7 @@ export class NotificationService implements INotificationService {
 
   @serviceMethod()
   async toggleReadStatus({ notificationId, userId, read }: IToggleReadStatus) {
-    const notification = await prisma.notification.findUnique({
+    const notification = await prisma.notification.findFirst({
       where: {
         receiverId: userId,
         id: notificationId,
@@ -51,11 +51,9 @@ export class NotificationService implements INotificationService {
       return { code: ResponseCode.NOTIFICATION_NOT_FOUND }
     }
 
-    notification.read = read
-
     await prisma.notification.update({
       where: { id: notificationId },
-      data: notification,
+      data: { read },
     })
 
     return { code: ResponseCode.OK }
@@ -96,7 +94,7 @@ export class NotificationService implements INotificationService {
 
   @serviceMethod()
   async deleteNotification({ userId, notificationId }: IDeleteNotification) {
-    const notification = await prisma.notification.findUnique({
+    const notification = await prisma.notification.findFirst({
       where: {
         receiverId: userId,
         id: notificationId,

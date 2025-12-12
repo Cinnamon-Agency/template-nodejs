@@ -12,7 +12,7 @@ export const generateToken = (
   const secret = config[`${type}_SECRET`]
   const token = sign(payload, secret, {
     expiresIn: `${config[`${type}_EXPIRES_IN`]}m`,
-    ...(options && options),
+    ...options,
   })
   return token
 }

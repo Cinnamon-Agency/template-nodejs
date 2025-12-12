@@ -25,15 +25,31 @@ export const authenticateDocs = (
   const authHeader = req.header('Authorization')
 
   if (authHeader) {
-    const encodedCredentials = authHeader.split(' ')[1]
-    const decodedCredentials = Buffer.from(
-      encodedCredentials,
-      'base64'
-    ).toString()
-    const [username, password] = decodedCredentials.split(':')
+    try {
+      const parts = authHeader.split(' ')
+      if (parts.length !== 2 || parts[0] !== 'Basic') {
+        throw new Error('Invalid Authorization header format')
+      }
 
-    if (authenticatedDocUsers[username] === password) {
-      return next()
+      const encodedCredentials = parts[1]
+      const decodedCredentials = Buffer.from(
+        encodedCredentials,
+        'base64'
+      ).toString()
+
+      const colonIndex = decodedCredentials.indexOf(':')
+      if (colonIndex === -1) {
+        throw new Error('Invalid credentials format')
+      }
+
+      const username = decodedCredentials.substring(0, colonIndex)
+      const password = decodedCredentials.substring(colonIndex + 1)
+
+      if (authenticatedDocUsers[username] === password) {
+        return next()
+      }
+    } catch {
+      // Invalid auth header format, fall through to 401
     }
   }
 
@@ -46,8 +62,8 @@ export const requireToken =
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       let token = ''
-      if (req.cookies && req.cookies['template-token']) {
-        token = req.cookies['template-token']
+      if (req.cookies && req.cookies['accessToken']) {
+        token = req.cookies['accessToken']
       }
 
       const decodedToken = verifyToken<DecodedToken>(
@@ -80,7 +96,10 @@ export const requireToken =
           return next()
         }
 
-        if (!allowedRoles.includes(userRoles[0])) {
+        const hasAllowedRole = userRoles.some(role =>
+          allowedRoles.includes(role)
+        )
+        if (!hasAllowedRole) {
           return next({
             code: ResponseCode.UNAUTHORIZED,
           })
