@@ -22,7 +22,7 @@ const paths = {
       },
       responses: {
         '200': {
-          description: 'Succefully created project',
+          description: 'Successfully created project',
           content: {
             schema: {
               $ref: '#/definitions/create_project_response',
@@ -36,7 +36,7 @@ const paths = {
       description: 'Get list of projects',
       responses: {
         '200': {
-          description: 'Succefully fetch projects',
+          description: 'Successfully fetched projects',
           content: {
             schema: {
               $ref: '#/definitions/get_projects_response',
@@ -47,21 +47,23 @@ const paths = {
     },
   },
   '/project/{id}': {
-    post: {
+    get: {
       tags: ['Project'],
-      description: 'Create new project',
+      description: 'Get project by ID',
       parameters: [
         {
           in: 'path',
           name: 'id',
-          type: 'string',
-          required: false,
+          schema: {
+            type: 'string',
+          },
+          required: true,
           description: 'Project ID',
         },
       ],
       responses: {
         '200': {
-          description: 'Succefully created project',
+          description: 'Successfully fetched project',
           content: {
             schema: {
               $ref: '#/definitions/get_project_response',
@@ -94,14 +96,6 @@ const definitions = {
       data: null,
       code: 401001,
       message: 'Invalid token',
-    },
-  },
-  '404': {
-    description: 'Project not found',
-    content: {
-      schema: {
-        $ref: '#/definitions/project_not_found_response',
-      },
     },
   },
   project_not_found_response: {

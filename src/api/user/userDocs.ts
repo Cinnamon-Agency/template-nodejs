@@ -30,8 +30,10 @@ const paths = {
         {
           in: 'path',
           name: 'id',
-          type: 'string',
-          required: false,
+          schema: {
+            type: 'string',
+          },
+          required: true,
           description: 'User ID',
         },
       ],
@@ -54,7 +56,7 @@ const paths = {
 
       responses: {
         '200': {
-          description: 'Succefully finished onboarding flow',
+          description: 'Successfully finished onboarding flow',
           content: {
             schema: {
               $ref: '#/definitions/200_response',
@@ -72,14 +74,6 @@ const definitions = {
       data: null,
       code: 200000,
       message: 'OK',
-    },
-  },
-  '404': {
-    description: 'User not found',
-    content: {
-      schema: {
-        $ref: '#/definitions/user_not_found_response',
-      },
     },
   },
   '401_response': {

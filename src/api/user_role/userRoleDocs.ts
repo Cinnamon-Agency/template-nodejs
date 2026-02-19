@@ -12,7 +12,7 @@ const paths = {
       summary: 'Get all user roles for user',
       responses: {
         '200': {
-          description: 'Succefully fetched user roles for user',
+          description: 'Successfully fetched user roles for user',
           content: {
             schema: {
               $ref: '#/definitions/get_user_roles_response',

@@ -14,16 +14,20 @@ const paths = {
         {
           in: 'query',
           name: 'unread',
-          type: 'boolean',
+          schema: {
+            type: 'boolean',
+          },
           required: false,
           description: 'If true fetch only unread messages',
         },
         {
           in: 'query',
           name: 'numberOfFetched',
-          type: 'number',
+          schema: {
+            type: 'integer',
+          },
           required: true,
-          description: 'NUmber of entities already fetched',
+          description: 'Number of entities already fetched',
         },
       ],
       responses: {
@@ -47,8 +51,10 @@ const paths = {
         {
           in: 'path',
           name: 'notificationId',
-          type: 'string',
-          required: false,
+          schema: {
+            type: 'string',
+          },
+          required: true,
           description: 'Notification Id',
         },
       ],
@@ -63,7 +69,7 @@ const paths = {
       },
       responses: {
         '200': {
-          description: 'Succesfully updated read status of notification',
+          description: 'Successfully updated read status of notification',
           content: {
             schema: {
               $ref: '#/definitions/200_response',
@@ -79,14 +85,16 @@ const paths = {
         {
           in: 'path',
           name: 'notificationId',
-          type: 'string',
-          required: false,
+          schema: {
+            type: 'string',
+          },
+          required: true,
           description: 'Notification Id',
         },
       ],
       responses: {
         '200': {
-          description: 'Successfully Fetched default notifications',
+          description: 'Successfully deleted notification',
           content: {
             schema: {
               $ref: '#/definitions/200_response',
@@ -111,14 +119,6 @@ const definitions = {
       data: null,
       code: 401001,
       message: 'Invalid token',
-    },
-  },
-  '404': {
-    description: 'Notification not found',
-    content: {
-      schema: {
-        $ref: '#/definitions/notification_not_found_response',
-      },
     },
   },
   update_read_status_body: {

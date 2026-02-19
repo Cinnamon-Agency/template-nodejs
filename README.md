@@ -1,187 +1,120 @@
 # Cinnamon Node.js/TypeScript Backend Template
 
-## **Table of Contents**
+A production-ready Node.js backend API template built with **TypeScript**, **Express.js 5**, **Prisma ORM**, and **PostgreSQL**. Features JWT authentication with multi-provider OAuth support, role-based access control, real-time WebSocket communication, AWS integrations (SES, Pinpoint SMS, CloudWatch), Google Cloud Storage, and interactive Swagger API documentation.
 
-*  [Info](#info)
-*  [Running the app](#running)
-*  [Blog post](#blog)
-*  [About project](#about)
-*  [Project structure overview](#structure)
-*  [Database and data structure](#database)
-*  [Authentication and authorization](#auth)
-*  [Documenting](#docs)
-*  [Communication protocols](#protocol)
-*  [Conclusion](#conclusion)
-----
-
-## **Running the app** <a name="running"></a>
-
-First you need to provide environmental variables. You can copy/paste variable names from **<em>./.env.example</em>** file and provide your own values.
+**Author:** Cinnamon Agency
 
 ---
 
-**Note:** This template is for building backend APIs and services using Node.js and TypeScript. It is not a Flutter project. All references to Flutter in previous versions or documentation are incorrect.
+## Documentation
+
+| Document | Description |
+|---|---|
+| [Getting Started](docs/GETTING_STARTED.md) | Prerequisites, setup instructions, scripts reference |
+| [Architecture](docs/ARCHITECTURE.md) | Project structure, bootstrap flow, DI, middleware pipeline, error handling, response format, logging |
+| [API Reference](docs/API_REFERENCE.md) | All endpoints (Auth, User, Project, Notification, Support Request), internal services, Swagger docs |
+| [Database](docs/DATABASE.md) | Prisma schema — all 12 models, 8 enums, indexes, seed data, migrations |
+| [Authentication](docs/AUTHENTICATION.md) | JWT token flow, cookie config, RBAC, verification flows, device trust, security measures |
+| [Services](docs/SERVICES.md) | AWS SES, Pinpoint SMS, CloudWatch, Google Cloud Storage, JWT, bcrypt, Prisma, WebSocket |
+| [Deployment](docs/DEPLOYMENT.md) | Docker, Docker Compose, production checklist, graceful shutdown, health checks |
+| [Environment](docs/ENVIRONMENT.md) | Full list of all 30+ environment variables with defaults and descriptions |
 
 ---
 
-Installation is easy and can be done in seconds! Clone this project, make sure you're on the latest Node.js version, open the newly cloned project and run the following commands:
-
-Install all dependencies:
+## Quick Start
 
 ```bash
-npm install
+# Clone and setup
+git clone <repository-url>
+cd template-nodejs
+cp .env.template .env    # Edit with your values
+
+# Option A: Docker (recommended)
+docker-compose up -d
+docker-compose exec api yarn migrate:deploy
+docker-compose exec api yarn seed
+
+# Option B: Local
+yarn install
+yarn prisma:generate
+yarn migrate:deploy
+yarn seed
+yarn dev
 ```
 
-Run the app:
+API: `http://localhost:3000` — Swagger: `http://localhost:3000/api-docs`
 
-```bash
-npm run start
+---
+
+## Tech Stack
+
+| Category | Technology |
+|---|---|
+| **Runtime** | Node.js 22 |
+| **Language** | TypeScript 5.8 (strict mode) |
+| **Framework** | Express.js 5 |
+| **ORM** | Prisma 6 |
+| **Database** | PostgreSQL 16 |
+| **Auth** | JWT (jsonwebtoken), bcrypt |
+| **Validation** | Joi 17 |
+| **DI Container** | tsyringe |
+| **Email** | AWS SES |
+| **SMS** | AWS Pinpoint SMS Voice V2 |
+| **Logging** | Winston + Morgan + AWS CloudWatch |
+| **File Storage** | Google Cloud Storage |
+| **WebSocket** | ws (native) |
+| **API Docs** | Swagger UI Express (OpenAPI 3.0) |
+| **Security** | Helmet, CORS, rate-limiter-flexible |
+| **Containerization** | Docker + Docker Compose |
+| **Package Manager** | Yarn |
+
+---
+
+## API Overview
+
+| Module | Base Path | Endpoints | Auth | Highlights |
+|---|---|---|---|---|
+| **Auth** | `/auth` | 13 | Mixed | Register, login, logout, token refresh, email/phone verification, login codes, device trust |
+| **User** | `/user` | 3 | JWT | Profile, notification toggle |
+| **Project** | `/project` | 3 | JWT | CRUD with media uploads (GCS signed URLs), Prisma transactions |
+| **Notification** | `/notification` | 3 | JWT | CRUD with email + WebSocket real-time events |
+| **Support** | `/support_request` | 2 | Public/ADMIN | Public submission, admin status management |
+
+---
+
+## Project Structure (Overview)
+
 ```
-After you started the app, you can visit to http://localost:3000/api-docs you will find yourself on Swagger page.
-
-###### ** We are using port 3000, but you can set up your env variables as you like and use any other port.
-###### ** We are using host 127.0.0.1, but you can set up your env variables as you like and use any other host.
-
-There you can test our template.
-
-## **About project** <a name="about"></a>
-
-This adapted template is designed to align with the latest trends and best practices in Node.js application development, ensuring that our projects follow the most effective approaches. It will be regularly updated to maintain its relevance and efficacy over time. By fostering a sense of familiarity among our developers, this template aims to enhance collaboration and productivity within our team, ultimately maximizing our effectiveness in delivering high-quality solutions.
-
-## **Project structure overview** <a name="structure"></a>
-
-Given that our codebase is written in TypeScript, we've adopted the "package-by-feature" structure as our preferred method. This approach not only maximizes our utilization of TypeScript's robust features but also facilitates seamless migration to a microservices architecture, should the need arise. By organizing our code in this manner, we enhance readability, maintainability, and scalability, ensuring that our development process remains efficient and adaptable to evolving requirements.
-
-Within the */src* directory, we house the definitions of Express routes, business logic, middleware functions, and configurations for third-party services. This centralized location serves as the core of our application, consolidating essential components such as routing logic, business operations, middleware implementations, and configurations for external services. By organizing these elements within the /src directory, we ensure clarity, maintainability, and ease of access for developers working on the project.
-
-*/api*<br>
-*/config*<br>
-*/interfaces*<br>
-*/logger*<br>
-*/middleware*<br>
-*/routes*<br>
-*/services*<br>
-
-## **Database and data structure** <a name="database"></a>
-
-Our choice of MySQL as the primary database, complemented by the Prisma ORM, underscores our commitment to reliability and performance. The database schema is designed with scalability and maintainability in mind.
-
-### **Core Tables**
-
-1. **Users**
-   - Stores user account information
-   - Includes authentication details and user preferences
-   - One-to-many relationship with UserRoles
-
-2. **Roles**
-   ```prisma
-   model Role {
-     id    String    @id @default(uuid())
-     name  RoleType  @unique @default(USER)
-     users UserRole[]
-     @@map("roles")
-   }
-   ```
-   - Defines available roles in the system (USER, ADMIN, SUPERADMIN)
-   - Used for role-based access control
-
-3. **UserRoles**
-   ```prisma
-   model UserRole {
-     id        String   @id @default(uuid())
-     user      User     @relation(fields: [userId], references: [id])
-     userId    String
-     role      Role     @relation(fields: [roleId], references: [id])
-     roleId    String
-     createdAt DateTime @default(now())
-     updatedAt DateTime @updatedAt
-     @@unique([userId, roleId])
-     @@map("user_roles")
-   }
-   ```
-   - Junction table for many-to-many relationship between Users and Roles
-   - Tracks role assignments with timestamps
-
-### **Key Features**
-- **Type Safety**: Full TypeScript support through Prisma
-- **Scalability**: Designed to handle growing numbers of users and roles
-- **Flexibility**: Easy to add new roles or modify permissions
-- **Audit Trail**: Timestamps track when roles are assigned
-
-### **Example Queries**
-
-```typescript
-// Get all roles for a user
-const userWithRoles = await prisma.user.findUnique({
-  where: { id: userId },
-  include: {
-    roles: {
-      include: {
-        role: true
-      }
-    }
-  }
-})
-
-// Assign a role to a user
-await prisma.userRole.create({
-  data: {
-    userId: 'user-123',
-    roleId: 'role-admin-456'
-  }
-})
+src/
+├── api/            # Feature modules (auth, user, project, notification, support_request, media, role, user_role, user_session, verification_uid)
+├── common/         # Shared types, response codes, @serviceMethod() decorator
+├── core/           # App init, config, logger, server + graceful shutdown
+├── middleware/      # Auth, rate limiter, validation, response formatter, logging, shutdown
+├── routes/         # Central router
+├── services/       # AWS SES, Pinpoint SMS, CloudWatch, GCS, JWT, bcrypt, Prisma, WebSocket, UUID
+└── documentation/  # Swagger/OpenAPI setup
 ```
 
-### **Security**
-- Role assignments are protected by authentication middleware
-- All database operations are parameterized to prevent SQL injection
-- Sensitive operations require appropriate role permissions
+See [Architecture](docs/ARCHITECTURE.md) for the full annotated directory tree.
 
-## **Authentication and authorization** <a name="auth"></a>
+---
 
-In our template, we've implemented authentication and authorization using JWT tokens, enhancing the security of our application. The integration of refresh tokens further bolsters our app's security posture, providing an additional layer of protection against unauthorized access. Continuously striving to enhance our security measures, we are dedicated to adopting and implementing new, improved approaches. By remaining vigilant and proactive, we prioritize the ongoing protection of our users' data and the integrity of our systems.
+## Scripts
 
-Furthermore, we prioritize the security of sensitive data stored within our database by encrypting it thoroughly. Our encryption protocols are designed to ensure that even our developers cannot decrypt this information, underscoring our commitment to safeguarding user privacy and confidentiality. This stringent approach to encryption reinforces the integrity of our data storage practices, providing peace of mind to both our team and our users.
+| Script | Description |
+|---|---|
+| `yarn dev` | Development server (hot-reload) |
+| `yarn build` | Compile TypeScript |
+| `yarn start` | Production server |
+| `yarn lint` / `yarn lint:fix` | ESLint |
+| `yarn format` | Prettier |
+| `yarn migrate:dev` | Create migration (dev) |
+| `yarn migrate:deploy` | Apply migrations (prod) |
+| `yarn seed` | Seed database |
+| `yarn db:bootstrap` | Full DB setup (generate + migrate + seed) |
 
-## **Role-Based Access Control (RBAC)** <a name="rbac"></a>
+---
 
-The application implements a flexible Role-Based Access Control (RBAC) system with the following features:
+## License
 
-### **Roles**
-- **USER**: Standard user with basic access rights
-- **ADMIN**: Administrative user with extended privileges
-- **SUPERADMIN**: Highest privilege level with full system access
-
-### **Key Components**
-- **Role Management**: Centralized role definitions and permissions
-- **User-Role Assignment**: Multiple roles can be assigned to users
-- **Type-Safe**: Strongly typed interfaces for role management
-- **Scalable**: Easy to add new roles and permissions as needed
-
-### **Usage Example**
-```typescript
-// Assigning a role to a user
-const userRole: ICreateUserRole = {
-  userId: 123,
-  roleType: RoleType.ADMIN
-};
-
-// Getting roles for a user
-const userRoles = await userRoleService.getRolesForUser({ userId: 123 });
-```
-
-## **Monitor and logging** <a name="monitor"></a>
-
-While Morgan serves as our primary logging tool for the application, we are continuously enhancing our template to incorporate additional monitoring and event observation tools. This proactive approach allows us to strengthen our application's capabilities by gaining deeper insights into its performance and behavior. By expanding our toolkit to include comprehensive monitoring solutions, we aim to optimize resource utilization, identify potential issues proactively, and enhance overall system reliability. Our commitment to constant improvement underscores our dedication to delivering high-quality, resilient applications that meet the evolving needs of our users.
-
-## **Communication protocols** <a name="protocol"></a>
-
-In our application, we've seamlessly integrated both HTTP and WebSocket protocols to cater to diverse communication needs. Leveraging the versatile Express.js framework, we efficiently manage server operations and HTTP requests, ensuring robustness and scalability. Additionally, for WebSocket communications, we've opted for the native WS module, which provides efficient handling of real-time data exchange, enhancing responsiveness and interactivity within our application. By utilizing these technologies in tandem, we deliver a comprehensive solution capable of meeting various communication requirements while maintaining performance and reliability.
-
-## **Documentation** <a name="docs"></a>
-
-In addition to our database setup, we prioritize comprehensive documentation for our Node.js applications, including the integration of Swagger. Clear and detailed documentation ensures that our codebase is easily understandable and accessible to all team members. By incorporating Swagger, we provide an interactive API documentation platform that facilitates seamless communication between developers, stakeholders, and other project members. Swagger enables us to document endpoints, request/response payloads, and authentication mechanisms, enhancing clarity and consistency across our API implementations. This commitment to documentation, bolstered by Swagger, fosters collaboration, accelerates onboarding processes for new team members, and ultimately contributes to the long-term maintainability and scalability of our applications.
-
-## **Conclusion** <a name="conclusion"></a>
-
-While we have chosen specific tools for implementation, it's essential to highlight that our team remains highly adaptable and flexible to accommodate your unique requirements. Our expertise extends beyond the selected tools, allowing us to seamlessly integrate alternative solutions as needed. With a focus on collaboration and client satisfaction, we prioritize understanding your needs and tailoring our approach to deliver optimal results. Rest assured, our commitment to flexibility ensures that we can effectively adapt to any changes or preferences, ensuring a smooth and successful project collaboration.
+ISC

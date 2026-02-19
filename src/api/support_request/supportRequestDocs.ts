@@ -21,7 +21,7 @@ const paths = {
       },
       responses: {
         '200': {
-          description: 'Succefully created contact Support ticket',
+          description: 'Successfully created contact Support ticket',
           content: {
             schema: {
               $ref: '#/definitions/200_response',
@@ -39,7 +39,9 @@ const paths = {
         {
           in: 'path',
           name: 'supportRequestId',
-          type: 'string',
+          schema: {
+            type: 'string',
+          },
           required: true,
           description: 'contact support ID',
         },
@@ -55,7 +57,7 @@ const paths = {
       },
       responses: {
         '200': {
-          description: 'Succefully updated contact Support',
+          description: 'Successfully updated contact Support',
           content: {
             schema: {
               $ref: '#/definitions/200_response',
@@ -75,6 +77,7 @@ const definitions = {
     },
   },
   create_support_request_body: {
+    type: 'object',
     properties: {
       firstName: {
         type: 'string',
@@ -100,12 +103,13 @@ const definitions = {
     required: ['firstName', 'lastName', 'email', 'subject', 'message'],
   },
   update_support_request_status_body: {
+    type: 'object',
     properties: {
       status: {
         type: 'string',
         description: 'The status of the contact support',
+        enum: ['OPEN', 'CLOSED'],
       },
-      enum: ['OPEN', 'CLOSED'],
     },
     required: ['status'],
   },
