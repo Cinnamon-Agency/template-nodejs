@@ -14,6 +14,14 @@ const mockPrismaClient = {
 
 jest.mock('../../src/services/prisma', () => ({
   getPrismaClient: () => mockPrismaClient,
+  isPrismaError: jest.fn(() => false),
+  mapPrismaErrorToResponseCode: jest.fn(() => 500000),
+}))
+
+jest.mock('@core/logger', () => ({
+  logger: {
+    error: jest.fn(),
+  },
 }))
 
 // Mock cache service
@@ -286,6 +294,188 @@ describe('UserService', () => {
       })
 
       expect(result.code).toBe(ResponseCode.USER_NOT_FOUND)
+    })
+  })
+
+  describe('getUserByEmailAndAuthType', () => {
+    it('should return user when found by email and auth type', async () => {
+      const user = {
+        id: 'uuid-1',
+        email: 'test@example.com',
+        authType: AuthType.GOOGLE,
+      }
+
+      mockPrismaClient.user.findUnique.mockResolvedValue(user)
+
+      const result = await userService.getUserByEmailAndAuthType({
+        email: 'test@example.com',
+        authType: AuthType.GOOGLE,
+      })
+
+      expect(result.code).toBe(ResponseCode.OK)
+      expect((result as any).user.email).toBe('test@example.com')
+      expect((result as any).user.authType).toBe(AuthType.GOOGLE)
+      expect(mockPrismaClient.user.findUnique).toHaveBeenCalledWith({
+        where: { email: 'test@example.com', authType: AuthType.GOOGLE },
+      })
+    })
+
+    it('should return USER_NOT_FOUND when user does not exist with given email and auth type', async () => {
+      mockPrismaClient.user.findUnique.mockResolvedValue(null)
+
+      const result = await userService.getUserByEmailAndAuthType({
+        email: 'test@example.com',
+        authType: AuthType.GOOGLE,
+      })
+
+      expect(result.code).toBe(ResponseCode.USER_NOT_FOUND)
+      expect(result).not.toHaveProperty('user')
+    })
+
+    it('should return USER_NOT_FOUND when user exists with different auth type', async () => {
+      mockPrismaClient.user.findUnique.mockResolvedValue(null)
+
+      const result = await userService.getUserByEmailAndAuthType({
+        email: 'test@example.com',
+        authType: AuthType.USER_PASSWORD,
+      })
+
+      expect(result.code).toBe(ResponseCode.USER_NOT_FOUND)
+    })
+  })
+
+  describe('Caching behavior', () => {
+    it('should cache user data after getUserById', async () => {
+      const user = {
+        id: 'uuid-1',
+        email: 'test@example.com',
+        password: 'hashed_password',
+        authType: AuthType.USER_PASSWORD,
+        emailVerified: false,
+        phoneNumber: null,
+        phoneVerified: false,
+        notifications: false,
+        profilePictureFileName: null,
+        roles: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }
+
+      mockPrismaClient.user.findUnique.mockResolvedValue(user)
+      const { cache } = require('../../src/services/cache')
+
+      const result = await userService.getUserById({ userId: 'uuid-1' })
+
+      expect(result.code).toBe(ResponseCode.OK)
+      expect(cache.set).toHaveBeenCalledWith('user:uuid-1', user, 300)
+    })
+
+    it('should return cached user data on subsequent calls', async () => {
+      const cachedUser = {
+        id: 'uuid-1',
+        email: 'cached@example.com',
+        authType: AuthType.USER_PASSWORD,
+      }
+
+      const { cache } = require('../../src/services/cache')
+      cache.get.mockResolvedValue(cachedUser)
+
+      const result = await userService.getUserById({ userId: 'uuid-1' })
+
+      expect(result.code).toBe(ResponseCode.OK)
+      expect((result as any).user).toEqual(cachedUser)
+      expect(cache.get).toHaveBeenCalledWith('user:uuid-1')
+      expect(mockPrismaClient.user.findUnique).not.toHaveBeenCalled()
+    })
+
+    it('should invalidate cache when updating user', async () => {
+      const user = {
+        id: 'uuid-1',
+        email: 'test@example.com',
+        notifications: false,
+      }
+
+      const updatedUser = { ...user, notifications: true }
+      const { cache } = require('../../src/services/cache')
+
+      mockPrismaClient.user.findUnique.mockResolvedValue(user)
+      mockPrismaClient.user.update.mockResolvedValue(updatedUser)
+
+      const result = await userService.toggleNotifications({ userId: 'uuid-1' })
+
+      expect(result.code).toBe(ResponseCode.OK)
+      expect(cache.del).toHaveBeenCalledWith('user:uuid-1')
+    })
+
+    it('should invalidate cache when updating password', async () => {
+      const user = {
+        id: 'uuid-1',
+        email: 'test@example.com',
+      }
+
+      const { cache } = require('../../src/services/cache')
+
+      mockPrismaClient.user.findUnique.mockResolvedValue(user)
+      mockPrismaClient.user.update.mockResolvedValue({ ...user, password: 'new_hashed' })
+
+      const result = await userService.updatePassword({
+        userId: 'uuid-1',
+        password: 'newpassword123',
+      })
+
+      expect(result.code).toBe(ResponseCode.OK)
+      expect(cache.del).toHaveBeenCalledWith('user:uuid-1')
+    })
+  })
+
+  describe('Database error handling', () => {
+    it('should handle database errors during user creation', async () => {
+      const { isPrismaError, mapPrismaErrorToResponseCode } = require('../../src/services/prisma')
+      isPrismaError.mockReturnValue(true)
+      mapPrismaErrorToResponseCode.mockReturnValue(500001)
+      
+      mockPrismaClient.user.create.mockRejectedValue(new Error('Database connection failed'))
+
+      const result = await userService.createUser({
+        email: 'test@example.com',
+        password: 'password123',
+        authType: AuthType.USER_PASSWORD,
+      })
+
+      expect(result.code).toBe(500001)
+    })
+
+    it('should handle database errors during user lookup', async () => {
+      const { isPrismaError, mapPrismaErrorToResponseCode } = require('../../src/services/prisma')
+      isPrismaError.mockReturnValue(true)
+      mapPrismaErrorToResponseCode.mockReturnValue(500002)
+      
+      // Mock cache miss to trigger database call
+      const { cache } = require('../../src/services/cache')
+      cache.get.mockResolvedValue(null)
+      
+      mockPrismaClient.user.findUnique.mockRejectedValue(new Error('Database timeout'))
+
+      const result = await userService.getUserById({ userId: 'uuid-1' })
+
+      expect(result.code).toBe(500002)
+    })
+
+    it('should handle database errors during user update', async () => {
+      const { isPrismaError, mapPrismaErrorToResponseCode } = require('../../src/services/prisma')
+      isPrismaError.mockReturnValue(true)
+      mapPrismaErrorToResponseCode.mockReturnValue(500003)
+      
+      mockPrismaClient.user.findUnique.mockResolvedValue({
+        id: 'uuid-1',
+        email: 'test@example.com',
+        notifications: false,
+      })
+      mockPrismaClient.user.update.mockRejectedValue(new Error('Update failed'))
+
+      const result = await userService.toggleNotifications({ userId: 'uuid-1' })
+
+      expect(result.code).toBe(500003)
     })
   })
 })
