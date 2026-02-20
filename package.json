@@ -16,7 +16,7 @@
     "migrate:deploy": "prisma migrate deploy",
     "migrate:status": "prisma migrate status",
     "migrate:dev": "prisma migrate dev",
-    "db:bootstrap": "prisma generate && prisma migrate deploy && yarn seed"
+    "db:bootstrap": "prisma generate && prisma migrate deploy && npm run seed"
   },
   "author": "Cinnamon Agency",
   "license": "ISC",

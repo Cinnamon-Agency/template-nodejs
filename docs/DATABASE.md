@@ -214,7 +214,7 @@ The seed script (`prisma/seed.ts`) creates:
 
 Run with:
 ```bash
-yarn seed
+npm run seed
 ```
 
 ---
@@ -225,14 +225,14 @@ Migrations are managed by Prisma Migrate and stored in `prisma/migrations/`.
 
 ```bash
 # Create a new migration (development)
-yarn migrate:dev
+npm run migrate:dev
 
 # Apply pending migrations (production)
-yarn migrate:deploy
+npm run migrate:deploy
 
 # Check migration status
-yarn migrate:status
+npm run migrate:status
 
 # Full bootstrap (generate + migrate + seed)
-yarn db:bootstrap
+npm run db:bootstrap
 ```

@@ -31,15 +31,15 @@ cp .env.template .env    # Edit with your values
 
 # Option A: Docker (recommended)
 docker-compose up -d
-docker-compose exec api yarn migrate:deploy
-docker-compose exec api yarn seed
+docker-compose exec api npm run migrate:deploy
+docker-compose exec api npm run seed
 
 # Option B: Local
-yarn install
-yarn prisma:generate
-yarn migrate:deploy
-yarn seed
-yarn dev
+npm install
+npm run prisma:generate
+npm run migrate:deploy
+npm run seed
+npm run dev
 ```
 
 API: `http://localhost:3000` — Swagger: `http://localhost:3000/api-docs`
@@ -66,7 +66,7 @@ API: `http://localhost:3000` — Swagger: `http://localhost:3000/api-docs`
 | **API Docs** | Swagger UI Express (OpenAPI 3.0) |
 | **Security** | Helmet, CORS, rate-limiter-flexible |
 | **Containerization** | Docker + Docker Compose |
-| **Package Manager** | Yarn |
+| **Package Manager** | npm |
 
 ---
 
@@ -103,15 +103,15 @@ See [Architecture](docs/ARCHITECTURE.md) for the full annotated directory tree.
 
 | Script | Description |
 |---|---|
-| `yarn dev` | Development server (hot-reload) |
-| `yarn build` | Compile TypeScript |
-| `yarn start` | Production server |
-| `yarn lint` / `yarn lint:fix` | ESLint |
-| `yarn format` | Prettier |
-| `yarn migrate:dev` | Create migration (dev) |
-| `yarn migrate:deploy` | Apply migrations (prod) |
-| `yarn seed` | Seed database |
-| `yarn db:bootstrap` | Full DB setup (generate + migrate + seed) |
+| `npm run dev` | Development server (hot-reload) |
+| `npm run build` | Compile TypeScript |
+| `npm run start` | Production server |
+| `npm run lint` / `npm run lint:fix` | ESLint |
+| `npm run format` | Prettier |
+| `npm run migrate:dev` | Create migration (dev) |
+| `npm run migrate:deploy` | Apply migrations (prod) |
+| `npm run seed` | Seed database |
+| `npm run db:bootstrap` | Full DB setup (generate + migrate + seed) |
 
 ---
 

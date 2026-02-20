@@ -30,10 +30,10 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 COPY package*.json ./
-RUN yarn ci --only=production
+RUN npm ci --only=production
 
 COPY . .
-RUN yarn build
+RUN npm run build
 
 # Production image
 FROM node:18-alpine AS production
@@ -111,12 +111,12 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '18'
-          cache: 'yarn'
+          cache: 'npm'
       
-      - run: yarn install --frozen-lockfile
-      - run: yarn test --coverage
-      - run: yarn lint
-      - run: yarn build
+      - run: npm ci
+      - run: npm run test --coverage
+      - run: npm run lint
+      - run: npm run build
 
   deploy-staging:
     needs: test
@@ -184,10 +184,10 @@ LOG_LEVEL=info
 pg_dump $DATABASE_URL > backup_$(date +%Y%m%d_%H%M%S).sql
 
 # 2. Apply migrations
-yarn prisma migrate deploy
+npm run prisma migrate deploy
 
 # 3. Verify migration
-yarn prisma migrate status
+npm run prisma migrate status
 
 # 4. Update application
 docker-compose pull
@@ -197,7 +197,7 @@ docker-compose up -d
 ### **Rollback Strategy**
 ```bash
 # Rollback migration
-yarn prisma migrate reset --force
+npm run prisma migrate reset --force
 
 # Restore from backup
 psql $DATABASE_URL < backup_20231201_120000.sql
@@ -397,7 +397,7 @@ curl http://localhost:3000/health
 docker-compose logs app
 
 # Check database connection
-yarn prisma db pull
+npm run prisma db pull
 
 # Test health endpoint
 curl http://localhost:3000/health

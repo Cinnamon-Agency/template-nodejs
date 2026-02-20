@@ -7,18 +7,18 @@
 - **Base image:** `node:22`
 - **Build steps:** Install dependencies → Copy source → Build TypeScript → Expose port 3000
 - **Memory:** `NODE_OPTIONS="--max-old-space-size=3072"` for memory optimization
-- **Package manager:** Yarn with `--frozen-lockfile`
+- **Package manager:** npm with `package-lock.json`
 
 ```dockerfile
 FROM node:22
 WORKDIR /usr/src/app
-COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile
+COPY package.json package-lock.json ./
+RUN npm ci --only=production
 COPY . .
 ENV NODE_OPTIONS="--max-old-space-size=3072"
-RUN yarn build
+RUN npm run build
 EXPOSE 3000
-CMD ["yarn", "start"]
+CMD ["npm", "start"]
 ```
 
 ---
@@ -54,10 +54,10 @@ docker-compose up -d
 docker-compose logs -f api
 
 # Run migrations inside container
-docker-compose exec api yarn migrate:deploy
+docker-compose exec api npm run migrate:deploy
 
 # Seed database
-docker-compose exec api yarn seed
+docker-compose exec api npm run seed
 
 # Stop all services
 docker-compose down
@@ -89,7 +89,7 @@ docker run -p 3000:3000 --env-file .env template-nodejs
 - [ ] Use IAM roles instead of `AWS_ACCESS_KEY`/`AWS_SECRET` for AWS services
 - [ ] Use GCP Workload Identity instead of service account key file
 - [ ] Set `DATABASE_URL` to your production PostgreSQL instance
-- [ ] Run `yarn migrate:deploy` before starting the application
+- [ ] Run `npm run migrate:deploy` before starting the application
 - [ ] Set `LOG_TO_CONSOLE=false` if using CloudWatch exclusively
 - [ ] Increase `SALT_ROUNDS` to 12+ for stronger password hashing
 - [ ] Configure appropriate rate limiter values for production traffic
@@ -120,12 +120,12 @@ The server handles `SIGINT` and `SIGTERM` signals with a graceful shutdown seque
 
 ```bash
 # Full bootstrap (generate client + migrate + seed)
-yarn db:bootstrap
+npm run db:bootstrap
 
 # Or step by step:
-yarn prisma:generate    # Generate Prisma client
-yarn migrate:deploy     # Apply pending migrations
-yarn seed               # Seed roles and superadmin
+npm run prisma:generate    # Generate Prisma client
+npm run migrate:deploy     # Apply pending migrations
+npm run seed               # Seed roles and superadmin
 ```
 
 ---
