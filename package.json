@@ -21,7 +21,8 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:unit": "jest tests/unit",
-    "test:integration": "jest tests/integration"
+    "test:integration": "jest tests/integration",
+    "commit": "node scripts/generate-commit-message.js"
   },
   "author": "Cinnamon Agency",
   "license": "ISC",

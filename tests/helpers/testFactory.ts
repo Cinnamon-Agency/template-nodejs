@@ -9,6 +9,31 @@ export interface TestUser {
   authType: string;
 }
 
+export interface TestProject {
+  id: string;
+  name: string;
+  description: string;
+  deadline: Date;
+  userId: string;
+  projectStatus: string;
+}
+
+export interface TestMedia {
+  id: string;
+  mediaFileName: string;
+  mediaType: string;
+  projectId: string;
+}
+
+export interface TestNotification {
+  id: string;
+  senderId: string;
+  receiverId: string;
+  message: string;
+  read: boolean;
+  notificationType: string;
+}
+
 export class TestFactory {
   private prisma: PrismaClient;
 
@@ -80,5 +105,107 @@ export class TestFactory {
     // This would use your JWT service to create a token
     // For now, return a mock token
     return `mock-token-${userId}`;
+  }
+
+  async createProject(userId: string, projectData: Partial<TestProject> = {}): Promise<TestProject> {
+    const defaultProject = {
+      name: 'Test Project',
+      description: 'A test project',
+      deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+      projectStatus: 'ACTIVE'
+    };
+
+    const projectToCreate = { ...defaultProject, ...projectData, userId };
+
+    const project = await this.prisma.project.create({
+      data: {
+        name: projectToCreate.name,
+        description: projectToCreate.description,
+        deadline: projectToCreate.deadline,
+        projectStatus: projectToCreate.projectStatus as any,
+        userId: projectToCreate.userId
+      }
+    });
+
+    return {
+      id: project.id,
+      name: project.name,
+      description: project.description,
+      deadline: project.deadline,
+      userId: project.userId,
+      projectStatus: project.projectStatus
+    } as TestProject;
+  }
+
+  async createMedia(projectId: string, mediaData: Partial<TestMedia> = {}): Promise<TestMedia> {
+    const defaultMedia = {
+      mediaFileName: 'test-file.jpg',
+      mediaType: 'IMAGE'
+    };
+
+    const mediaToCreate = { ...defaultMedia, ...mediaData, projectId };
+
+    const media = await this.prisma.media.create({
+      data: {
+        mediaFileName: mediaToCreate.mediaFileName,
+        mediaType: mediaToCreate.mediaType as any,
+        projectId: mediaToCreate.projectId
+      }
+    });
+
+    return {
+      id: media.id,
+      mediaFileName: media.mediaFileName,
+      mediaType: media.mediaType,
+      projectId: media.projectId
+    } as TestMedia;
+  }
+
+  async createNotification(senderId: string, receiverId: string, notificationData: Partial<TestNotification> = {}): Promise<TestNotification> {
+    const defaultNotification = {
+      message: 'Test notification',
+      read: false,
+      notificationType: 'EXAMPLE_NOTIFICATION'
+    };
+
+    const notificationToCreate = { ...defaultNotification, ...notificationData, senderId, receiverId };
+
+    const notification = await this.prisma.notification.create({
+      data: {
+        senderId: notificationToCreate.senderId,
+        receiverId: notificationToCreate.receiverId,
+        message: notificationToCreate.message,
+        read: notificationToCreate.read,
+        notificationType: notificationToCreate.notificationType as any
+      }
+    });
+
+    return {
+      id: notification.id,
+      senderId: notification.senderId,
+      receiverId: notification.receiverId,
+      message: notification.message,
+      read: notification.read,
+      notificationType: notification.notificationType
+    } as TestNotification;
+  }
+
+  async createSupportRequest(supportData: Partial<any> = {}): Promise<any> {
+    const defaultSupport = {
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'support@example.com',
+      subject: 'Test Support Request',
+      message: 'This is a test support request message',
+      status: 'OPEN' as const
+    };
+
+    const supportToCreate = { ...defaultSupport, ...supportData };
+
+    const supportRequest = await this.prisma.supportRequest.create({
+      data: supportToCreate
+    });
+
+    return supportRequest;
   }
 }
