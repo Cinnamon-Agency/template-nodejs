@@ -33,7 +33,7 @@ setInterval(() => {
       memoryStore.delete(key)
     }
   }
-}, MEMORY_CACHE_CLEANUP_INTERVAL)
+}, MEMORY_CACHE_CLEANUP_INTERVAL).unref()
 
 export const cache = {
   /**
