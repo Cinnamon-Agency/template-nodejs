@@ -1,6 +1,6 @@
-import { ResponseCode, serviceMethod } from '@common'
+import { ResponseCode, serviceMethod, normalizePagination, buildPaginatedResult } from '@common'
 import { autoInjectable, singleton } from 'tsyringe'
-import { prisma } from '@app'
+import { getPrismaClient } from '@services/prisma'
 import {
   ICreateProject,
   IGetProjectById,
@@ -23,7 +23,7 @@ export class ProjectService implements IProjectService {
     deadline,
     mediaFiles,
   }: ICreateProject) {
-    return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    return await getPrismaClient().$transaction(async (tx: Prisma.TransactionClient) => {
       const project = await tx.project.create({
         data: {
           userId,
@@ -51,20 +51,28 @@ export class ProjectService implements IProjectService {
 
   @serviceMethod()
   async getProjects({ page, perPage, userId }: IGetProjects) {
-    const offset = (page - 1) * perPage
+    const pagination = normalizePagination(page, perPage)
+    const offset = (pagination.page - 1) * pagination.perPage
 
-    const projects = await prisma.project.findMany({
-      where: { userId },
-      skip: offset,
-      take: perPage,
-    })
+    const [projects, total] = await Promise.all([
+      getPrismaClient().project.findMany({
+        where: { userId },
+        skip: offset,
+        take: pagination.perPage,
+        orderBy: { createdAt: 'desc' },
+      }),
+      getPrismaClient().project.count({ where: { userId } }),
+    ])
 
-    return { projects, code: ResponseCode.OK }
+    return {
+      data: buildPaginatedResult(projects, total, pagination),
+      code: ResponseCode.OK,
+    }
   }
 
   @serviceMethod()
   async getProjectById({ projectId, userId }: IGetProjectById) {
-    const project = await prisma.project.findUnique({
+    const project = await getPrismaClient().project.findUnique({
       where: {
         id: projectId,
       },

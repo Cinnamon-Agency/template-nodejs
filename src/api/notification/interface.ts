@@ -15,7 +15,8 @@ export interface ICreateNotification {
 export interface IGetNotifications {
   unread: boolean
   userId: string
-  numberOfFetched: number
+  page: number
+  perPage: number
 }
 
 export interface IToggleReadStatus {

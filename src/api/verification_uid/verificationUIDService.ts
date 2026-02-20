@@ -1,4 +1,4 @@
-import { prisma } from '@app'
+import { getPrismaClient } from '@services/prisma'
 import { ResponseCode, serviceMethod } from '@common'
 import { compare, hashString } from '@services/bcrypt'
 import { generateUUID } from '@services/uuid'
@@ -26,7 +26,7 @@ export class VerificationUIDService implements IVerificationUIDService {
 
     await this.clearVerificationUID({ userId, type })
 
-    const created = await prisma.verificationUID.create({
+    const created = await getPrismaClient().verificationUID.create({
       data: { userId, uid, hash, type },
     })
 
@@ -39,7 +39,7 @@ export class VerificationUIDService implements IVerificationUIDService {
 
   @serviceMethod()
   async getVerificationUID({ uid }: IGetVerificationUID) {
-    const verificationUID = await prisma.verificationUID.findFirst({
+    const verificationUID = await getPrismaClient().verificationUID.findFirst({
       where: { uid },
     })
     if (!verificationUID) {
@@ -51,7 +51,7 @@ export class VerificationUIDService implements IVerificationUIDService {
 
   @serviceMethod()
   async clearVerificationUID({ userId, type }: IClearVerificationUID) {
-    const verificationUID = await prisma.verificationUID.findFirst({
+    const verificationUID = await getPrismaClient().verificationUID.findFirst({
       where: {
         userId,
         type: type,
@@ -61,7 +61,7 @@ export class VerificationUIDService implements IVerificationUIDService {
       return { code: ResponseCode.VERIFICATION_UID_NOT_FOUND }
     }
 
-    await prisma.verificationUID.delete({
+    await getPrismaClient().verificationUID.delete({
       where: { id: verificationUID.id },
     })
 
@@ -70,7 +70,7 @@ export class VerificationUIDService implements IVerificationUIDService {
 
   @serviceMethod()
   async verifyUID({ uid, hashUid, type }: IVerifyUID) {
-    const verificationUID = await prisma.verificationUID.findFirst({
+    const verificationUID = await getPrismaClient().verificationUID.findFirst({
       where: {
         uid,
         type: type,

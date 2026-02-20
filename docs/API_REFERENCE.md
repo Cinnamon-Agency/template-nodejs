@@ -2,14 +2,15 @@
 
 ## Route Mounting
 
-All routes are mounted in `src/routes/index.ts`:
+All routes are mounted in `src/routes/index.ts` under `/api/v1`:
 
 ```
 /api-docs       → Swagger UI (Basic Auth protected)
-/auth           → Authentication module
-/user           → User management module
-/project        → Project module
-/notification   → Notification module
+/api/v1/auth    → Authentication module
+/api/v1/user    → User management module
+/api/v1/project → Project module
+/api/v1/notification → Notification module
+/api/v1/support_request → Support request module
 ```
 
 ---

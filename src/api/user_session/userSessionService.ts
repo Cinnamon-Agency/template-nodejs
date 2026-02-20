@@ -1,4 +1,4 @@
-import { ResponseCode, serviceMethod } from '@common'
+import { ResponseCode, serviceMethod, MINUTES_TO_MS } from '@common'
 import {
   IExpireUserSession,
   IGetUserSession,
@@ -9,7 +9,7 @@ import {
 import config from '@core/config'
 import { compare, hashString } from '@services/bcrypt'
 import { autoInjectable, singleton } from 'tsyringe'
-import { prisma } from '@app'
+import { getPrismaClient } from '@services/prisma'
 import { UserSessionStatus } from '@prisma/client'
 
 @singleton()
@@ -17,32 +17,32 @@ import { UserSessionStatus } from '@prisma/client'
 export class UserSessionService implements IUserSessionService {
   @serviceMethod()
   async storeUserSession({ userId, refreshToken }: IStoreUserSession) {
-    const user = await prisma.user.findUnique({
+    const user = await getPrismaClient().user.findUnique({
       where: { id: userId },
     })
     if (!user) {
       return { code: ResponseCode.USER_NOT_FOUND }
     }
 
-    const existingSession = await prisma.userSession.findFirst({
+    const existingSession = await getPrismaClient().userSession.findFirst({
       where: {
         userId,
         status: UserSessionStatus.ACTIVE,
       },
     })
     if (existingSession) {
-      await prisma.userSession.update({
+      await getPrismaClient().userSession.update({
         where: { id: existingSession.id },
         data: { status: UserSessionStatus.LOGGED_OUT },
       })
     }
 
     const expiresAt = new Date(
-      Date.now() + Number(config.REFRESH_TOKEN_EXPIRES_IN) * 60 * 1000
+      Date.now() + Number(config.REFRESH_TOKEN_EXPIRES_IN) * MINUTES_TO_MS
     )
 
     const refreshTokenHash = await hashString(refreshToken)
-    const userSession = await prisma.userSession.create({
+    const userSession = await getPrismaClient().userSession.create({
       data: { userId, refreshToken: refreshTokenHash, expiresAt },
     })
 
@@ -51,14 +51,14 @@ export class UserSessionService implements IUserSessionService {
 
   @serviceMethod()
   async getUserSession({ userId }: IGetUserSession) {
-    const user = await prisma.user.findUnique({
+    const user = await getPrismaClient().user.findUnique({
       where: { id: userId },
     })
     if (!user) {
       return { code: ResponseCode.USER_NOT_FOUND }
     }
 
-    const userSession = await prisma.userSession.findFirst({
+    const userSession = await getPrismaClient().userSession.findFirst({
       where: { userId },
     })
 
@@ -75,14 +75,14 @@ export class UserSessionService implements IUserSessionService {
     oldRefreshToken,
     newRefreshToken,
   }: IUpdateUserSession) {
-    const user = await prisma.user.findUnique({
+    const user = await getPrismaClient().user.findUnique({
       where: { id: userId },
     })
     if (!user) {
       return { code: ResponseCode.SESSION_EXPIRED }
     }
 
-    const userSession = await prisma.userSession.findFirst({
+    const userSession = await getPrismaClient().userSession.findFirst({
       where: {
         userId,
         status: UserSessionStatus.ACTIVE,
@@ -100,10 +100,10 @@ export class UserSessionService implements IUserSessionService {
     const refreshTokenHash = await hashString(newRefreshToken)
 
     const expiresAt = new Date(
-      Date.now() + Number(config.REFRESH_TOKEN_EXPIRES_IN) * 60 * 1000
+      Date.now() + Number(config.REFRESH_TOKEN_EXPIRES_IN) * MINUTES_TO_MS
     )
 
-    await prisma.userSession.update({
+    await getPrismaClient().userSession.update({
       where: { id: userSession.id },
       data: {
         refreshToken: refreshTokenHash,
@@ -116,14 +116,14 @@ export class UserSessionService implements IUserSessionService {
 
   @serviceMethod()
   async expireUserSession({ userId, status }: IExpireUserSession) {
-    const user = await prisma.user.findUnique({
+    const user = await getPrismaClient().user.findUnique({
       where: { id: userId },
     })
     if (!user) {
       return { code: ResponseCode.USER_NOT_FOUND }
     }
 
-    const userSession = await prisma.userSession.findFirst({
+    const userSession = await getPrismaClient().userSession.findFirst({
       where: {
         userId,
         status: UserSessionStatus.ACTIVE,
@@ -133,7 +133,7 @@ export class UserSessionService implements IUserSessionService {
       return { code: ResponseCode.USER_SESSION_NOT_FOUND }
     }
 
-    await prisma.userSession.update({
+    await getPrismaClient().userSession.update({
       where: { id: userSession.id },
       data: { status: UserSessionStatus.EXPIRED },
     })

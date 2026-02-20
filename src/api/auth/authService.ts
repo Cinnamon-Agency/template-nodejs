@@ -1,4 +1,16 @@
-import { ResponseCode, serviceMethod } from '@common'
+import {
+  ResponseCode,
+  serviceMethod,
+  MINUTES_TO_MS,
+  DAYS_TO_MS,
+  PHONE_CODE_MIN,
+  PHONE_CODE_MAX,
+  PHONE_CODE_EXPIRY_MINUTES,
+  LOGIN_CODE_MIN,
+  LOGIN_CODE_MAX,
+  LOGIN_CODE_EXPIRY_MINUTES,
+  DEVICE_TOKEN_DEFAULT_EXPIRY_DAYS,
+} from '@common'
 import { UserService } from '@api/user/userService'
 import { Response } from 'express'
 import {
@@ -21,6 +33,7 @@ import {
 } from './interface'
 import { TokenType, generateToken, verifyToken } from '@services/jsonwebtoken'
 import config from '@core/config'
+
 import { UserSessionService } from '@api/user_session/userSessionService'
 import { UserSessionStatus } from '@api/user_session/interface'
 import { autoInjectable, singleton } from 'tsyringe'
@@ -30,8 +43,10 @@ import { VerificationUIDType } from '@api/verification_uid/interface'
 import { VerificationUIDService } from '@api/verification_uid/verificationUIDService'
 import { compare } from '@services/bcrypt'
 import { sendSMS } from '@services/aws-end-user-messaging'
-import { prisma } from '@app'
+import { getPrismaClient } from '@services/prisma'
 import { AuthType } from '@prisma/client'
+
+const isProduction = config.NODE_ENV === 'production'
 
 @singleton()
 @autoInjectable()
@@ -125,7 +140,7 @@ export class AuthService implements IAuthService {
       return { code: userSessionCode }
     }
     const expiresAt = new Date(
-      Date.now() + Number(config.ACCESS_TOKEN_EXPIRES_IN) * 60 * 1000
+      Date.now() + Number(config.ACCESS_TOKEN_EXPIRES_IN) * MINUTES_TO_MS
     )
     return {
       tokens: {
@@ -177,7 +192,7 @@ export class AuthService implements IAuthService {
       TokenType.ACCESS_TOKEN
     )
     const expiresAt = new Date(
-      Date.now() + Number(config.ACCESS_TOKEN_EXPIRES_IN) * 60 * 1000
+      Date.now() + Number(config.ACCESS_TOKEN_EXPIRES_IN) * MINUTES_TO_MS
     )
 
     return {
@@ -261,11 +276,11 @@ export class AuthService implements IAuthService {
 
   private static readonly COOKIE_OPTIONS = {
     httpOnly: true,
-    secure: true,
-    sameSite: 'strict' as const,
+    secure: isProduction,
+    sameSite: isProduction ? ('strict' as const) : ('lax' as const),
   }
 
-  private static readonly DEVICE_TOKEN_MAX_AGE = 30 * 24 * 60 * 60 * 1000 // 30 days in milliseconds
+  private static readonly DEVICE_TOKEN_MAX_AGE = DEVICE_TOKEN_DEFAULT_EXPIRY_DAYS * DAYS_TO_MS
 
   /**
    * Sets authentication cookies (access and refresh tokens) on the response
@@ -386,16 +401,16 @@ export class AuthService implements IAuthService {
     userId,
   }: ISendVerificationCode) {
     // Generate 6-digit code
-    const code = Math.floor(100000 + Math.random() * 900000).toString()
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
+    const code = Math.floor(PHONE_CODE_MIN + Math.random() * PHONE_CODE_MAX).toString()
+    const expiresAt = new Date(Date.now() + PHONE_CODE_EXPIRY_MINUTES * MINUTES_TO_MS)
 
     // Delete any existing codes for this user
-    await prisma.phoneVerificationCode.deleteMany({
+    await getPrismaClient().phoneVerificationCode.deleteMany({
       where: { userId },
     })
 
     // Store the code
-    await prisma.phoneVerificationCode.create({
+    await getPrismaClient().phoneVerificationCode.create({
       data: {
         userId,
         phoneNumber,
@@ -405,7 +420,7 @@ export class AuthService implements IAuthService {
     })
 
     // Send SMS
-    const message = `Your verification code is: ${code}. This code will expire in 10 minutes.`
+    const message = `Your verification code is: ${code}. This code will expire in ${PHONE_CODE_EXPIRY_MINUTES} minutes.`
     const { code: smsCode } = await sendSMS(phoneNumber, message)
 
     if (smsCode !== ResponseCode.OK) {
@@ -417,7 +432,7 @@ export class AuthService implements IAuthService {
 
   @serviceMethod()
   async verifyPhoneCode({ userId, code }: IVerifyPhoneCode) {
-    const verificationCode = await prisma.phoneVerificationCode.findFirst({
+    const verificationCode = await getPrismaClient().phoneVerificationCode.findFirst({
       where: {
         userId,
         code,
@@ -444,7 +459,7 @@ export class AuthService implements IAuthService {
     }
 
     // Delete the verification code
-    await prisma.phoneVerificationCode.delete({
+    await getPrismaClient().phoneVerificationCode.delete({
       where: { id: verificationCode.id },
     })
 
@@ -455,17 +470,17 @@ export class AuthService implements IAuthService {
   async storeDeviceToken({
     deviceToken,
     userId,
-    expiresInDays = 30,
+    expiresInDays = DEVICE_TOKEN_DEFAULT_EXPIRY_DAYS,
   }: IStoreDeviceToken) {
-    const expiresAt = new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000)
+    const expiresAt = new Date(Date.now() + expiresInDays * DAYS_TO_MS)
 
     // Delete any existing token for this device
-    await prisma.deviceToken.deleteMany({
+    await getPrismaClient().deviceToken.deleteMany({
       where: { token: deviceToken },
     })
 
     // Store the new device token
-    await prisma.deviceToken.create({
+    await getPrismaClient().deviceToken.create({
       data: {
         userId,
         token: deviceToken,
@@ -478,7 +493,7 @@ export class AuthService implements IAuthService {
 
   @serviceMethod()
   async verifyDeviceToken(deviceToken: string) {
-    const storedToken = await prisma.deviceToken.findUnique({
+    const storedToken = await getPrismaClient().deviceToken.findUnique({
       where: { token: deviceToken },
     })
 
@@ -489,7 +504,7 @@ export class AuthService implements IAuthService {
     // Check if token is expired
     if (storedToken.expiresAt < new Date()) {
       // Delete expired token
-      await prisma.deviceToken.delete({
+      await getPrismaClient().deviceToken.delete({
         where: { id: storedToken.id },
       })
       return {
@@ -541,16 +556,16 @@ export class AuthService implements IAuthService {
     }
 
     // Generate 4-digit code
-    const code = Math.floor(1000 + Math.random() * 9000).toString()
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
+    const code = Math.floor(LOGIN_CODE_MIN + Math.random() * LOGIN_CODE_MAX).toString()
+    const expiresAt = new Date(Date.now() + LOGIN_CODE_EXPIRY_MINUTES * MINUTES_TO_MS)
 
     // Delete any existing codes for this email
-    await prisma.loginCode.deleteMany({
+    await getPrismaClient().loginCode.deleteMany({
       where: { email },
     })
 
     // Store the code
-    await prisma.loginCode.create({
+    await getPrismaClient().loginCode.create({
       data: {
         email,
         code,
@@ -584,7 +599,7 @@ export class AuthService implements IAuthService {
     }
 
     // Find the login code
-    const storedCode = await prisma.loginCode.findFirst({
+    const storedCode = await getPrismaClient().loginCode.findFirst({
       where: {
         email,
         code: loginCode,
@@ -604,7 +619,7 @@ export class AuthService implements IAuthService {
     }
 
     // Delete the used code
-    await prisma.loginCode.delete({
+    await getPrismaClient().loginCode.delete({
       where: { id: storedCode.id },
     })
 
@@ -613,7 +628,7 @@ export class AuthService implements IAuthService {
       await this.storeDeviceToken({
         deviceToken,
         userId: user.id,
-        expiresInDays: 30,
+        expiresInDays: DEVICE_TOKEN_DEFAULT_EXPIRY_DAYS,
       })
     }
 

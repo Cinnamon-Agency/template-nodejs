@@ -1,9 +1,16 @@
 import Joi, { Schema } from 'joi'
 import { NextFunction, Request, Response } from 'express'
-import { ResponseCode, ResponseError } from '@common'
+import { ResponseCode } from '@common'
 
 type ValidationInput = { schema: Schema; input: Record<string, unknown> }
 type Validate = (req: Request) => ValidationInput
+
+interface ValidationErrorDetail {
+  key: string | number | undefined
+  type: string
+  message: string
+  limit?: number
+}
 
 export const validate = (validate: Validate) => {
   return async (req: Request, res: Response, next: NextFunction) => {
@@ -14,7 +21,7 @@ export const validate = (validate: Validate) => {
       res.locals.input = validated || {}
       return next()
     } catch (err: unknown) {
-      const errors = []
+      const errors: ValidationErrorDetail[] = []
 
       if (err instanceof Joi.ValidationError) {
         if (err && err.details) {
@@ -31,7 +38,10 @@ export const validate = (validate: Validate) => {
         }
       }
 
-      next(new ResponseError(ResponseCode.INVALID_INPUT))
+      return next({
+        code: ResponseCode.INVALID_INPUT,
+        data: { errors },
+      })
     }
   }
 }

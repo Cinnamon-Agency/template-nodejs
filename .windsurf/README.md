@@ -24,7 +24,8 @@ This directory contains the configuration files for the Windsurf development env
     ├── deployment.md            # Deployment process workflow
     ├── security-review.md       # Security review workflow
     ├── setup-development.md     # Development environment setup
-    └── testing-strategy.md       # Testing strategy implementation
+    ├── testing-strategy.md       # Testing strategy implementation
+    └── cache-management.md      # Cache service management and optimization
 ```
 
 ## **Rules Overview**
@@ -81,6 +82,7 @@ Each skill area defines the capabilities and responsibilities for specialized AI
 - **Security Review**: Security assessment and vulnerability checking
 - **Development Setup**: Environment configuration and initialization
 - **Testing Strategy**: Comprehensive testing implementation
+- **Cache Management**: Cache service optimization and management
 
 ### **Workflow Activation**
 Workflows can be activated using slash commands:
@@ -90,6 +92,7 @@ Workflows can be activated using slash commands:
 - `/security-review` - Conduct security reviews
 - `/setup-development` - Setup development environment
 - `/testing-strategy` - Implement testing strategies
+- `/cache-management` - Manage and optimize cache services
 
 ## **Usage Guidelines**
 
@@ -128,6 +131,7 @@ The configuration aligns with the project's structure:
 - `src/api/` - API endpoints following backend development standards
 - `src/core/` - Core services using defined patterns
 - `src/common/` - Shared utilities following conventions
+- `src/services/` - Specialized services including cache, auth, and storage
 - `prisma/` - Database operations using management skills
 - Documentation maintained using API documentation skills
 

@@ -1,13 +1,58 @@
 import { NextFunction, Request, Response } from 'express'
-import { ResponseCode } from '@common'
+import { ResponseCode, DEVICE_TOKEN_BYTES } from '@common'
 import { AuthService } from './authService'
 import { autoInjectable, singleton } from 'tsyringe'
 import { randomBytes } from 'crypto'
+
+interface AuthTokens {
+  accessToken: string
+  refreshToken: string
+  accessTokenExpiresAt: Date
+  refreshTokenExpiresAt: Date
+}
 
 @singleton()
 @autoInjectable()
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  /**
+   * Parses a compound UID string (e.g. "uuid1/uuid2") into its two parts.
+   * Returns null if the format is invalid.
+   */
+  private parseUidPair(uid: string): { uid: string; hashUid: string } | null {
+    const parts = uid.split('/')
+    if (parts.length !== 2) return null
+    return { uid: parts[0], hashUid: parts[1] }
+  }
+
+  /**
+   * Shared logic for signing tokens and returning the appropriate response
+   * for both mobile (bearer) and web (cookie) clients.
+   */
+  private respondWithTokens(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+    user: { id: string },
+    tokens: AuthTokens,
+    extraData?: Record<string, unknown>
+  ) {
+    const responseUser = { id: user.id }
+
+    if (AuthService.isMobileClient(req)) {
+      return next({
+        data: { user: responseUser, tokens, ...extraData },
+        code: ResponseCode.OK,
+      })
+    }
+
+    AuthService.setAuthCookies(res, tokens)
+    return next({
+      data: { user: responseUser, ...extraData },
+      code: ResponseCode.OK,
+    })
+  }
 
   public async login(req: Request, res: Response, next: NextFunction) {
     const { authType, email, password } = res.locals.input
@@ -24,34 +69,11 @@ export class AuthController {
     const { tokens, code: tokenCode } = await this.authService.signToken({
       user,
     })
-
     if (!tokens) {
       return next({ code: tokenCode })
     }
 
-    const responseUser = {
-      id: user.id,
-    }
-
-    // For mobile clients, return tokens in response body (bearer token)
-    // For web clients, set tokens in cookies
-    if (AuthService.isMobileClient(req)) {
-      return next({
-        data: {
-          user: responseUser,
-          tokens,
-        },
-        code: ResponseCode.OK,
-      })
-    } else {
-      AuthService.setAuthCookies(res, tokens)
-      return next({
-        data: {
-          user: responseUser,
-        },
-        code: ResponseCode.OK,
-      })
-    }
+    return this.respondWithTokens(req, res, next, user, tokens)
   }
 
   public async register(req: Request, res: Response, next: NextFunction) {
@@ -62,7 +84,6 @@ export class AuthController {
       email,
       password,
     })
-
     if (!user) {
       return next({ code })
     }
@@ -70,34 +91,11 @@ export class AuthController {
     const { tokens, code: tokenCode } = await this.authService.signToken({
       user,
     })
-
     if (!tokens) {
       return next({ code: tokenCode })
     }
 
-    const responseUser = {
-      id: user.id,
-    }
-
-    // For mobile clients, return tokens in response body (bearer token)
-    // For web clients, set tokens in cookies
-    if (AuthService.isMobileClient(req)) {
-      return next({
-        data: {
-          user: responseUser,
-          tokens,
-        },
-        code: ResponseCode.OK,
-      })
-    } else {
-      AuthService.setAuthCookies(res, tokens)
-      return next({
-        data: {
-          user: responseUser,
-        },
-        code: ResponseCode.OK,
-      })
-    }
+    return this.respondWithTokens(req, res, next, user, tokens)
   }
 
   public async refreshToken(req: Request, res: Response, next: NextFunction) {
@@ -152,14 +150,14 @@ export class AuthController {
   public async resetPassword(req: Request, res: Response, next: NextFunction) {
     const { uid, password } = res.locals.input
 
-    const uids = uid.split('/')
-    if (uids.length !== 2) {
+    const parsed = this.parseUidPair(uid)
+    if (!parsed) {
       return next({ code: ResponseCode.INVALID_UID })
     }
 
     const { code } = await this.authService.resetPassword({
-      uid: uids[0],
-      hashUid: uids[1],
+      uid: parsed.uid,
+      hashUid: parsed.hashUid,
       password,
     })
 
@@ -173,10 +171,9 @@ export class AuthController {
   ) {
     const { loginCode, email, dontAskOnThisDevice } = res.locals.input
 
-    // Generate device token if dontAskOnThisDevice is true
     let deviceToken: string | undefined
     if (dontAskOnThisDevice) {
-      deviceToken = randomBytes(32).toString('hex')
+      deviceToken = randomBytes(DEVICE_TOKEN_BYTES).toString('hex')
     }
 
     const result = await this.authService.verifyLoginCode({
@@ -192,26 +189,24 @@ export class AuthController {
 
     const { user, tokens } = result.data
 
-    // Set auth cookies if not mobile client
     if (!AuthService.isMobileClient(req)) {
       AuthService.setAuthCookies(res, tokens)
     }
 
-    // Set device token cookie if requested
     if (dontAskOnThisDevice && deviceToken) {
       AuthService.setDeviceTokenCookie(res, deviceToken)
     }
 
-    const responseUser = {
-      id: user.id,
+    const extraData: Record<string, unknown> = {}
+    if (AuthService.isMobileClient(req)) {
+      extraData.tokens = tokens
+    }
+    if (dontAskOnThisDevice && deviceToken) {
+      extraData.deviceToken = deviceToken
     }
 
     return next({
-      data: {
-        user: responseUser,
-        ...(AuthService.isMobileClient(req) ? { tokens } : {}),
-        ...(dontAskOnThisDevice && deviceToken ? { deviceToken } : {}),
-      },
+      data: { user: { id: user.id }, ...extraData },
       code: ResponseCode.OK,
     })
   }
@@ -222,29 +217,22 @@ export class AuthController {
     next: NextFunction
   ) {
     const { email } = res.locals.input
-    const { code } = await this.authService.resendLoginCode({
-      email,
-    })
-    if (code !== ResponseCode.OK) {
-      return next({ code })
-    }
+    const { code } = await this.authService.resendLoginCode({ email })
 
-    return next({
-      code: ResponseCode.OK,
-    })
+    return next({ code })
   }
 
   public async setNewPassword(req: Request, res: Response, next: NextFunction) {
     const { uid, password } = res.locals.input
 
-    const uids = uid.split('/')
-    if (uids.length !== 2) {
+    const parsed = this.parseUidPair(uid)
+    if (!parsed) {
       return next({ code: ResponseCode.INVALID_UID })
     }
 
     const result = await this.authService.setNewPassword({
-      uid: uids[0],
-      hashUid: uids[1],
+      uid: parsed.uid,
+      hashUid: parsed.hashUid,
       password,
     })
 
@@ -252,22 +240,20 @@ export class AuthController {
       return next({ code: result.code })
     }
 
-    return next({
-      code: ResponseCode.OK,
-    })
+    return next({ code: ResponseCode.OK })
   }
 
   public async verifyEmail(req: Request, res: Response, next: NextFunction) {
     const { uid } = res.locals.input
 
-    const uids = uid.split('/')
-    if (uids.length !== 2) {
+    const parsed = this.parseUidPair(uid)
+    if (!parsed) {
       return next({ code: ResponseCode.INVALID_UID })
     }
 
     const { code } = await this.authService.verifyEmail({
-      uid: uids[0],
-      hashUid: uids[1],
+      uid: parsed.uid,
+      hashUid: parsed.hashUid,
     })
 
     return next({ code })

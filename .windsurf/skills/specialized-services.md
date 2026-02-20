@@ -235,6 +235,22 @@
 - Cache warming and preloading
 - Cache performance monitoring
 
+### **Redis Cache Integration**
+- Redis client configuration and management
+- Connection pooling and failover handling
+- Memory-based fallback caching
+- TTL management and expiration policies
+- Cache key pattern design and organization
+- Performance monitoring and metrics collection
+
+### **Cache Service Architecture**
+- Service layer caching patterns
+- Repository-level caching implementation
+- Application-level caching strategies
+- Cache-aside pattern implementation
+- Write-through and write-behind caching
+- Cache coherency and consistency guarantees
+
 ### **Load Balancing**
 - Application load balancing
 - Database load distribution

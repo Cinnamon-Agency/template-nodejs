@@ -1,4 +1,4 @@
-import { ResponseCode, serviceMethod } from '@common'
+import { ResponseCode, serviceMethod, normalizePagination, buildPaginatedResult } from '@common'
 import { autoInjectable, singleton } from 'tsyringe'
 import {
   ICreateNotification,
@@ -9,7 +9,7 @@ import {
 } from './interface'
 import { sendEmail } from '@services/aws-ses'
 import { UserService } from '@api/user/userService'
-import { prisma } from '@app'
+import { getPrismaClient } from '@services/prisma'
 import { EmailTemplate } from '@services/aws-ses/interface'
 
 @singleton()
@@ -21,26 +21,38 @@ export class NotificationService implements INotificationService {
   async getNotifications({
     userId,
     unread,
-    numberOfFetched,
+    page,
+    perPage,
   }: IGetNotifications) {
+    const pagination = normalizePagination(page, perPage)
+    const offset = (pagination.page - 1) * pagination.perPage
+
     const where: { receiverId: string; read?: boolean } = {
       receiverId: userId,
     }
     if (unread) {
       where.read = false
     }
-    const notifications = await prisma.notification.findMany({
-      where,
-      skip: numberOfFetched,
-      take: 20,
-    })
 
-    return { notifications, code: ResponseCode.OK }
+    const [notifications, total] = await Promise.all([
+      getPrismaClient().notification.findMany({
+        where,
+        skip: offset,
+        take: pagination.perPage,
+        orderBy: { createdAt: 'desc' },
+      }),
+      getPrismaClient().notification.count({ where }),
+    ])
+
+    return {
+      data: buildPaginatedResult(notifications, total, pagination),
+      code: ResponseCode.OK,
+    }
   }
 
   @serviceMethod()
   async toggleReadStatus({ notificationId, userId, read }: IToggleReadStatus) {
-    const notification = await prisma.notification.findFirst({
+    const notification = await getPrismaClient().notification.findFirst({
       where: {
         receiverId: userId,
         id: notificationId,
@@ -51,7 +63,7 @@ export class NotificationService implements INotificationService {
       return { code: ResponseCode.NOTIFICATION_NOT_FOUND }
     }
 
-    await prisma.notification.update({
+    await getPrismaClient().notification.update({
       where: { id: notificationId },
       data: { read },
     })
@@ -66,7 +78,7 @@ export class NotificationService implements INotificationService {
     message,
     type: notificationType,
   }: ICreateNotification) {
-    await prisma.notification.create({
+    await getPrismaClient().notification.create({
       data: {
         receiverId,
         senderId,
@@ -94,7 +106,7 @@ export class NotificationService implements INotificationService {
 
   @serviceMethod()
   async deleteNotification({ userId, notificationId }: IDeleteNotification) {
-    const notification = await prisma.notification.findFirst({
+    const notification = await getPrismaClient().notification.findFirst({
       where: {
         receiverId: userId,
         id: notificationId,
@@ -105,7 +117,7 @@ export class NotificationService implements INotificationService {
       return { code: ResponseCode.NOTIFICATION_NOT_FOUND }
     }
 
-    await prisma.notification.delete({ where: { id: notificationId } })
+    await getPrismaClient().notification.delete({ where: { id: notificationId } })
 
     return { code: ResponseCode.OK }
   }

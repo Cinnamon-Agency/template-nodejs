@@ -1,6 +1,23 @@
 import { Request } from 'express'
 import Joi from 'joi'
 import { AuthType } from '@prisma/client'
+import { PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } from '@common'
+
+/**
+ * Shared password validation rule.
+ * Requires at least one uppercase, one lowercase, and one digit.
+ */
+const passwordRule = Joi.string()
+  .min(PASSWORD_MIN_LENGTH)
+  .max(PASSWORD_MAX_LENGTH)
+  .regex(/[A-Z]/, 'uppercase letter')
+  .regex(/[a-z]/, 'lowercase letter')
+  .regex(/\d/, 'digit')
+  .messages({
+    'string.min': `Password must be at least ${PASSWORD_MIN_LENGTH} characters`,
+    'string.max': `Password must be at most ${PASSWORD_MAX_LENGTH} characters`,
+    'string.pattern.name': 'Password must contain at least one {#name}',
+  })
 
 export const loginSchema = (req: Request) => {
   return {
@@ -34,7 +51,7 @@ export const registerSchema = (req: Request) => {
         email: Joi.string().email().required(),
         password: Joi.alternatives().conditional('authType', {
           is: 'UserPassword',
-          then: Joi.string().min(8).max(24).required(),
+          then: passwordRule.required(),
         }),
       })
       .options({ abortEarly: false }),
@@ -68,11 +85,7 @@ export const resetPasswordSchema = (req: Request) => {
             /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
           )
           .required(),
-        password: Joi.string()
-          .min(8)
-          .max(24)
-          // .regex(new RegExp(atob(config.PASSWORD_BASE64_REGEX)))
-          .required(),
+        password: passwordRule.required(),
       })
       .options({ abortEarly: false }),
     input: {
@@ -138,7 +151,7 @@ export const setNewPasswordSchema = (req: Request) => {
             /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
           )
           .required(),
-        password: Joi.string().min(8).max(24).required(),
+        password: passwordRule.required(),
       })
       .options({ abortEarly: false }),
     input: {

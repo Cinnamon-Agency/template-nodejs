@@ -6,12 +6,14 @@ export const getNotificationSchema = (req: Request) => {
     schema: Joi.object()
       .keys({
         unread: Joi.boolean().optional(),
-        numberOfFetched: Joi.number().required(),
+        page: Joi.number().integer().min(1).default(1),
+        perPage: Joi.number().integer().min(1).max(100).default(20),
       })
       .options({ abortEarly: false }),
     input: {
       unread: req.query.unread,
-      numberOfFetched: req.query.numberOfFetched,
+      page: req.query.page,
+      perPage: req.query.perPage,
     },
   }
 }

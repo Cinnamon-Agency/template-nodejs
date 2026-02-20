@@ -18,24 +18,17 @@ export class NotificationController {
     next: NextFunction
   ) {
     const { id } = req.user
-    const { unread, numberOfFetched } = res.locals.input
+    const { unread, page, perPage } = res.locals.input
 
-    const { notifications, code } =
+    const { data, code } =
       await this.notificationService.getNotifications({
         userId: id,
         unread,
-        numberOfFetched,
+        page,
+        perPage,
       })
-    if (!notifications) {
-      return next({ code })
-    }
 
-    return next({
-      data: {
-        notifications,
-      },
-      code: ResponseCode.OK,
-    })
+    return next({ data, code })
   }
 
   public async toggleReadStatus(

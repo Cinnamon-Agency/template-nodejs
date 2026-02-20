@@ -24,6 +24,9 @@ export interface ENV {
   LOG_REQUESTS?: boolean
   LOG_TO_CONSOLE?: boolean
 
+  // Redis
+  REDIS_URL?: string
+
   // Rate Limiting
   RATE_LIMITER_DURATION_IN_SECONDS?: number
   RATE_LIMITER_POINTS?: number

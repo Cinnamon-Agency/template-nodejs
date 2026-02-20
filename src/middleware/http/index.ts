@@ -8,6 +8,7 @@ export const requestLogger = morgan(
     const statusCode = status ? parseInt(status) : 0
 
     return JSON.stringify({
+      request_id: req.requestId || null,
       method: tokens.method(req, res),
       url: tokens.url(req, res),
       status: statusCode,

@@ -1,9 +1,16 @@
 import { Prisma, PrismaClient } from '@prisma/client'
 import { ResponseCode } from '@common'
+import { container } from 'tsyringe'
 
-const prisma = new PrismaClient()
+export const PRISMA_TOKEN = 'PrismaClient'
 
-export default prisma
+container.register<PrismaClient>(PRISMA_TOKEN, {
+  useValue: new PrismaClient(),
+})
+
+export function getPrismaClient(): PrismaClient {
+  return container.resolve<PrismaClient>(PRISMA_TOKEN)
+}
 
 export function isPrismaError(
   error: unknown

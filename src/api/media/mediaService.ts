@@ -1,5 +1,5 @@
 import { autoInjectable, singleton } from 'tsyringe'
-import { prisma } from '@app'
+import { getPrismaClient } from '@services/prisma'
 import { ICreateMediaEntries, IMediaService } from './interface'
 
 import { ResponseCode, serviceMethod } from '@common'
@@ -15,7 +15,7 @@ export class MediaService implements IMediaService {
     const mediaInfo = []
 
     for (const { mediaFileName, mediaType } of mediaFiles) {
-      const created = await prisma.media.create({
+      const created = await getPrismaClient().media.create({
         data: {
           mediaFileName,
           mediaType,

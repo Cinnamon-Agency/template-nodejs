@@ -6,7 +6,7 @@ import { serverState } from './state'
 import { container } from 'tsyringe'
 
 import { WebSocketService } from '@services/websocket'
-import { prisma } from '@app'
+import { getPrismaClient } from '@services/prisma'
 
 export class AppServer {
   private server: Server | null = null
@@ -51,7 +51,7 @@ export class AppServer {
 
       const shutdownTasks = []
 
-      shutdownTasks.push(prisma.$disconnect())
+      shutdownTasks.push(getPrismaClient().$disconnect())
 
       const webSocketService = container.resolve(WebSocketService)
       // Properly invoke close() to get a promise

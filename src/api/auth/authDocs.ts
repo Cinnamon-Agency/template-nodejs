@@ -37,16 +37,20 @@ const paths = {
         '200': {
           description: 'Successfully registered',
           content: {
-            schema: {
-              $ref: '#/definitions/auth_register_response',
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/auth_register_response',
+              },
             },
           },
         },
         '400': {
           description: 'User already registered',
           content: {
-            schema: {
-              $ref: '#/definitions/user_already_registered_response',
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/user_already_registered_response',
+              },
             },
           },
         },
@@ -84,8 +88,10 @@ const paths = {
         '200': {
           description: 'Successfully logged in',
           content: {
-            schema: {
-              $ref: '#/definitions/auth_login_response',
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/auth_login_response',
+              },
             },
           },
         },
@@ -93,8 +99,10 @@ const paths = {
           description:
             'Given email is not linked to a user or password is incorrect',
           content: {
-            schema: {
-              $ref: '#/definitions/auth_login_response_404',
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/auth_login_response_404',
+              },
             },
           },
         },
@@ -109,24 +117,30 @@ const paths = {
         '200': {
           description: 'Successfully refreshed access token',
           content: {
-            schema: {
-              $ref: '#/definitions/refresh_token_response',
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/refresh_token_response',
+              },
             },
           },
         },
         '401:40101': {
           description: 'Invalid token',
           content: {
-            schema: {
-              $ref: '#/definitions/401_response',
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/401_response',
+              },
             },
           },
         },
         '401:40102': {
           description: 'Expired token',
           content: {
-            schema: {
-              $ref: '#/definitions/auth_expired_token_response',
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/auth_expired_token_response',
+              },
             },
           },
         },
@@ -141,8 +155,10 @@ const paths = {
         '200': {
           description: 'Successfully logged out user',
           content: {
-            schema: {
-              $ref: '#/definitions/200_response',
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/200_response',
+              },
             },
           },
         },
@@ -166,24 +182,30 @@ const paths = {
         '200': {
           description: 'Email successfully verified',
           content: {
-            schema: {
-              $ref: '#/definitions/200_response',
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/200_response',
+              },
             },
           },
         },
         '400': {
           description: 'Invalid UID',
           content: {
-            schema: {
-              $ref: '#/definitions/invalid_uid_response',
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/invalid_uid_response',
+              },
             },
           },
         },
         '404': {
           description: 'Verification UID not found',
           content: {
-            schema: {
-              $ref: '#/definitions/verification_uid_not_found_response',
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/verification_uid_not_found_response',
+              },
             },
           },
         },
@@ -207,24 +229,30 @@ const paths = {
         '200': {
           description: 'Verification email sent successfully',
           content: {
-            schema: {
-              $ref: '#/definitions/200_response',
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/200_response',
+              },
             },
           },
         },
         '404': {
           description: 'User not found',
           content: {
-            schema: {
-              $ref: '#/definitions/user_not_found_response',
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/user_not_found_response',
+              },
             },
           },
         },
         '401': {
           description: 'User already verified',
           content: {
-            schema: {
-              $ref: '#/definitions/user_already_verified_response',
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/user_already_verified_response',
+              },
             },
           },
         },
@@ -250,24 +278,30 @@ const paths = {
         '200': {
           description: 'Verification code sent successfully',
           content: {
-            schema: {
-              $ref: '#/definitions/200_response',
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/200_response',
+              },
             },
           },
         },
         '401': {
           description: 'Unauthorized - invalid or missing token',
           content: {
-            schema: {
-              $ref: '#/definitions/401_response',
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/401_response',
+              },
             },
           },
         },
         '424': {
           description: 'Failed to send SMS',
           content: {
-            schema: {
-              $ref: '#/definitions/failed_dependency_response',
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/failed_dependency_response',
+              },
             },
           },
         },
@@ -293,31 +327,37 @@ const paths = {
         '200': {
           description: 'Phone number verified successfully',
           content: {
-            schema: {
-              $ref: '#/definitions/200_response',
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/200_response',
+              },
             },
           },
         },
         '400': {
           description: 'Invalid verification code',
           content: {
-            schema: {
-              $ref: '#/definitions/invalid_code_response',
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/invalid_code_response',
+              },
             },
           },
         },
         '401': {
           description: 'Unauthorized or code expired',
           content: {
-            schema: {
-              $ref: '#/definitions/401_response',
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/401_response',
+              },
             },
           },
         },
       },
     },
   },
-  '/auth/resend-login-code': {
+  '/auth/resendLoginCode': {
     post: {
       tags: ['Auth'],
       description:
@@ -335,23 +375,27 @@ const paths = {
         '200': {
           description: 'Login code sent successfully',
           content: {
-            schema: {
-              $ref: '#/definitions/200_response',
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/200_response',
+              },
             },
           },
         },
         '404': {
           description: 'User not found',
           content: {
-            schema: {
-              $ref: '#/definitions/user_not_found_response',
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/user_not_found_response',
+              },
             },
           },
         },
       },
     },
   },
-  '/auth/verify-login-code': {
+  '/auth/verifyLoginCode': {
     post: {
       tags: ['Auth'],
       description:
@@ -369,32 +413,171 @@ const paths = {
         '200': {
           description: 'Login code verified successfully',
           content: {
-            schema: {
-              $ref: '#/definitions/verify_login_code_response',
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/verify_login_code_response',
+              },
             },
           },
         },
         '400': {
           description: 'Invalid login code',
           content: {
-            schema: {
-              $ref: '#/definitions/invalid_login_code_response',
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/invalid_login_code_response',
+              },
             },
           },
         },
         '401': {
           description: 'Login code expired',
           content: {
-            schema: {
-              $ref: '#/definitions/login_code_expired_response',
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/login_code_expired_response',
+              },
             },
           },
         },
         '404': {
           description: 'User not found',
           content: {
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/user_not_found_response',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  '/auth/password/forgot': {
+    post: {
+      tags: ['Auth'],
+      description: 'Send password reset email to user',
+      requestBody: {
+        content: {
+          'application/json': {
             schema: {
-              $ref: '#/definitions/user_not_found_response',
+              $ref: '#/definitions/forgot_password_body',
+            },
+          },
+        },
+      },
+      responses: {
+        '200': {
+          description: 'Password reset email sent successfully',
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/200_response',
+              },
+            },
+          },
+        },
+        '404': {
+          description: 'User not found',
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/user_not_found_response',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  '/auth/password/reset': {
+    post: {
+      tags: ['Auth'],
+      description: 'Reset password with verification UID from email',
+      requestBody: {
+        content: {
+          'application/json': {
+            schema: {
+              $ref: '#/definitions/reset_password_body',
+            },
+          },
+        },
+      },
+      responses: {
+        '200': {
+          description: 'Password reset successfully',
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/200_response',
+              },
+            },
+          },
+        },
+        '400': {
+          description: 'Invalid UID',
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/invalid_uid_response',
+              },
+            },
+          },
+        },
+        '404': {
+          description: 'Verification UID not found',
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/verification_uid_not_found_response',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  '/auth/password/setNew': {
+    post: {
+      tags: ['Auth'],
+      description: 'Set new password with verification UID (for first-time setup or expired password)',
+      requestBody: {
+        content: {
+          'application/json': {
+            schema: {
+              $ref: '#/definitions/set_new_password_body',
+            },
+          },
+        },
+      },
+      responses: {
+        '200': {
+          description: 'New password set successfully',
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/200_response',
+              },
+            },
+          },
+        },
+        '400': {
+          description: 'Invalid UID',
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/invalid_uid_response',
+              },
+            },
+          },
+        },
+        '404': {
+          description: 'Verification UID not found',
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/verification_uid_not_found_response',
+              },
             },
           },
         },
@@ -696,6 +879,57 @@ const definitions = {
       code: 401002,
       message: 'Session expired',
     },
+  },
+  forgot_password_body: {
+    type: 'object',
+    description: 'Request body for sending password reset email',
+    properties: {
+      email: {
+        type: 'string',
+        format: 'email',
+        example: 'john.doe@email.com',
+        description: 'User email address to send password reset link to',
+      },
+    },
+    required: ['email'],
+  },
+  reset_password_body: {
+    type: 'object',
+    description: 'Request body for resetting password with verification UID',
+    properties: {
+      uid: {
+        type: 'string',
+        example: '94104c89-e04a-41b6-9902-e19c723c1354/a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+        description: 'Verification UID received in password reset email (format: uuid1/uuid2)',
+      },
+      password: {
+        type: 'string',
+        example: 'NewPassword123',
+        description: 'New password (8-24 characters, must contain uppercase, lowercase, and digit)',
+        minLength: 8,
+        maxLength: 24,
+      },
+    },
+    required: ['uid', 'password'],
+  },
+  set_new_password_body: {
+    type: 'object',
+    description: 'Request body for setting new password with verification UID (for first-time setup)',
+    properties: {
+      uid: {
+        type: 'string',
+        example: '94104c89-e04a-41b6-9902-e19c723c1354/a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+        description: 'Verification UID received in email (format: uuid1/uuid2)',
+      },
+      password: {
+        type: 'string',
+        example: 'NewPassword123',
+        description: 'New password (8-24 characters, must contain uppercase, lowercase, and digit)',
+        minLength: 8,
+        maxLength: 24,
+      },
+    },
+    required: ['uid', 'password'],
   },
 }
 

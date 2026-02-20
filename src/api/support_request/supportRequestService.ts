@@ -1,5 +1,5 @@
 import { autoInjectable, singleton } from 'tsyringe'
-import { prisma } from '@app'
+import { getPrismaClient } from '@services/prisma'
 import {
   ICreateSupportRequest,
   ISupportRequestService,
@@ -55,7 +55,7 @@ export class SupportRequestService implements ISupportRequestService {
       return { code: emailSuccessCode }
     }
 
-    await prisma.supportRequest.create({
+    await getPrismaClient().supportRequest.create({
       data: {
         firstName,
         lastName,
@@ -73,7 +73,7 @@ export class SupportRequestService implements ISupportRequestService {
     status,
     supportRequestId,
   }: IUpdateSupportRequestStatus) {
-    const supportRequest = await prisma.supportRequest.findUnique({
+    const supportRequest = await getPrismaClient().supportRequest.findUnique({
       where: { id: supportRequestId },
     })
     if (!supportRequest) {
@@ -82,7 +82,7 @@ export class SupportRequestService implements ISupportRequestService {
       }
     }
 
-    await prisma.supportRequest.update({
+    await getPrismaClient().supportRequest.update({
       where: { id: supportRequestId },
       data: { status },
     })

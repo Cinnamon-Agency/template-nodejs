@@ -34,10 +34,8 @@ const getConfig = (): Config => {
     DOCS_PASSWORD: process.env.DOCS_PASSWORD || '',
 
     // Authentication
-    ACCESS_TOKEN_SECRET:
-      process.env.ACCESS_TOKEN_SECRET || 'your-access-token-secret',
-    REFRESH_TOKEN_SECRET:
-      process.env.REFRESH_TOKEN_SECRET || 'your-refresh-token-secret',
+    ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET || '',
+    REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET || '',
     ACCESS_TOKEN_EXPIRES_IN: environmentNumber(
       process.env.ACCESS_TOKEN_EXPIRES_IN || '15'
     ),
@@ -48,6 +46,9 @@ const getConfig = (): Config => {
     // Logging
     LOG_REQUESTS: environmentBoolean(process.env.LOG_REQUESTS),
     LOG_TO_CONSOLE: environmentBoolean(process.env.LOG_TO_CONSOLE),
+
+    // Redis
+    REDIS_URL: process.env.REDIS_URL || '',
 
     // Rate Limiting
     RATE_LIMITER_DURATION_IN_SECONDS: environmentNumber(
@@ -97,12 +98,29 @@ const getConfig = (): Config => {
   return cachedConfig
 }
 
+const REQUIRED_IN_PRODUCTION: (keyof ENV)[] = [
+  'DATABASE_URL',
+  'ACCESS_TOKEN_SECRET',
+  'REFRESH_TOKEN_SECRET',
+]
+
 const getSanitizedConfig = (config: ENV) => {
   for (const [key, value] of Object.entries(config)) {
     if (value === undefined) {
       throw new Error(`Missing value for ${key} in .env`)
     }
   }
+
+  if (config.NODE_ENV === 'production') {
+    for (const key of REQUIRED_IN_PRODUCTION) {
+      if (!config[key]) {
+        throw new Error(
+          `Missing required production config: ${key}. Set it in your environment variables.`
+        )
+      }
+    }
+  }
+
   return config as Config
 }
 

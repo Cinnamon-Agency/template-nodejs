@@ -4,7 +4,7 @@ import {
   IUserRoleService,
 } from './interface'
 import { autoInjectable, singleton } from 'tsyringe'
-import { prisma } from '@app'
+import { getPrismaClient } from '@services/prisma'
 import { ResponseCode, serviceMethod } from '@common'
 import { RoleService } from '../role/roleService'
 
@@ -23,7 +23,7 @@ export class UserRoleService implements IUserRoleService {
       return { code: roleCode }
     }
 
-    const userRole = await prisma.userRole.create({
+    const userRole = await getPrismaClient().userRole.create({
       data: {
         userId,
         roleId: role.id,
@@ -39,7 +39,7 @@ export class UserRoleService implements IUserRoleService {
 
   @serviceMethod()
   async getRolesForUser({ userId }: IGetRolesForUser) {
-    const userRoles = await prisma.userRole.findMany({
+    const userRoles = await getPrismaClient().userRole.findMany({
       where: { userId },
       include: { role: true },
     })

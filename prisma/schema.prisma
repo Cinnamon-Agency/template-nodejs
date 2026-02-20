@@ -74,9 +74,9 @@ model Role {
 
 model UserRole {
   id        String   @id @default(uuid()) @db.Uuid
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String   @db.Uuid
-  role      Role     @relation(fields: [roleId], references: [id])
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
   roleId    String   @db.Uuid
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -106,6 +106,7 @@ model User {
   createdAt               DateTime        @default(now())
   updatedAt               DateTime        @updatedAt
 
+  @@index([email, authType])
   @@map("users")
 }
 
@@ -115,7 +116,7 @@ model Project {
   description   String
   deadline      DateTime
   userId        String     @db.Uuid
-  user          User       @relation(fields: [userId], references: [id])
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   projectStatus ProjectStatus @default(ACTIVE)
   mediaFiles    Media[]
   createdAt     DateTime   @default(now())
@@ -127,7 +128,7 @@ model Media {
   mediaType     MediaType
   mediaFileName String     @unique
   projectId     String     @db.Uuid
-  project       Project    @relation(fields: [projectId], references: [id])
+  project       Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 }
@@ -135,20 +136,20 @@ model Media {
 model Notification {
   id               String           @id @default(uuid()) @db.Uuid
   senderId         String           @db.Uuid
-  sender           User             @relation("NotificationSender", fields: [senderId], references: [id])
+  sender           User             @relation("NotificationSender", fields: [senderId], references: [id], onDelete: Cascade)
   receiverId       String           @db.Uuid
-  receiver         User             @relation("NotificationReceiver", fields: [receiverId], references: [id])
+  receiver         User             @relation("NotificationReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
   message          String
-  read             Boolean          @default(true)
+  read             Boolean          @default(false)
   notificationType NotificationType
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 }
 
 model UserSession {
-  id            String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id            String            @id @default(uuid()) @db.Uuid
   userId        String            @db.Uuid
-  user          User              @relation(fields: [userId], references: [id])
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   refreshToken  String            @db.VarChar(500)
   expiresAt     DateTime
   status        UserSessionStatus @default(ACTIVE)
@@ -162,7 +163,7 @@ model UserSession {
 model VerificationUID {
   id        String              @id @default(uuid()) @db.Uuid
   userId    String              @db.Uuid
-  user      User                @relation(fields: [userId], references: [id])
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   uid       String              @db.Uuid
   hash      String              @db.VarChar(255)
   type      VerificationUIDType
@@ -174,7 +175,7 @@ model VerificationUID {
 }
 
 model SupportRequest {
-  id        String                @id @default(uuid())
+  id        String                @id @default(uuid()) @db.Uuid
   firstName String
   lastName  String
   email     String
@@ -200,7 +201,7 @@ model PhoneVerificationCode {
 }
 
 model LoginCode {
-  id        String   @id @default(uuid())
+  id        String   @id @default(uuid()) @db.Uuid
   email     String
   code      String
   expiresAt DateTime
@@ -212,8 +213,8 @@ model LoginCode {
 }
 
 model DeviceToken {
-  id        String   @id @default(uuid())
-  userId    String
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
   token     String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())

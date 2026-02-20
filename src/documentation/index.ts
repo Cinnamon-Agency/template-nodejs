@@ -32,7 +32,7 @@ export const APIDocumentation = {
   ],
   servers: [
     {
-      url: config.API_BASE_URL,
+      url: `${config.API_BASE_URL}/api/v1`,
     },
   ],
   ..._.mergeWith(

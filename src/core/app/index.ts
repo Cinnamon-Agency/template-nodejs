@@ -4,16 +4,19 @@ import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import helmet from 'helmet'
 import { router } from '@routes'
-import { PrismaClient } from '@prisma/client'
+import '@services/prisma' // registers PrismaClient in DI container
 import { responseFormatter } from '@middleware/response'
 import rateLimiter from '@middleware/rate_limiter'
 import config from '@core/config'
 import { requestLogger } from '@middleware/http'
 import { notFound } from '@middleware/not_found'
+import { globalErrorHandler } from '@middleware/error_handler'
+import { csrfProtection } from '@middleware/csrf'
+import { sanitizeInput } from '@middleware/sanitize'
+import { requestIdMiddleware } from '@middleware/request_id'
 import { serverState } from '@core/server/state'
 import { shutdownHandler } from '@middleware/shutdown'
 
-export const prisma = new PrismaClient()
 export class App {
   private app: express.Express
 
@@ -37,6 +40,8 @@ export class App {
       helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } })
     )
 
+    this.app.use(requestIdMiddleware)
+
     this.app.use(rateLimiter)
 
     this.app.use((req, res, next) => {
@@ -46,13 +51,15 @@ export class App {
         bodyParser.json()(req, res, next)
       }
     })
+    this.app.use(sanitizeInput)
+
     if (config.LOG_REQUESTS) {
       this.app.use(requestLogger)
     }
 
     this.app.use((req, res, next) => {
       if (req.url === '/') {
-        res.redirect('/api/v2/api-docs')
+        res.redirect('/api-docs')
         return
       }
 
@@ -63,6 +70,8 @@ export class App {
       res.status(200).json({ status: 'ok' })
     })
 
+    this.app.use(csrfProtection)
+
     this.app.use(shutdownHandler(serverState.shuttingDown))
 
     this.app.use('/', router)
@@ -70,6 +79,8 @@ export class App {
     this.app.use(notFound)
 
     this.app.use(responseFormatter)
+
+    this.app.use(globalErrorHandler)
   }
 
   getApp() {

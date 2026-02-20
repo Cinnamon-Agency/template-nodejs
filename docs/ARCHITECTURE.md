@@ -62,6 +62,7 @@ template-nodejs/
 │   ├── services/                # Third-party service integrations
 │   │   ├── aws-ses/                # AWS SES email sending with HTML templates
 │   │   ├── aws-end-user-messaging/ # AWS Pinpoint SMS sending
+│   │   ├── cache/                  # Redis/memory caching service with TTL support
 │   │   ├── cloudwatch/             # AWS CloudWatch log event sending
 │   │   ├── bcrypt/                 # Password hashing + comparison
 │   │   ├── jsonwebtoken/           # JWT token generation + verification
@@ -147,7 +148,7 @@ Middleware is applied in this order in `src/core/app/index.ts`:
 | 4 | **Rate Limiter** | `src/middleware/rate_limiter/` | In-memory rate limiting (configurable points/duration) |
 | 5 | **Body Parser** | `body-parser` | JSON parsing (raw for webhook endpoint) |
 | 6 | **HTTP Logger** | `src/middleware/http/` | Morgan structured JSON logging (skips healthcheck) |
-| 7 | **Root Redirect** | Inline | Redirects `/` to `/api/v2/api-docs` |
+| 7 | **Root Redirect** | Inline | Redirects `/` to `/api/v1/api-docs` |
 | 8 | **Health Check** | Inline | `GET /api/v1/healthcheck` returns `{ status: "ok" }` |
 | 9 | **Shutdown Handler** | `src/middleware/shutdown/` | Returns 503 when server is shutting down |
 | 10 | **Router** | `src/routes/` | All feature routes |

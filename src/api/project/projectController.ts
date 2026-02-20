@@ -25,13 +25,13 @@ export class ProjectController {
   public async getProjects(req: Request, res: Response, next: NextFunction) {
     const { page, perPage } = res.locals.input
     const { id: userId } = req.user
-    const { projects, code } = await this.projectService.getProjects({
+    const { data, code } = await this.projectService.getProjects({
       page,
       perPage,
       userId,
     })
 
-    return next({ projects, code })
+    return next({ data, code })
   }
 
   public async getProjectById(req: Request, res: Response, next: NextFunction) {

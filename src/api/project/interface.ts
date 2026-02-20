@@ -16,8 +16,8 @@ export interface ICreateProject {
 }
 
 export interface IGetProjects {
-  page: 1
-  perPage: 10
+  page: number
+  perPage: number
   userId: string
 }
 

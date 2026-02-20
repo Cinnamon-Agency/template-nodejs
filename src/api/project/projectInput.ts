@@ -29,8 +29,8 @@ export const getProjectsSchema = (req: Request) => {
   return {
     schema: Joi.object()
       .keys({
-        page: Joi.number().required(),
-        perPage: Joi.number().required(),
+        page: Joi.number().integer().min(1).default(1),
+        perPage: Joi.number().integer().min(1).max(100).default(10),
       })
       .options({ abortEarly: false }),
     input: {
