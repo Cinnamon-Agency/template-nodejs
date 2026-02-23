@@ -576,4 +576,205 @@ describe('Cache Service', () => {
       expect(resultOther).toBe('other-value')
     })
   })
+
+  describe('Missing coverage tests', () => {
+    describe('Memory cache cleanup', () => {
+      it('should clean up expired entries from memory cache', async () => {
+        // Set a value with short TTL
+        await cache.set('cleanup-test', 'value', 1)
+        
+        // Fast forward time to trigger cleanup
+        jest.advanceTimersByTime(61 * 1000) // 61 seconds
+        
+        // Value should be cleaned up
+        const result = await cache.get('cleanup-test')
+        expect(result).toBeNull()
+      })
+    })
+
+    describe('Redis error handling in set operation', () => {
+      it('should fall back to memory cache when Redis set fails', async () => {
+        // Mock Redis to throw error on set
+        const RedisMock = require('ioredis')
+        const mockRedis = new RedisMock()
+        mockRedis.set.mockRejectedValue(new Error('Redis connection failed'))
+        
+        // Set value (should fall back to memory)
+        await cache.set('fallback-test', 'fallback-value', 300)
+        
+        // Verify it's in memory cache
+        const result = await cache.get('fallback-test')
+        expect(result).toBe('fallback-value')
+      })
+    })
+
+    describe('Redis error handling in get operation', () => {
+      it('should fall back to memory cache when Redis get fails', async () => {
+        // Set value in memory cache first
+        await cache.set('memory-only', 'memory-value', 300)
+        
+        // Mock Redis to throw error on get
+        const RedisMock = require('ioredis')
+        const mockRedis = new RedisMock()
+        mockRedis.get.mockRejectedValue(new Error('Redis connection failed'))
+        
+        // Should still get from memory cache
+        const result = await cache.get('memory-only')
+        expect(result).toBe('memory-value')
+      })
+    })
+
+    describe('Redis error handling in del operation', () => {
+      it('should handle Redis del errors gracefully', async () => {
+        // Set value first
+        await cache.set('del-error-test', 'del-error-value', 300)
+        
+        // Mock Redis to throw error on del
+        const RedisMock = require('ioredis')
+        const mockRedis = new RedisMock()
+        mockRedis.del.mockRejectedValue(new Error('Redis del failed'))
+        
+        // Should not throw error
+        await expect(cache.del('del-error-test')).resolves.not.toThrow()
+        
+        // Memory cache should still be deleted
+        const result = await cache.get('del-error-test')
+        expect(result).toBeNull()
+      })
+    })
+
+    describe('Redis error handling in delByPrefix operation', () => {
+      it('should handle Redis keys and del errors gracefully', async () => {
+        // Set some values first
+        await cache.set('error-prefix-1', 'value1', 300)
+        await cache.set('error-prefix-2', 'value2', 300)
+        
+        // Mock Redis to throw error on keys and del
+        const RedisMock = require('ioredis')
+        const mockRedis = new RedisMock()
+        mockRedis.keys.mockRejectedValue(new Error('Redis keys failed'))
+        mockRedis.del.mockRejectedValue(new Error('Redis del failed'))
+        
+        // Should not throw error
+        await expect(cache.delByPrefix('error-prefix')).resolves.not.toThrow()
+        
+        // Memory cache should still be cleaned up
+        const result1 = await cache.get('error-prefix-1')
+        const result2 = await cache.get('error-prefix-2')
+        expect(result1).toBeNull()
+        expect(result2).toBeNull()
+      })
+    })
+
+    describe('Missing coverage tests', () => {
+      describe('Memory cache cleanup', () => {
+        it('should clean up expired entries from memory cache', async () => {
+          // Set a value with short TTL
+          await cache.set('cleanup-test', 'cleanup-value', 1) // 1 second TTL
+          
+          // Verify it exists
+          const result1 = await cache.get('cleanup-test')
+          expect(result1).toBe('cleanup-value')
+          
+          // Fast-forward time by 2 seconds
+          jest.advanceTimersByTime(2000)
+          
+          // Value should be cleaned up
+          const result2 = await cache.get('cleanup-test')
+          expect(result2).toBeNull()
+        })
+
+        it('should trigger automatic cleanup interval', async () => {
+          // Set some values with short TTL
+          await cache.set('auto-cleanup-1', 'value1', 1)
+          await cache.set('auto-cleanup-2', 'value2', 1)
+          
+          // Verify they exist
+          expect(await cache.get('auto-cleanup-1')).toBe('value1')
+          expect(await cache.get('auto-cleanup-2')).toBe('value2')
+          
+          // Advance time to trigger the cleanup interval (1 minute + 2 seconds)
+          jest.advanceTimersByTime(60200)
+          
+          // Values should be cleaned up by the interval
+          expect(await cache.get('auto-cleanup-1')).toBeNull()
+          expect(await cache.get('auto-cleanup-2')).toBeNull()
+        })
+      })
+
+      describe('Redis error handling in set operation', () => {
+        it('should fall back to memory cache when Redis set fails', async () => {
+          // Mock Redis to throw error on set
+          const RedisMock = require('ioredis')
+          const mockRedis = new RedisMock()
+          mockRedis.set.mockRejectedValue(new Error('Redis set failed'))
+          
+          // Set value - should fall back to memory
+          await cache.set('redis-set-fallback', 'fallback-value', 300)
+          
+          // Should still be able to get from memory
+          const result = await cache.get('redis-set-fallback')
+          expect(result).toBe('fallback-value')
+        })
+      })
+
+      describe('Redis error handling in get operation', () => {
+        it('should fall back to memory cache when Redis get fails', async () => {
+          // Set value in memory first
+          await cache.set('memory-only', 'memory-value', 300)
+          
+          // Mock Redis to throw error on get
+          const RedisMock = require('ioredis')
+          const mockRedis = new RedisMock()
+          mockRedis.get.mockRejectedValue(new Error('Redis get failed'))
+          
+          // Should still get from memory cache
+          const result = await cache.get('memory-only')
+          expect(result).toBe('memory-value')
+        })
+      })
+
+      describe('Redis error handling in del operation', () => {
+        it('should handle Redis del errors gracefully', async () => {
+          // Set value first
+          await cache.set('del-error-test', 'del-error-value', 300)
+          
+          // Mock Redis to throw error on del
+          const RedisMock = require('ioredis')
+          const mockRedis = new RedisMock()
+          mockRedis.del.mockRejectedValue(new Error('Redis del failed'))
+          
+          // Should not throw error
+          await expect(cache.del('del-error-test')).resolves.not.toThrow()
+          
+          // Memory cache should still be deleted
+          const result = await cache.get('del-error-test')
+          expect(result).toBeNull()
+        })
+      })
+
+      describe('Redis error handling in delByPrefix operation', () => {
+        it('should handle Redis keys and del errors gracefully', async () => {
+          // Set some values first
+          await cache.set('error-prefix-1', 'value1', 300)
+          await cache.set('error-prefix-2', 'value2', 300)
+          
+          // Mock Redis to throw error on keys and del
+          const RedisMock = require('ioredis')
+          const mockRedis = new RedisMock()
+          mockRedis.keys.mockRejectedValue(new Error('Redis keys failed'))
+          mockRedis.del.mockRejectedValue(new Error('Redis del failed'))
+          
+          // Should not throw error
+          await expect(cache.delByPrefix('error-prefix')).resolves.not.toThrow()
+          
+          // Memory cache should still be cleaned up
+          const result1 = await cache.get('error-prefix-1')
+          const result2 = await cache.get('error-prefix-2')
+          expect(result1).toBeNull()
+          expect(result2).toBeNull()
+        })
+      })
+    })
+  })
 })

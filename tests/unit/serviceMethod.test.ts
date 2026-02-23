@@ -561,5 +561,45 @@ describe('serviceMethod decorator', () => {
         stack: undefined,
       })
     })
+
+    it('should handle error handler that returns response without code', async () => {
+      const invalidErrorHandler = jest.fn().mockResolvedValue({ invalidField: 'value' })
+
+      class TestService {
+        @serviceMethod({ onError: invalidErrorHandler })
+        async testMethod(): Promise<{ code: ResponseCode }> {
+          throw new Error('General error')
+        }
+      }
+
+      const service = new TestService()
+      const result = await service.testMethod()
+
+      // Should fall back to INVALID_INPUT when error handler returns invalid response
+      expect(result).toEqual({ code: ResponseCode.INVALID_INPUT })
+    })
+
+    it('should handle non-Error originalError in error handler exception', async () => {
+      const throwingErrorHandler = jest.fn().mockRejectedValue(new Error('Handler error'))
+
+      class TestService {
+        @serviceMethod({ onError: throwingErrorHandler })
+        async testMethod(): Promise<{ code: ResponseCode }> {
+          throw 'String error' // Not an Error object
+        }
+      }
+
+      const service = new TestService()
+      const result = await service.testMethod()
+
+      expect(result).toEqual({ code: ResponseCode.SERVER_ERROR })
+      expect(mockLogger.error).toHaveBeenCalledWith({
+        code: ResponseCode.SERVER_ERROR,
+        message: 'Error handler threw an exception',
+        originalError: 'String error',
+        handlerError: 'Handler error',
+        stack: expect.any(String),
+      })
+    })
   })
 })
