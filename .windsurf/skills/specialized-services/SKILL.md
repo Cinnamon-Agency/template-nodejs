@@ -1,3 +1,8 @@
+---
+name: specialized-services
+description: Specialized services including authentication, media management, and notifications
+---
+
 # Specialized Services Skills
 
 ## **Authentication & User Management**

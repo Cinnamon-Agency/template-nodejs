@@ -1,3 +1,8 @@
+---
+name: testing-strategy
+description: Comprehensive testing strategy with Jest, integration tests, and coverage analysis
+---
+
 # Testing Strategy Skills
 
 ## **Testing Fundamentals**

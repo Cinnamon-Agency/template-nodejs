@@ -1,3 +1,8 @@
+---
+name: security-implementation
+description: Security implementation with JWT, OAuth, and vulnerability assessment
+---
+
 # Security Implementation Skills
 
 ## **Authentication Systems**

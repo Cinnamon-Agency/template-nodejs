@@ -1,3 +1,8 @@
+---
+name: backend-development
+description: Node.js & TypeScript backend development with Express.js and Prisma ORM
+---
+
 # Backend Development Skills
 
 ## **Core Technologies**

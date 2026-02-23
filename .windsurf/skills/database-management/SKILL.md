@@ -1,3 +1,8 @@
+---
+name: database-management
+description: Database architecture and Prisma ORM with PostgreSQL optimization
+---
+
 # Database Management Skills
 
 ## **Prisma ORM Mastery**

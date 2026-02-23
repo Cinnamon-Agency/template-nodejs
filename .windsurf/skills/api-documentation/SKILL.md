@@ -1,3 +1,8 @@
+---
+name: api-documentation
+description: Guides the API documentation process with Swagger/OpenAPI and testing
+---
+
 # API Documentation Skills
 
 ## **Swagger/OpenAPI Mastery**

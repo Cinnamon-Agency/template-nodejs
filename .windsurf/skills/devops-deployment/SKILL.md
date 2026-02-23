@@ -1,3 +1,8 @@
+---
+name: devops-deployment
+description: DevOps deployment with Docker, CI/CD pipelines, and infrastructure management
+---
+
 # DevOps & Deployment Skills
 
 ## **Containerization**
