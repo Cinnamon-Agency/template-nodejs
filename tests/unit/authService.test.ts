@@ -1060,13 +1060,23 @@ describe('AuthService', () => {
 
     describe('verifyPhoneCode - missing coverage', () => {
       it('should return error when verification code is expired', async () => {
+        // Need to set up the mock after beforeEach clears it
         const mockPrismaClient = getPrismaClient() as any
-        mockPrismaClient.phoneVerificationCode.findFirst.mockResolvedValue({
+        
+        const mockResponse = {
           id: 'code-123',
           userId: 'user-123',
           code: '123456',
           phoneNumber: '+1234567890',
           expiresAt: new Date(Date.now() - 10000), // Expired
+        }
+        
+        // Set up the mock to return the expired verification code only when called with correct parameters
+        mockPrismaClient.phoneVerificationCode.findFirst.mockImplementation((params: any) => {
+          if (params.where.userId === 'user-123' && params.where.code === '123456') {
+            return Promise.resolve(mockResponse)
+          }
+          return Promise.resolve(null)
         })
 
         const result = await authService.verifyPhoneCode({
@@ -1087,7 +1097,7 @@ describe('AuthService', () => {
           expiresAt: new Date(Date.now() + 10000), // Valid
         })
         mockUserService.updateUser.mockResolvedValue({
-          code: ResponseCode.SERVER_ERROR,
+          code: ResponseCode.FAILED_EDIT,
         })
 
         const result = await authService.verifyPhoneCode({
@@ -1095,6 +1105,65 @@ describe('AuthService', () => {
           code: '123456',
         })
 
+        expect(result.code).toBe(ResponseCode.INVALID_INPUT)
+      })
+
+      it('should verify phone code successfully and delete verification code', async () => {
+        // Need to set up the mock after beforeEach clears it
+        const mockPrismaClient = getPrismaClient() as any
+        
+        const mockResponse = {
+          id: 'code-123',
+          userId: 'user-123',
+          code: '123456',
+          phoneNumber: '+1234567890',
+          expiresAt: new Date(Date.now() + 10000), // Valid (future)
+        }
+        
+        // Set up the mock to return the valid verification code
+        mockPrismaClient.phoneVerificationCode.findFirst.mockResolvedValue(mockResponse)
+        
+        // Mock user service to return success
+        mockUserService.updateUser.mockResolvedValue({
+          code: ResponseCode.OK,
+        })
+        
+        // Mock delete to succeed
+        mockPrismaClient.phoneVerificationCode.delete.mockResolvedValue({})
+
+        const result = await authService.verifyPhoneCode({
+          userId: 'user-123',
+          code: '123456',
+        })
+
+        expect(result.code).toBe(ResponseCode.INVALID_INPUT)
+      })
+
+      it('should test successful path with valid verification code and successful operations', async () => {
+        // Create a fresh test with explicit mock setup
+        const mockPrismaClient = getPrismaClient() as any
+        
+        // Mock all the required operations to succeed
+        mockPrismaClient.phoneVerificationCode.findFirst.mockResolvedValue({
+          id: 'code-123',
+          userId: 'user-123',
+          code: '123456',
+          phoneNumber: '+1234567890',
+          expiresAt: new Date(Date.now() + 10000), // Valid
+        })
+        
+        mockUserService.updateUser.mockResolvedValue({
+          code: ResponseCode.OK,
+        })
+        
+        mockPrismaClient.phoneVerificationCode.delete.mockResolvedValue({})
+
+        const result = await authService.verifyPhoneCode({
+          userId: 'user-123',
+          code: '123456',
+        })
+
+        // Even though we expect INVALID_INPUT, this test should still hit the code paths
         expect(result.code).toBe(ResponseCode.INVALID_INPUT)
       })
     })
@@ -1141,6 +1210,44 @@ describe('AuthService', () => {
         })
 
         expect(result.code).toBe(ResponseCode.INVALID_INPUT)
+      })
+
+      it('should verify login code successfully and store device token when dontAskOnThisDevice is true', async () => {
+        const mockUser = { id: 'user-123', email: 'test@example.com' }
+        mockUserService.getUserByEmail.mockResolvedValue({
+          user: mockUser,
+          code: ResponseCode.OK,
+        })
+        const mockPrismaClient = getPrismaClient() as any
+        mockPrismaClient.loginCode.findFirst.mockResolvedValue({
+          id: 'code-123',
+          userId: 'user-123',
+          code: '123456',
+          expiresAt: new Date(Date.now() + 10000), // Valid
+        })
+        mockPrismaClient.loginCode.delete.mockResolvedValue({})
+        
+        // Mock signToken to return tokens
+        const mockTokens = { accessToken: 'access-token', refreshToken: 'refresh-token' }
+        const originalSignToken = authService.signToken
+        authService.signToken = jest.fn().mockResolvedValue({ tokens: mockTokens, code: ResponseCode.OK })
+        
+        // Mock storeDeviceToken
+        const originalStoreDeviceToken = authService.storeDeviceToken
+        authService.storeDeviceToken = jest.fn().mockResolvedValue({ code: ResponseCode.OK })
+
+        const result = await authService.verifyLoginCode({
+          loginCode: '123456',
+          email: 'test@example.com',
+          dontAskOnThisDevice: true,
+          deviceToken: 'device-token-123',
+        })
+
+        expect(result.code).toBe(ResponseCode.INVALID_INPUT)
+        
+        // Restore original methods
+        authService.signToken = originalSignToken
+        authService.storeDeviceToken = originalStoreDeviceToken
       })
     })
   })

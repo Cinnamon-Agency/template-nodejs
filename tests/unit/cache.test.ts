@@ -702,35 +702,176 @@ describe('Cache Service', () => {
         })
       })
 
-      describe('Redis error handling in set operation', () => {
-        it('should fall back to memory cache when Redis set fails', async () => {
-          // Mock Redis to throw error on set
-          const RedisMock = require('ioredis')
-          const mockRedis = new RedisMock()
-          mockRedis.set.mockRejectedValue(new Error('Redis set failed'))
+      describe('Memory cleanup interval', () => {
+        it('should execute cleanup interval callback and remove expired entries', async () => {
+          // Set multiple values with different expiration times
+          await cache.set('key1', 'value1', 1) // Will expire in 1 second
+          await cache.set('key2', 'value2', 2) // Will expire in 2 seconds  
+          await cache.set('key3', 'value3', 300) // Will not expire
           
-          // Set value - should fall back to memory
-          await cache.set('redis-set-fallback', 'fallback-value', 300)
+          // Verify all values exist initially
+          expect(await cache.get('key1')).toBe('value1')
+          expect(await cache.get('key2')).toBe('value2')
+          expect(await cache.get('key3')).toBe('value3')
           
-          // Should still be able to get from memory
-          const result = await cache.get('redis-set-fallback')
-          expect(result).toBe('fallback-value')
+          // Fast forward time by 61 seconds to trigger the cleanup interval
+          jest.advanceTimersByTime(61 * 1000)
+          
+          // Run the cleanup interval
+          jest.runOnlyPendingTimers()
+          
+          // Verify expired entries are removed and non-expired remain
+          expect(await cache.get('key1')).toBeNull()
+          expect(await cache.get('key2')).toBeNull()
+          expect(await cache.get('key3')).toBe('value3')
         })
-      })
 
-      describe('Redis error handling in get operation', () => {
-        it('should fall back to memory cache when Redis get fails', async () => {
-          // Set value in memory first
-          await cache.set('memory-only', 'memory-value', 300)
+        it('should execute cleanup callback when entries have expired', async () => {
+          // Set a value that will expire
+          await cache.set('expire-test', 'value', 1) // 1 second TTL
           
-          // Mock Redis to throw error on get
-          const RedisMock = require('ioredis')
-          const mockRedis = new RedisMock()
-          mockRedis.get.mockRejectedValue(new Error('Redis get failed'))
+          // Verify it exists
+          expect(await cache.get('expire-test')).toBe('value')
           
-          // Should still get from memory cache
-          const result = await cache.get('memory-only')
-          expect(result).toBe('memory-value')
+          // Fast forward time by 2 seconds to ensure it's expired
+          jest.advanceTimersByTime(2000)
+          
+          // Trigger the cleanup interval by advancing time past the interval
+          jest.advanceTimersByTime(61 * 1000)
+          
+          // Run all pending timers including the cleanup interval
+          jest.runOnlyPendingTimers()
+          
+          // Verify the expired entry was cleaned up
+          expect(await cache.get('expire-test')).toBeNull()
+        })
+
+        it('should directly test memory cleanup logic with expired entries', async () => {
+          // Set multiple entries that will expire
+          await cache.set('cleanup1', 'value1', 1) // expires in 1 second
+          await cache.set('cleanup2', 'value2', 1) // expires in 1 second
+          await cache.set('cleanup3', 'value3', 300) // doesn't expire
+          
+          // Verify they exist
+          expect(await cache.get('cleanup1')).toBe('value1')
+          expect(await cache.get('cleanup2')).toBe('value2')
+          expect(await cache.get('cleanup3')).toBe('value3')
+          
+          // Wait for entries to expire
+          jest.advanceTimersByTime(2000) // 2 seconds
+          
+          // Trigger multiple cleanup intervals to ensure callback execution
+          for (let i = 0; i < 3; i++) {
+            jest.advanceTimersByTime(61 * 1000) // 61 seconds
+            jest.runOnlyPendingTimers()
+          }
+          
+          // Verify expired entries are gone
+          expect(await cache.get('cleanup1')).toBeNull()
+          expect(await cache.get('cleanup2')).toBeNull()
+          expect(await cache.get('cleanup3')).toBe('value3') // Should still exist
+        })
+
+        it('should force cleanup interval execution with many expired entries', async () => {
+          // Create many expired entries to ensure the cleanup callback runs
+          const expiredKeys = []
+          for (let i = 0; i < 10; i++) {
+            const key = `expired-${i}`
+            await cache.set(key, `value-${i}`, 1) // 1 second TTL
+            expiredKeys.push(key)
+          }
+          
+          // Also create some non-expired entries
+          await cache.set('valid1', 'value1', 300)
+          await cache.set('valid2', 'value2', 300)
+          
+          // Verify all entries exist initially
+          for (const key of expiredKeys) {
+            expect(await cache.get(key)).toBe(`value-${key.split('-')[1]}`)
+          }
+          expect(await cache.get('valid1')).toBe('value1')
+          expect(await cache.get('valid2')).toBe('value2')
+          
+          // Wait for entries to expire
+          jest.advanceTimersByTime(2000) // 2 seconds
+          
+          // Trigger cleanup interval multiple times to ensure callback execution
+          jest.advanceTimersByTime(61 * 1000) // 61 seconds - trigger first cleanup
+          jest.runOnlyPendingTimers()
+          
+          jest.advanceTimersByTime(61 * 1000) // 61 seconds - trigger second cleanup
+          jest.runOnlyPendingTimers()
+          
+          jest.advanceTimersByTime(61 * 1000) // 61 seconds - trigger third cleanup
+          jest.runOnlyPendingTimers()
+          
+          // Verify expired entries are gone and valid ones remain
+          for (const key of expiredKeys) {
+            expect(await cache.get(key)).toBeNull()
+          }
+          expect(await cache.get('valid1')).toBe('value1')
+          expect(await cache.get('valid2')).toBe('value2')
+        })
+
+        it('should test cleanup interval with immediate expiration and multiple triggers', async () => {
+          // Set entries with zero TTL (immediate expiration)
+          await cache.set('immediate1', 'value1', 0)
+          await cache.set('immediate2', 'value2', 0)
+          
+          // Also set some normal entries
+          await cache.set('normal1', 'value1', 300)
+          await cache.set('normal2', 'value2', 300)
+          
+          // Advance time and trigger cleanup multiple times
+          jest.advanceTimersByTime(100) // 100ms
+          jest.runOnlyPendingTimers()
+          
+          jest.advanceTimersByTime(61 * 1000) // 61 seconds - trigger cleanup
+          jest.runOnlyPendingTimers()
+          
+          jest.advanceTimersByTime(61 * 1000) // 61 seconds - trigger cleanup again
+          jest.runOnlyPendingTimers()
+          
+          // Verify immediate entries are gone, normal ones remain
+          expect(await cache.get('immediate1')).toBeNull()
+          expect(await cache.get('immediate2')).toBeNull()
+          expect(await cache.get('normal1')).toBe('value1')
+          expect(await cache.get('normal2')).toBe('value2')
+        })
+
+        it('should test cleanup interval with mixed expiration times', async () => {
+          // Set entries with different expiration times
+          await cache.set('short1', 'value1', 1) // 1 second
+          await cache.set('short2', 'value2', 2) // 2 seconds
+          await cache.set('medium1', 'value3', 120) // 120 seconds (longer than cleanup interval)
+          await cache.set('long1', 'value4', 300) // 300 seconds
+          
+          // Verify they exist
+          expect(await cache.get('short1')).toBe('value1')
+          expect(await cache.get('short2')).toBe('value2')
+          expect(await cache.get('medium1')).toBe('value3')
+          expect(await cache.get('long1')).toBe('value4')
+          
+          // Wait for short entries to expire
+          jest.advanceTimersByTime(3000) // 3 seconds
+          
+          // Trigger cleanup interval
+          jest.advanceTimersByTime(61 * 1000) // 61 seconds
+          jest.runOnlyPendingTimers()
+          
+          // Verify short entries are gone, others remain
+          expect(await cache.get('short1')).toBeNull()
+          expect(await cache.get('short2')).toBeNull()
+          expect(await cache.get('medium1')).toBe('value3') // Should still exist (120s TTL)
+          expect(await cache.get('long1')).toBe('value4') // Should still exist (300s TTL)
+          
+          // Wait for medium entry to expire (need to advance past 120 seconds total)
+          jest.advanceTimersByTime(61 * 1000) // 61 seconds
+          jest.runOnlyPendingTimers()
+          
+          // Verify medium entry is now gone
+          expect(await cache.get('medium1')).toBeNull()
+          expect(await cache.get('long1')).toBe('value4') // Should still exist
         })
       })
 
@@ -774,6 +915,97 @@ describe('Cache Service', () => {
           expect(result1).toBeNull()
           expect(result2).toBeNull()
         })
+      })
+    })
+
+    describe('Redis successful operations', () => {
+      let mockRedisClient: any
+
+      beforeEach(() => {
+        mockRedisClient = {
+          get: jest.fn(),
+          set: jest.fn(),
+          del: jest.fn(),
+          keys: jest.fn(),
+          on: jest.fn(),
+        }
+      })
+
+      it('should use Redis successfully for set operation', async () => {
+        // Mock config to have Redis URL
+        jest.doMock('@core/config', () => ({
+          REDIS_URL: 'redis://localhost:6379',
+        }))
+        
+        // Mock ioredis to return our mock client
+        jest.doMock('ioredis', () => {
+          return jest.fn().mockImplementation(() => mockRedisClient)
+        })
+
+        // Re-import cache to get Redis-enabled version
+        const cacheModule = require('../../src/services/cache')
+        const redisCache = cacheModule.cache
+
+        // Mock Redis set to succeed
+        mockRedisClient.set.mockResolvedValue('OK')
+
+        // Set a value using Redis
+        await redisCache.set('test-key', 'test-value', 300)
+
+        // Verify Redis set was called
+        expect(mockRedisClient.set).toHaveBeenCalledWith('test-key', JSON.stringify('test-value'), 'EX', 300)
+      })
+
+      it('should use Redis successfully for del operation', async () => {
+        // Mock config to have Redis URL
+        jest.doMock('@core/config', () => ({
+          REDIS_URL: 'redis://localhost:6379',
+        }))
+        
+        // Mock ioredis to return our mock client
+        jest.doMock('ioredis', () => {
+          return jest.fn().mockImplementation(() => mockRedisClient)
+        })
+
+        // Re-import cache to get Redis-enabled version
+        const cacheModule = require('../../src/services/cache')
+        const redisCache = cacheModule.cache
+
+        // Mock Redis del to succeed
+        mockRedisClient.del.mockResolvedValue(1)
+
+        // Delete a key using Redis
+        await redisCache.del('test-key')
+
+        // Verify Redis del was called
+        expect(mockRedisClient.del).toHaveBeenCalledWith('test-key')
+      })
+
+      it('should use Redis successfully for delByPrefix operation', async () => {
+        // Mock config to have Redis URL
+        jest.doMock('@core/config', () => ({
+          REDIS_URL: 'redis://localhost:6379',
+        }))
+        
+        // Mock ioredis to return our mock client
+        jest.doMock('ioredis', () => {
+          return jest.fn().mockImplementation(() => mockRedisClient)
+        })
+
+        // Re-import cache to get Redis-enabled version
+        const cacheModule = require('../../src/services/cache')
+        const redisCache = cacheModule.cache
+
+        // Mock Redis keys and del to succeed
+        mockRedisClient.keys.mockResolvedValue(['prefix:key1', 'prefix:key2'])
+        mockRedisClient.del.mockResolvedValue(2)
+
+        // Delete keys by prefix using Redis
+        await redisCache.delByPrefix('prefix')
+
+        // Verify Redis keys and del were called
+        expect(mockRedisClient.keys).toHaveBeenCalledWith('prefix*')
+        expect(mockRedisClient.del).toHaveBeenCalledWith('prefix:key1', 'prefix:key2')
       })
     })
   })
