@@ -381,4 +381,17 @@ describe('VerificationUIDService', () => {
       expect(clearResult.code).toBe(ResponseCode.OK)
     })
   })
+
+  describe('Error handling in decorator', () => {
+    it('should trigger onError callback when non-Prisma error occurs', async () => {
+      mockPrismaClient.verificationUID.create.mockRejectedValue(new Error('Database connection failed'))
+      
+      const result = await verificationUIDService.setVerificationUID({
+        userId: 'user-123',
+        type: 'EMAIL_VERIFICATION',
+      })
+
+      expect(result.code).toBe(ResponseCode.SERVER_ERROR)
+    })
+  })
 })
