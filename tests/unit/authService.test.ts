@@ -503,5 +503,450 @@ describe('AuthService', () => {
 
       expect(result.code).toBe(ResponseCode.INVALID_INPUT)
     })
+
+    it('should return error if user does not exist', async () => {
+      mockUserService.getUserByEmail.mockResolvedValue({
+        user: null,
+        code: ResponseCode.USER_NOT_FOUND,
+      })
+
+      const result = await authService.verifyLoginCode({
+        loginCode: '123456',
+        email: 'nonexistent@example.com',
+        dontAskOnThisDevice: false,
+        deviceToken: undefined,
+      })
+
+      expect(result.code).toBe(ResponseCode.USER_NOT_FOUND)
+    })
+
+    it('should return error for expired login code', async () => {
+      const mockUser = { id: 'user-123', email: 'test@example.com' }
+      mockUserService.getUserByEmail.mockResolvedValue({
+        user: mockUser,
+        code: ResponseCode.OK,
+      })
+
+      const mockPrismaClient = getPrismaClient() as any
+      mockPrismaClient.loginCode.findFirst.mockResolvedValue({
+        id: 'code-123',
+        code: '123456',
+        email: 'test@example.com',
+        expiresAt: new Date(Date.now() - 10000), // Expired
+      })
+
+      const result = await authService.verifyLoginCode({
+        loginCode: '123456',
+        email: 'test@example.com',
+        dontAskOnThisDevice: false,
+        deviceToken: undefined,
+      })
+
+      expect(result.code).toBe(ResponseCode.INVALID_INPUT)
+    })
+
+    it('should handle signToken failure in verifyLoginCode', async () => {
+      const mockUser = { id: 'user-123', email: 'test@example.com' }
+      mockUserService.getUserByEmail.mockResolvedValue({
+        user: mockUser,
+        code: ResponseCode.OK,
+      })
+
+      const mockPrismaClient = getPrismaClient() as any
+      mockPrismaClient.loginCode.findFirst.mockResolvedValue({
+        id: 'code-123',
+        code: '123456',
+        email: 'test@example.com',
+        expiresAt: new Date(Date.now() + 10000), // Valid
+      })
+
+      // Mock signToken to fail
+      mockUserSessionService.storeUserSession.mockResolvedValue({
+        userSession: null,
+        code: ResponseCode.SERVER_ERROR,
+      })
+
+      const result = await authService.verifyLoginCode({
+        loginCode: '123456',
+        email: 'test@example.com',
+        dontAskOnThisDevice: false,
+        deviceToken: undefined,
+      })
+
+      expect(result.code).toBe(ResponseCode.INVALID_INPUT)
+    })
+  })
+
+  describe('Static methods', () => {
+    describe('setAuthCookies', () => {
+      it('should set authentication cookies', () => {
+        const mockRes = {
+          cookie: jest.fn(),
+        }
+        const tokens = {
+          accessToken: 'access-token',
+          refreshToken: 'refresh-token',
+          accessTokenExpiresAt: new Date(),
+          refreshTokenExpiresAt: new Date(),
+        }
+
+        AuthService.setAuthCookies(mockRes as any, tokens)
+
+        expect(mockRes.cookie).toHaveBeenCalledWith('accessToken', 'access-token', expect.any(Object))
+        expect(mockRes.cookie).toHaveBeenCalledWith('refreshToken', 'refresh-token', expect.any(Object))
+      })
+    })
+
+    describe('setDeviceTokenCookie', () => {
+      it('should set device token cookie', () => {
+        const mockRes = {
+          cookie: jest.fn(),
+        }
+        const deviceToken = 'device-token-123'
+
+        AuthService.setDeviceTokenCookie(mockRes as any, deviceToken)
+
+        expect(mockRes.cookie).toHaveBeenCalledWith('deviceToken', deviceToken, expect.any(Object))
+      })
+    })
+
+    describe('clearAuthCookies', () => {
+      it('should clear authentication cookies', () => {
+        const mockRes = {
+          clearCookie: jest.fn(),
+        }
+
+        AuthService.clearAuthCookies(mockRes as any)
+
+        expect(mockRes.clearCookie).toHaveBeenCalledWith('accessToken', expect.any(Object))
+        expect(mockRes.clearCookie).toHaveBeenCalledWith('refreshToken', expect.any(Object))
+      })
+    })
+
+    describe('isMobileClient', () => {
+      it('should return true for mobile client', () => {
+        const req = {
+          headers: {
+            'x-client-type': 'mobile',
+          },
+        }
+
+        const result = AuthService.isMobileClient(req)
+
+        expect(result).toBe(true)
+      })
+
+      it('should return false for non-mobile client', () => {
+        const req = {
+          headers: {
+            'x-client-type': 'web',
+          },
+        }
+
+        const result = AuthService.isMobileClient(req)
+
+        expect(result).toBe(false)
+      })
+
+      it('should return false when client type header is missing', () => {
+        const req = {
+          headers: {},
+        }
+
+        const result = AuthService.isMobileClient(req)
+
+        expect(result).toBe(false)
+      })
+    })
+  })
+
+  describe('Error handling in register method', () => {
+    it('should return error when user creation fails', async () => {
+      mockUserService.getUserByEmail.mockResolvedValue({
+        user: null,
+        code: ResponseCode.USER_NOT_FOUND,
+      })
+      mockUserService.createUser.mockResolvedValue({
+        user: null,
+        code: ResponseCode.SERVER_ERROR,
+      })
+
+      const result = await authService.register({
+        authType: AuthType.USER_PASSWORD,
+        email: 'test@example.com',
+        password: 'password123',
+      })
+
+      expect(result.code).toBe(ResponseCode.SERVER_ERROR)
+    })
+  })
+
+  describe('Error handling in login method', () => {
+    it('should return error when user lookup fails', async () => {
+      mockUserService.getUserByEmailAndAuthType.mockResolvedValue({
+        user: null,
+        code: ResponseCode.USER_NOT_FOUND,
+      })
+
+      const result = await authService.login({
+        authType: AuthType.USER_PASSWORD,
+        email: 'test@example.com',
+        password: 'password123',
+      })
+
+      expect(result.code).toBe(ResponseCode.USER_NOT_FOUND)
+    })
+  })
+
+  describe('Error handling in refreshToken method', () => {
+    it('should return error when user session update fails', async () => {
+      mockUserSessionService.updateUserSession.mockResolvedValue({
+        userSession: null,
+        code: ResponseCode.SERVER_ERROR,
+      })
+
+      const result = await authService.refreshToken({
+        refreshToken: 'valid-refresh-token',
+      })
+
+      expect(result.code).toBe(ResponseCode.SERVER_ERROR)
+    })
+  })
+
+  describe('Error handling in sendForgotPasswordEmail method', () => {
+    it('should return error when verification UID creation fails', async () => {
+      mockUserService.getUserByEmail.mockResolvedValue({
+        user: { id: 'user-123', email: 'test@example.com' },
+        code: ResponseCode.OK,
+      })
+      mockVerificationUIDService.setVerificationUID.mockResolvedValue({
+        uids: null,
+        code: ResponseCode.SERVER_ERROR,
+      })
+
+      const result = await authService.sendForgotPasswordEmail({
+        email: 'test@example.com',
+      })
+
+      expect(result.code).toBe(ResponseCode.SERVER_ERROR)
+    })
+  })
+
+  describe('Error handling in resetPassword method', () => {
+    it('should return error when password update fails', async () => {
+      mockVerificationUIDService.verifyUID.mockResolvedValue({
+        verificationUID: { userId: 'user-123' },
+        code: ResponseCode.OK,
+      })
+      mockUserService.updatePassword.mockResolvedValue({
+        code: ResponseCode.SERVER_ERROR,
+      })
+
+      const result = await authService.resetPassword({
+        uid: 'uid-123',
+        hashUid: 'hash-123',
+        password: 'newpassword123',
+      })
+
+      expect(result.code).toBe(ResponseCode.SERVER_ERROR)
+    })
+  })
+
+  describe('Error handling in sendVerificationEmail method', () => {
+    it('should return error when verification UID creation fails', async () => {
+      mockVerificationUIDService.setVerificationUID.mockResolvedValue({
+        uids: null,
+        code: ResponseCode.SERVER_ERROR,
+      })
+
+      const result = await authService.sendVerificationEmail('user-123', 'test@example.com')
+
+      expect(result.code).toBe(ResponseCode.SERVER_ERROR)
+    })
+  })
+
+  describe('Error handling in verifyEmail method', () => {
+    it('should return error when verification UID verification fails', async () => {
+      mockVerificationUIDService.verifyUID.mockResolvedValue({
+        verificationUID: null,
+        code: ResponseCode.INVALID_INPUT,
+      })
+
+      const result = await authService.verifyEmail({
+        uid: 'invalid-uid',
+        hashUid: 'invalid-hash',
+      })
+
+      expect(result.code).toBe(ResponseCode.INVALID_INPUT)
+    })
+
+    it('should return error when user update fails', async () => {
+      mockVerificationUIDService.verifyUID.mockResolvedValue({
+        verificationUID: { userId: 'user-123' },
+        code: ResponseCode.OK,
+      })
+      mockUserService.updateUser.mockResolvedValue({
+        code: ResponseCode.SERVER_ERROR,
+      })
+
+      const result = await authService.verifyEmail({
+        uid: 'uid-123',
+        hashUid: 'hash-123',
+      })
+
+      expect(result.code).toBe(ResponseCode.SERVER_ERROR)
+    })
+  })
+
+  describe('Error handling in resendVerificationEmail method', () => {
+    it('should return error when user is already verified', async () => {
+      mockUserService.getUserByEmail.mockResolvedValue({
+        user: { id: 'user-123', email: 'test@example.com', emailVerified: true },
+        code: ResponseCode.OK,
+      })
+
+      const result = await authService.resendVerificationEmail({
+        email: 'test@example.com',
+      })
+
+      expect(result.code).toBe(ResponseCode.USER_ALREADY_ONBOARDED)
+    })
+
+    it('should return error when sendVerificationEmail fails', async () => {
+      mockUserService.getUserByEmail.mockResolvedValue({
+        user: { id: 'user-123', email: 'test@example.com', emailVerified: false },
+        code: ResponseCode.OK,
+      })
+      mockVerificationUIDService.setVerificationUID.mockResolvedValue({
+        uids: null,
+        code: ResponseCode.SERVER_ERROR,
+      })
+
+      const result = await authService.resendVerificationEmail({
+        email: 'test@example.com',
+      })
+
+      expect(result.code).toBe(ResponseCode.SERVER_ERROR)
+    })
+  })
+
+  describe('Error handling in sendPhoneVerificationCode method', () => {
+    it('should return error when SMS sending fails', async () => {
+      const { sendSMS } = require('../../src/services/aws-end-user-messaging')
+      sendSMS.mockResolvedValue({ code: ResponseCode.SERVER_ERROR })
+
+      const result = await authService.sendPhoneVerificationCode({
+        phoneNumber: '+1234567890',
+        userId: 'user-123',
+      })
+
+      expect(result.code).toBe(ResponseCode.SERVER_ERROR)
+    })
+  })
+
+  describe('Error handling in verifyPhoneCode method', () => {
+    it('should return error when verification code is expired', async () => {
+      const mockPrismaClient = getPrismaClient() as any
+      mockPrismaClient.phoneVerificationCode.findFirst.mockResolvedValue({
+        id: 'code-123',
+        userId: 'user-123',
+        code: '123456',
+        phoneNumber: '+1234567890',
+        expiresAt: new Date(Date.now() - 10000), // Expired
+      })
+
+      const result = await authService.verifyPhoneCode({
+        userId: 'user-123',
+        code: '123456',
+      })
+
+      expect(result.code).toBe(ResponseCode.INVALID_INPUT)
+    })
+
+    it('should return error when user update fails', async () => {
+      const mockPrismaClient = getPrismaClient() as any
+      mockPrismaClient.phoneVerificationCode.findFirst.mockResolvedValue({
+        id: 'code-123',
+        userId: 'user-123',
+        code: '123456',
+        phoneNumber: '+1234567890',
+        expiresAt: new Date(Date.now() + 10000), // Valid
+      })
+      mockUserService.updateUser.mockResolvedValue({
+        code: ResponseCode.SERVER_ERROR,
+      })
+
+      const result = await authService.verifyPhoneCode({
+        userId: 'user-123',
+        code: '123456',
+      })
+
+      expect(result.code).toBe(ResponseCode.INVALID_INPUT)
+    })
+  })
+
+  describe('Error handling in verifyDeviceToken method', () => {
+    it('should return error for invalid device token', async () => {
+      const mockPrismaClient = getPrismaClient() as any
+      mockPrismaClient.deviceToken.findUnique.mockResolvedValue(null)
+
+      const result = await authService.verifyDeviceToken('invalid-token')
+
+      expect(result.isValid).toBe(false)
+      expect(result.userId).toBeNull()
+      expect(result.code).toBe(ResponseCode.INVALID_INPUT)
+    })
+
+    it('should return error for expired device token', async () => {
+      const mockPrismaClient = getPrismaClient() as any
+      mockPrismaClient.deviceToken.findUnique.mockResolvedValue({
+        id: 'token-123',
+        userId: 'user-123',
+        token: 'expired-token',
+        expiresAt: new Date(Date.now() - 10000), // Expired
+      })
+      mockPrismaClient.deviceToken.delete.mockResolvedValue({})
+
+      const result = await authService.verifyDeviceToken('expired-token')
+
+      expect(result.isValid).toBe(false)
+      expect(result.userId).toBeNull()
+      expect(result.code).toBe(ResponseCode.INVALID_INPUT)
+    })
+  })
+
+  describe('Error handling in setNewPassword method', () => {
+    it('should return error when password update fails', async () => {
+      mockVerificationUIDService.verifyUID.mockResolvedValue({
+        verificationUID: { userId: 'user-123' },
+        code: ResponseCode.OK,
+      })
+      mockUserService.updatePassword.mockResolvedValue({
+        code: ResponseCode.SERVER_ERROR,
+      })
+
+      const result = await authService.setNewPassword({
+        uid: 'uid-123',
+        hashUid: 'hash-123',
+        password: 'newpassword123',
+      })
+
+      expect(result.code).toBe(ResponseCode.SERVER_ERROR)
+    })
+  })
+
+  describe('Error handling in resendLoginCode method', () => {
+    it('should return error when user does not exist', async () => {
+      mockUserService.getUserByEmail.mockResolvedValue({
+        user: null,
+        code: ResponseCode.USER_NOT_FOUND,
+      })
+
+      const result = await authService.resendLoginCode({
+        email: 'nonexistent@example.com',
+      })
+
+      expect(result.code).toBe(ResponseCode.USER_NOT_FOUND)
+    })
   })
 })

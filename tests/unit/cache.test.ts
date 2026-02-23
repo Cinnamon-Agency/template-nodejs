@@ -401,6 +401,115 @@ describe('Cache Service', () => {
     })
   })
 
+  describe('Redis initialization and error handling', () => {
+    it('should initialize Redis client when REDIS_URL is provided', () => {
+      // Mock config to have Redis URL
+      jest.doMock('@core/config', () => ({
+        REDIS_URL: 'redis://localhost:6379',
+      }))
+      
+      // Mock ioredis constructor
+      const mockRedis = jest.fn()
+      jest.doMock('ioredis', () => mockRedis)
+      
+      // Re-import the module to trigger initialization
+      jest.resetModules()
+      require('../../src/services/cache')
+      
+      expect(mockRedis).toHaveBeenCalledWith('redis://localhost:6379', {
+        enableOfflineQueue: false,
+        maxRetriesPerRequest: 1,
+      })
+    })
+
+    it('should handle Redis connection errors during initialization', () => {
+      // Mock config to have Redis URL
+      jest.doMock('@core/config', () => ({
+        REDIS_URL: 'redis://localhost:6379',
+      }))
+      
+      // Mock ioredis to throw during construction
+      const mockRedis = jest.fn().mockImplementation(() => {
+        throw new Error('Redis connection failed')
+      })
+      jest.doMock('ioredis', () => mockRedis)
+      
+      // Mock logger
+      const mockLogger = {
+        error: jest.fn(),
+        warn: jest.fn(),
+      }
+      jest.doMock('@core/logger', () => ({
+        logger: mockLogger,
+      }))
+      
+      // Re-import the module to trigger initialization
+      jest.resetModules()
+      require('../../src/services/cache')
+      
+      expect(mockLogger.warn).toHaveBeenCalledWith('Failed to connect to Redis for caching, using in-memory')
+    })
+
+    it('should set up Redis error event handler', () => {
+      // Mock config to have Redis URL
+      jest.doMock('@core/config', () => ({
+        REDIS_URL: 'redis://localhost:6379',
+      }))
+      
+      // Mock Redis client with on method
+      const mockOn = jest.fn()
+      const mockRedis = jest.fn().mockImplementation(() => ({
+        on: mockOn,
+      }))
+      jest.doMock('ioredis', () => mockRedis)
+      
+      // Re-import the module
+      jest.resetModules()
+      require('../../src/services/cache')
+      
+      expect(mockOn).toHaveBeenCalledWith('error', expect.any(Function))
+    })
+
+    it('should log Redis errors when error event is emitted', () => {
+      // Mock config to have Redis URL
+      jest.doMock('@core/config', () => ({
+        REDIS_URL: 'redis://localhost:6379',
+      }))
+      
+      // Mock logger
+      const mockLogger = {
+        error: jest.fn(),
+        warn: jest.fn(),
+      }
+      jest.doMock('@core/logger', () => ({
+        logger: mockLogger,
+      }))
+      
+      // Mock Redis client
+      let errorHandler: ((err: Error) => void) | null = null
+      const mockRedis = jest.fn().mockImplementation(() => ({
+        on: jest.fn((event, handler) => {
+          if (event === 'error') {
+            errorHandler = handler
+          }
+        }),
+      }))
+      jest.doMock('ioredis', () => mockRedis)
+      
+      // Re-import the module
+      jest.resetModules()
+      require('../../src/services/cache')
+      
+      // Simulate Redis error
+      if (errorHandler) {
+        const redisError = new Error('Redis connection lost')
+        ;(errorHandler as (err: Error) => void)(redisError)
+        
+        expect(mockLogger.error).toHaveBeenCalledWith('Cache Redis error:', redisError)
+      }
+    })
+  })
+
   describe('Redis error handling', () => {
     beforeEach(() => {
       // Mock Redis to be available but throw errors
