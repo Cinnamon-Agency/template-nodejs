@@ -30,8 +30,6 @@ description: Create and manage database migrations
 
 4. **Test Migration Locally**
    ```bash
-   # Reset database and apply all migrations
-   npm run migrate:reset
    npm run migrate:dev
    ```
 

@@ -20,12 +20,18 @@ description: Create a new API endpoint following project standards
    export class FeatureController {
      constructor(private featureService: FeatureService) {}
    
-     async createFeature(req: Request, res: Response) {
+     async createFeature(req: Request, res: Response, next: NextFunction) {
        try {
          const result = await this.featureService.create(req.body);
-         res.status(201).json({ success: true, data: result });
+         next({
+           data: result,
+           code: result.code,
+         })
        } catch (error) {
-         res.status(400).json({ success: false, error: error.message });
+         next({
+           code: ResponseCode.BAD_REQUEST,
+           error: error.message,
+         })
        }
      }
    }
