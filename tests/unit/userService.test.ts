@@ -295,6 +295,34 @@ describe('UserService', () => {
 
       expect(result.code).toBe(ResponseCode.USER_NOT_FOUND)
     })
+
+    it('should update phoneVerified field successfully', async () => {
+      const user = {
+        id: 'uuid-1',
+        email: 'test@example.com',
+        emailVerified: false,
+        phoneNumber: '+1234567890',
+        phoneVerified: false,
+      }
+
+      const updatedUser = { ...user, phoneVerified: true }
+
+      mockPrismaClient.user.findUnique.mockResolvedValue(user)
+      mockPrismaClient.user.update.mockResolvedValue(updatedUser)
+
+      const result = await userService.updateUser({
+        userId: 'uuid-1',
+        phoneVerified: true,
+      })
+
+      expect(result.code).toBe(ResponseCode.OK)
+      expect(mockPrismaClient.user.update).toHaveBeenCalledWith({
+        where: { id: 'uuid-1' },
+        data: {
+          phoneVerified: true,
+        },
+      })
+    })
   })
 
   describe('getUserByEmailAndAuthType', () => {

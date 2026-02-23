@@ -66,10 +66,10 @@ export enum ResponseCode {
 }
 
 export enum ResponseMessage {
-  OK = 'OK',
+  OK = 'Success',
   INTEGRITY_CONSTRAINT_VIOLATION = 'Integrity constraint violation',
   BAD_REQUEST = 'Bad request',
-  INVALID_INPUT = 'Invalid input',
+  INVALID_INPUT = 'Invalid input provided',
   INVALID_UID = 'Invalid UID',
   UNAUTHORIZED = 'Unauthorized',
   INVALID_TOKEN = 'Invalid token',
@@ -119,6 +119,7 @@ export class ResponseError extends Error {
   constructor(responseCode: ResponseCode) {
     super(getResponseMessage(responseCode))
     this.code = responseCode
+    this.name = 'ResponseError'
   }
 }
 

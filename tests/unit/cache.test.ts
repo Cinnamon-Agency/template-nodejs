@@ -400,4 +400,71 @@ describe('Cache Service', () => {
       }
     })
   })
+
+  describe('Redis error handling', () => {
+    beforeEach(() => {
+      // Mock Redis to be available but throw errors
+      jest.doMock('ioredis', () => {
+        return jest.fn().mockImplementation(() => ({
+          get: jest.fn().mockRejectedValue(new Error('Redis connection error')),
+          set: jest.fn().mockRejectedValue(new Error('Redis set error')),
+          del: jest.fn().mockRejectedValue(new Error('Redis del error')),
+          keys: jest.fn().mockRejectedValue(new Error('Redis keys error')),
+          on: jest.fn(),
+        }))
+      })
+      
+      // Re-import cache to get Redis mock
+      jest.resetModules()
+      const cacheModule = require('../../src/services/cache')
+      Object.assign(global, cacheModule)
+    })
+
+    it('should fall back to memory cache when Redis get fails', async () => {
+      // Set value in memory cache first
+      await cache.set('fallback-key', 'fallback-value', 300)
+      
+      // Try to get from Redis (will fail) and fall back to memory
+      const result = await cache.get('fallback-key')
+      
+      expect(result).toBe('fallback-value')
+    })
+
+    it('should fall back to memory cache when Redis set fails', async () => {
+      await cache.set('redis-fail-key', 'redis-fail-value', 300)
+      
+      const result = await cache.get('redis-fail-key')
+      expect(result).toBe('redis-fail-value')
+    })
+
+    it('should handle Redis del errors gracefully', async () => {
+      // Set value first
+      await cache.set('del-error-key', 'del-error-value', 300)
+      
+      // Try to delete (Redis will fail but memory cache should still work)
+      await cache.del('del-error-key')
+      
+      const result = await cache.get('del-error-key')
+      expect(result).toBeNull() // Should be deleted from memory cache
+    })
+
+    it('should handle Redis keys errors in delByPrefix', async () => {
+      // Set some values first
+      await cache.set('prefix-test-1', 'value1', 300)
+      await cache.set('prefix-test-2', 'value2', 300)
+      await cache.set('other-key', 'other-value', 300)
+      
+      // Delete by prefix (Redis keys will fail, but memory cleanup should work)
+      await cache.delByPrefix('prefix-test')
+      
+      // Memory cache keys with prefix should be deleted
+      const result1 = await cache.get('prefix-test-1')
+      const result2 = await cache.get('prefix-test-2')
+      const resultOther = await cache.get('other-key')
+      
+      expect(result1).toBeNull()
+      expect(result2).toBeNull()
+      expect(resultOther).toBe('other-value')
+    })
+  })
 })

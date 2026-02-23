@@ -387,4 +387,81 @@ describe('serviceMethod decorator', () => {
       expect(descriptor!.configurable).toBe(true)
     })
   })
+
+  describe('Error handler exception handling', () => {
+    it('should handle ResponseError with throwing error handler', async () => {
+      const throwingErrorHandler = jest.fn().mockImplementation(async () => {
+        throw new Error('Handler error')
+      })
+
+      class TestService {
+        @serviceMethod({ onError: throwingErrorHandler })
+        async testMethod(): Promise<{ code: ResponseCode }> {
+          throw new ResponseError(ResponseCode.USER_NOT_FOUND)
+        }
+      }
+
+      const service = new TestService()
+      const result = await service.testMethod()
+
+      expect(result?.code).toBe(ResponseCode.USER_NOT_FOUND)
+      expect(mockLogger.error).toHaveBeenCalledWith({
+        code: ResponseCode.SERVER_ERROR,
+        message: 'Error handler threw an exception during cleanup',
+        originalError: expect.any(String),
+        handlerError: 'Handler error',
+        stack: expect.any(String),
+      })
+    })
+
+    it('should handle general error with throwing error handler', async () => {
+      const throwingErrorHandler = jest.fn().mockImplementation(async () => {
+        throw new Error('Handler error')
+      })
+
+      class TestService {
+        @serviceMethod({ onError: throwingErrorHandler })
+        async testMethod(): Promise<{ code: ResponseCode }> {
+          throw new Error('General error')
+        }
+      }
+
+      const service = new TestService()
+      const result = await service.testMethod()
+
+      expect(result?.code).toBe(ResponseCode.SERVER_ERROR)
+      expect(mockLogger.error).toHaveBeenCalledWith({
+        code: ResponseCode.SERVER_ERROR,
+        message: 'Error handler threw an exception',
+        originalError: 'General error',
+        handlerError: 'Handler error',
+        stack: expect.any(String),
+      })
+    })
+
+    it('should handle error handler that throws non-Error object', async () => {
+      const throwingErrorHandler = jest.fn().mockImplementation(async () => {
+        throw 'String error'
+      })
+
+      class TestService {
+        @serviceMethod({ onError: throwingErrorHandler })
+        async testMethod(): Promise<{ code: ResponseCode }> {
+          throw new Error('General error')
+        }
+      }
+
+      const service = new TestService()
+      const result = await service.testMethod()
+
+      expect(result?.code).toBe(ResponseCode.SERVER_ERROR)
+      expect(mockLogger.error).toHaveBeenCalledWith({
+        code: ResponseCode.SERVER_ERROR,
+        message: 'Error handler threw an exception',
+        originalError: 'General error',
+        handlerError: 'String error',
+        stack: undefined,
+      })
+    })
+  })
 })

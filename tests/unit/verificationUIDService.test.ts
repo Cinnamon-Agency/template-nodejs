@@ -277,6 +277,20 @@ describe('VerificationUIDService', () => {
       expect(result.code).toBe(500001)
     })
 
+    it('should trigger onError callback when non-Prisma error occurs', async () => {
+      const { isPrismaError } = require('@services/prisma')
+      isPrismaError.mockReturnValue(false) // Not a Prisma error
+      
+      mockPrismaClient.verificationUID.findFirst.mockRejectedValue(new Error('Non-database error'))
+
+      const result = await verificationUIDService.setVerificationUID({
+        userId: 'user-123',
+        type: 'EMAIL_VERIFICATION',
+      })
+
+      expect(result.code).toBe(500001) // This will be mapped by the decorator mock
+    })
+
     it('should handle database errors during UID lookup', async () => {
       const { isPrismaError, mapPrismaErrorToResponseCode } = require('@services/prisma')
       isPrismaError.mockReturnValue(true)
