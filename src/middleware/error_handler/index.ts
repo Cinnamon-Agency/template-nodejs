@@ -1,6 +1,9 @@
+// Node.js modules
 import { NextFunction, Request, Response } from 'express'
+
+// Internal modules
 import { ResponseCode, ResponseMessage, ResponseError } from '@common'
-import { logger } from '@core/logger'
+import { logger, logError } from '@core/logger'
 
 export const globalErrorHandler = (
   err: unknown,
@@ -23,14 +26,27 @@ export const globalErrorHandler = (
     })
   }
 
-  // Handle unexpected errors
-  logger.error({
-    message: 'Unhandled error',
-    error: err instanceof Error ? err.message : String(err),
-    stack: err instanceof Error ? err.stack : undefined,
-    path: req.path,
-    method: req.method,
-  })
+  // Handle unexpected errors with enhanced logging
+  if (err instanceof Error) {
+    logError(err, {
+      path: req.path,
+      method: req.method,
+      userAgent: req.get('User-Agent'),
+      ip: req.ip,
+      requestId: req.headers['x-request-id'],
+      userId: (req as Request & { user?: { id: string } }).user?.id,
+    })
+  } else {
+    logger.error('Unhandled non-error object', {
+      error: String(err),
+      path: req.path,
+      method: req.method,
+      userAgent: req.get('User-Agent'),
+      ip: req.ip,
+      requestId: req.headers['x-request-id'],
+      timestamp: new Date().toISOString(),
+    })
+  }
 
   return res.status(500).send({
     data: null,

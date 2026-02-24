@@ -1,8 +1,13 @@
+// Node.js modules
 import express from 'express'
 import bodyParser from 'body-parser'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
+
+// External libraries
 import helmet from 'helmet'
+
+// Internal modules
 import { router } from '@routes'
 import '@services/prisma' // registers PrismaClient in DI container
 import { responseFormatter } from '@middleware/response'

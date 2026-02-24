@@ -1,8 +1,13 @@
+// Node.js modules
 import { NextFunction, Request, Response } from 'express'
+
+// External libraries
+import { randomBytes } from 'crypto'
+import { autoInjectable, singleton } from 'tsyringe'
+
+// Internal modules
 import { ResponseCode, DEVICE_TOKEN_BYTES } from '@common'
 import { AuthService } from './authService'
-import { autoInjectable, singleton } from 'tsyringe'
-import { randomBytes } from 'crypto'
 
 interface AuthTokens {
   accessToken: string

@@ -1,5 +1,4 @@
 import { NextFunction, Request, Response } from 'express'
-import { ResponseCode } from '@common'
 import { autoInjectable, singleton } from 'tsyringe'
 import { NotificationService } from './notificationService'
 import { WebSocketService } from '@services/websocket'

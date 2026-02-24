@@ -1,4 +1,7 @@
+// Node.js modules
 import express from 'express'
+
+// Internal modules
 import { AuthController } from './authController'
 import { validate } from '@middleware/validation'
 import { loginRateLimiter } from '@middleware/rate_limiter'
@@ -17,6 +20,7 @@ import {
   verifyPhoneCodeSchema,
 } from './authInput'
 import { requireToken } from '@middleware/auth'
+import { passwordResetRateLimiter, verificationRateLimiter } from '@middleware/rate_limiter'
 
 const authController = container.resolve(AuthController)
 export const authRouter = express.Router()
@@ -34,6 +38,7 @@ authRouter.post('/refresh', authController.refreshToken)
 authRouter.post(
   '/password/forgot',
   validate(forgotPasswordSchema),
+  passwordResetRateLimiter,
   authController.forgotPassword
 )
 authRouter.post(
@@ -45,6 +50,7 @@ authRouter.post(
 authRouter.post(
   '/resendLoginCode',
   validate(resendLoginCodeSchema),
+  verificationRateLimiter,
   authController.resendLoginCode
 )
 
@@ -64,12 +70,14 @@ authRouter.post(
 authRouter.post(
   '/verify-email',
   validate(verifyEmailSchema),
+  verificationRateLimiter,
   authController.verifyEmail
 )
 
 authRouter.post(
   '/resend-verification-email',
   validate(resendVerificationEmailSchema),
+  verificationRateLimiter,
   authController.resendVerificationEmail
 )
 
@@ -77,6 +85,7 @@ authRouter.post(
   '/send-phone-verification',
   requireToken,
   validate(sendPhoneVerificationSchema),
+  verificationRateLimiter,
   authController.sendPhoneVerification
 )
 
@@ -84,5 +93,6 @@ authRouter.post(
   '/verify-phone',
   requireToken,
   validate(verifyPhoneCodeSchema),
+  verificationRateLimiter,
   authController.verifyPhoneCode
 )
