@@ -14,6 +14,7 @@ import { responseFormatter } from '@middleware/response'
 import rateLimiter from '@middleware/rate_limiter'
 import config from '@core/config'
 import { requestLogger } from '@middleware/http'
+import cloudWatchMiddleware from '@middleware/log_middleware'
 import { notFound } from '@middleware/not_found'
 import { globalErrorHandler } from '@middleware/error_handler'
 import { csrfProtection } from '@middleware/csrf'
@@ -61,6 +62,8 @@ export class App {
     if (config.LOG_REQUESTS) {
       this.app.use(requestLogger)
     }
+
+    this.app.use(cloudWatchMiddleware)
 
     this.app.use((req, res, next) => {
       if (req.url === '/') {
