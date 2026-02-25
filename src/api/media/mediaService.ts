@@ -9,13 +9,14 @@ import { getSignedURL } from '@services/google_cloud_storage'
 @autoInjectable()
 export class MediaService implements IMediaService {
   @serviceMethod()
-  async createMediaEntries({ mediaFiles, projectId }: ICreateMediaEntries) {
+  async createMediaEntries({ mediaFiles, projectId, prisma }: ICreateMediaEntries) {
     let code: ResponseCode = ResponseCode.OK
 
+    const dbClient = prisma || getPrismaClient()
     const mediaInfo = []
 
     for (const { mediaFileName, mediaType } of mediaFiles) {
-      const created = await getPrismaClient().media.create({
+      const created = await dbClient.media.create({
         data: {
           mediaFileName,
           mediaType,

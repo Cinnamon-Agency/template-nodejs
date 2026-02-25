@@ -14,19 +14,19 @@ export const notificationRouter = express.Router()
 
 notificationRouter.get(
   '/',
-  requireToken,
+  requireToken(),
   validate(getNotificationSchema),
   notificationController.getNotifications
 )
 notificationRouter.put(
   '/:notificationId',
-  requireToken,
+  requireToken(),
   validate(toggleReadStatusSchema),
   notificationController.toggleReadStatus
 )
 notificationRouter.delete(
   '/:notificationId',
-  requireToken,
+  requireToken(),
   validate(deleteNotificationSchema),
   notificationController.deleteNotification
 )

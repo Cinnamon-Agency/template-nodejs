@@ -8,7 +8,7 @@ import { UserService } from './userService'
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  public async getUser(req: Request, res: Response, next: NextFunction) {
+  public getUser = async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.user
 
     const { user, code } = await this.userService.getUserById({ userId: id })
@@ -25,11 +25,11 @@ export class UserController {
     })
   }
 
-  public async toggleNotifications(
+  public toggleNotifications = async (
     req: Request,
     res: Response,
     next: NextFunction
-  ) {
+  ) => {
     const { id } = req.user
 
     const { code } = await this.userService.toggleNotifications({ userId: id })
@@ -39,7 +39,7 @@ export class UserController {
     })
   }
 
-  public async getUserProfile(req: Request, res: Response, next: NextFunction) {
+  public getUserProfile = async (req: Request, res: Response, next: NextFunction) => {
     const { id } = res.locals.input
 
     const { user, code } = await this.userService.getUserById({ userId: id })

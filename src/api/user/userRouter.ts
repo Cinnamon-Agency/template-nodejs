@@ -8,15 +8,15 @@ import { getUserProfileSchema } from './userInput'
 const userController = container.resolve(UserController)
 export const userRouter = express.Router()
 
-userRouter.get('/', requireToken, userController.getUser)
+userRouter.get('/', requireToken(), userController.getUser)
 userRouter.get(
   '/toggleNotifications',
-  requireToken,
+  requireToken(),
   userController.toggleNotifications
 )
 userRouter.get(
   '/:id',
-  requireToken,
+  requireToken(),
   validate(getUserProfileSchema),
   userController.getUserProfile
 )

@@ -64,6 +64,8 @@ export const requireToken =
       let token = ''
       if (req.cookies && req.cookies['accessToken']) {
         token = req.cookies['accessToken']
+      } else if (req.headers.authorization?.startsWith('Bearer ')) {
+        token = req.headers.authorization.slice(7)
       }
 
       const decodedToken = verifyToken<DecodedToken>(

@@ -33,13 +33,20 @@ async function main() {
       )
     }
 
-    const hashedPassword = await hashString('Sifra123!')
+    const hashedPassword = await hashString(process.env.SUPERADMIN_PASSWORD || 'Sifra123!')
 
-    await prisma.user.create({
+    const superAdmin = await prisma.user.create({
       data: {
         email: superAdminEmail,
         password: hashedPassword,
-        roleId: superAdminRole.id
+        authType: 'USER_PASSWORD',
+      }
+    })
+
+    await prisma.userRole.create({
+      data: {
+        userId: superAdmin.id,
+        roleId: superAdminRole.id,
       }
     })
 

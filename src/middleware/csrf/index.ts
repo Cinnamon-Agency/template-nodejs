@@ -35,31 +35,28 @@ export const csrfProtection = (
     return next()
   }
 
-  // Always set/refresh the CSRF cookie so the client has a token to send
-  let csrfCookieValue = req.cookies?.[CSRF_COOKIE_NAME] as string | undefined
-  if (!csrfCookieValue) {
-    csrfCookieValue = randomBytes(CSRF_TOKEN_LENGTH).toString('hex')
-    res.cookie(CSRF_COOKIE_NAME, csrfCookieValue, {
-      httpOnly: false, // Client JS must be able to read this
-      secure: isProduction,
-      sameSite: isProduction ? 'strict' : 'lax',
-      path: '/',
-    })
+  // Read the existing CSRF cookie for validation of state-changing requests
+  const csrfCookieValue = req.cookies?.[CSRF_COOKIE_NAME] as string | undefined
+
+  // Validate state-changing requests before rotating the token
+  if (!SAFE_METHODS.has(req.method)) {
+    const headerToken = req.headers[CSRF_HEADER_NAME] as string | undefined
+    if (!csrfCookieValue || !headerToken || headerToken !== csrfCookieValue) {
+      return next({
+        code: ResponseCode.FORBIDDEN,
+        message: 'CSRF token mismatch',
+      })
+    }
   }
 
-  // Safe methods don't need CSRF validation
-  if (SAFE_METHODS.has(req.method)) {
-    return next()
-  }
-
-  // Validate: header token must match cookie token
-  const headerToken = req.headers[CSRF_HEADER_NAME] as string | undefined
-  if (!headerToken || headerToken !== csrfCookieValue) {
-    return next({
-      code: ResponseCode.FORBIDDEN,
-      message: 'CSRF token mismatch',
-    })
-  }
+  // Rotate the CSRF token on every response to prevent token fixation
+  const newCsrfToken = randomBytes(CSRF_TOKEN_LENGTH).toString('hex')
+  res.cookie(CSRF_COOKIE_NAME, newCsrfToken, {
+    httpOnly: false, // Client JS must be able to read this
+    secure: isProduction,
+    sameSite: isProduction ? 'strict' : 'lax',
+    path: '/',
+  })
 
   return next()
 }

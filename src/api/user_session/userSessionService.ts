@@ -135,7 +135,7 @@ export class UserSessionService implements IUserSessionService {
 
     await getPrismaClient().userSession.update({
       where: { id: userSession.id },
-      data: { status: UserSessionStatus.EXPIRED },
+      data: { status: status === 'LoggedOut' ? UserSessionStatus.LOGGED_OUT : UserSessionStatus.EXPIRED },
     })
 
     return { code: ResponseCode.OK }

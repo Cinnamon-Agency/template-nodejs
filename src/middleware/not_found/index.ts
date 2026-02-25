@@ -1,10 +1,8 @@
-import { Request, Response } from 'express'
-import { ResponseCode, ResponseMessage } from '@common'
+import { NextFunction, Request, Response } from 'express'
+import { ResponseCode } from '@common'
 
-export const notFound = async (req: Request, res: Response) => {
-  return res.status(404).send({
-    data: null,
+export const notFound = (req: Request, res: Response, next: NextFunction) => {
+  return next({
     code: ResponseCode.NOT_FOUND,
-    message: ResponseMessage.NOT_FOUND,
   })
 }

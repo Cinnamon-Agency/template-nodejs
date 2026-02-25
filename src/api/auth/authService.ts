@@ -31,6 +31,7 @@ import {
   IResendLoginCode,
   IVerifyLoginCode,
 } from './interface'
+import { randomInt } from 'crypto'
 import { TokenType, generateToken, verifyToken } from '@services/jsonwebtoken'
 import config from '@core/config'
 
@@ -401,7 +402,7 @@ export class AuthService implements IAuthService {
     userId,
   }: ISendVerificationCode) {
     // Generate 6-digit code
-    const code = Math.floor(PHONE_CODE_MIN + Math.random() * PHONE_CODE_MAX).toString()
+    const code = randomInt(PHONE_CODE_MIN, PHONE_CODE_MIN + PHONE_CODE_MAX).toString()
     const expiresAt = new Date(Date.now() + PHONE_CODE_EXPIRY_MINUTES * MINUTES_TO_MS)
 
     // Delete any existing codes for this user
@@ -556,7 +557,7 @@ export class AuthService implements IAuthService {
     }
 
     // Generate 4-digit code
-    const code = Math.floor(LOGIN_CODE_MIN + Math.random() * LOGIN_CODE_MAX).toString()
+    const code = randomInt(LOGIN_CODE_MIN, LOGIN_CODE_MIN + LOGIN_CODE_MAX).toString()
     const expiresAt = new Date(Date.now() + LOGIN_CODE_EXPIRY_MINUTES * MINUTES_TO_MS)
 
     // Delete any existing codes for this email

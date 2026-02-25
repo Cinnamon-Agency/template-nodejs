@@ -5,7 +5,7 @@ import { ResponseCode } from '@common'
 import { getResponseMessage } from '@common'
 
 let storageClientConfig = {}
-if (config.NODE_ENV == 'local') {
+if (config.NODE_ENV === 'development') {
   storageClientConfig = {
     projectId: config.GOOGLE_CLOUD_PROJECT_ID,
     keyFileName: config.GOOGLE_SERVICE_ACCOUNT_KEY_LOCATION,

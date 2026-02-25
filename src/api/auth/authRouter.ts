@@ -32,7 +32,7 @@ authRouter.post(
   loginRateLimiter,
   authController.login
 )
-authRouter.post('/logout', requireToken, authController.logout)
+authRouter.post('/logout', requireToken(), authController.logout)
 authRouter.post('/refresh', authController.refreshToken)
 
 authRouter.post(
@@ -83,7 +83,7 @@ authRouter.post(
 
 authRouter.post(
   '/send-phone-verification',
-  requireToken,
+  requireToken(),
   validate(sendPhoneVerificationSchema),
   verificationRateLimiter,
   authController.sendPhoneVerification
@@ -91,7 +91,7 @@ authRouter.post(
 
 authRouter.post(
   '/verify-phone',
-  requireToken,
+  requireToken(),
   validate(verifyPhoneCodeSchema),
   verificationRateLimiter,
   authController.verifyPhoneCode

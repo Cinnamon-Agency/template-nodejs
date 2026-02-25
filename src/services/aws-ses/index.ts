@@ -7,7 +7,7 @@ import { ResponseCode, ResponseMessage } from '@common'
 import { logger } from '@core/logger'
 
 const sesConfig =
-  config.NODE_ENV === 'dev'
+  config.NODE_ENV === 'development'
     ? {
         credentials: {
           secretAccessKey: config.AWS_SECRET,

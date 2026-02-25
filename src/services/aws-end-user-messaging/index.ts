@@ -8,7 +8,7 @@ import { ResponseCode, ResponseMessage } from '@common'
 import config from '@core/config'
 
 const smsUserMessagingClientConfig =
-  config.NODE_ENV === 'dev'
+  config.NODE_ENV === 'development'
     ? {
         credentials: {
           secretAccessKey: config.AWS_SECRET,

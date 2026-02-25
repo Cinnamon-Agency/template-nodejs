@@ -7,7 +7,7 @@ import { ProjectService } from './projectService'
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
-  public async createProject(req: Request, res: Response, next: NextFunction) {
+  public createProject = async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.user
     const { name, description, deadline, mediaFiles } = res.locals.input
 
@@ -22,7 +22,7 @@ export class ProjectController {
     return next({ mediaInfo, code })
   }
 
-  public async getProjects(req: Request, res: Response, next: NextFunction) {
+  public getProjects = async (req: Request, res: Response, next: NextFunction) => {
     const { page, perPage } = res.locals.input
     const { id: userId } = req.user
     const { data, code } = await this.projectService.getProjects({
@@ -34,7 +34,7 @@ export class ProjectController {
     return next({ data, code })
   }
 
-  public async getProjectById(req: Request, res: Response, next: NextFunction) {
+  public getProjectById = async (req: Request, res: Response, next: NextFunction) => {
     const { id: projectId } = res.locals.input
     const { id: userId } = req.user
 

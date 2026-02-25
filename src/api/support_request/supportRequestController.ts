@@ -6,11 +6,11 @@ import { NextFunction, Request, Response } from 'express'
 export class SupportRequestController {
   constructor(private readonly supportRequestService: SupportRequestService) {}
 
-  public async createSupportRequest(
+  public createSupportRequest = async (
     req: Request,
     res: Response,
     next: NextFunction
-  ) {
+  ) => {
     const { firstName, lastName, email, subject, message } = res.locals.input
 
     const { code } = await this.supportRequestService.createSupportRequest({
@@ -26,11 +26,11 @@ export class SupportRequestController {
     })
   }
 
-  public async updateSupportRequestStatus(
+  public updateSupportRequestStatus = async (
     req: Request,
     res: Response,
     next: NextFunction
-  ) {
+  ) => {
     const { supportRequestId, status } = res.locals.input
 
     const { code } =

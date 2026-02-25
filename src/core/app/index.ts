@@ -77,7 +77,7 @@ export class App {
 
     this.app.use(csrfProtection)
 
-    this.app.use(shutdownHandler(serverState.shuttingDown))
+    this.app.use(shutdownHandler(serverState))
 
     this.app.use('/', router)
 

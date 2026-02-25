@@ -11,11 +11,11 @@ export class NotificationController {
     private readonly webSocketService: WebSocketService
   ) {}
 
-  public async getNotifications(
+  public getNotifications = async (
     req: Request,
     res: Response,
     next: NextFunction
-  ) {
+  ) => {
     const { id } = req.user
     const { unread, page, perPage } = res.locals.input
 
@@ -30,11 +30,11 @@ export class NotificationController {
     return next({ data, code })
   }
 
-  public async toggleReadStatus(
+  public toggleReadStatus = async (
     req: Request,
     res: Response,
     next: NextFunction
-  ) {
+  ) => {
     const { id } = req.user
     const { notificationId, read } = res.locals.input
 
@@ -49,11 +49,11 @@ export class NotificationController {
     })
   }
 
-  public async deleteNotification(
+  public deleteNotification = async (
     req: Request,
     res: Response,
     next: NextFunction
-  ) {
+  ) => {
     const { id } = req.user
     const { notificationId } = res.locals.input
 

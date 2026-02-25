@@ -29,9 +29,9 @@ export class WebSocketService {
   emit(event: string, data: IWebSocketEventData) {
     if (this.websocket) {
       this.websocket.emit(event, data)
-    } else if (!this.websocket) {
-      logger.error(`WebSocket is not open. Ready state is: Ready`)
-    } else logger.error(`Error on websocket initialization`)
+    } else {
+      logger.error(`WebSocket is not initialized`)
+    }
   }
 
   close() {

@@ -59,7 +59,7 @@ export class AuthController {
     })
   }
 
-  public async login(req: Request, res: Response, next: NextFunction) {
+  public login = async (req: Request, res: Response, next: NextFunction) => {
     const { authType, email, password } = res.locals.input
 
     const { user, code } = await this.authService.login({
@@ -81,7 +81,7 @@ export class AuthController {
     return this.respondWithTokens(req, res, next, user, tokens)
   }
 
-  public async register(req: Request, res: Response, next: NextFunction) {
+  public register = async (req: Request, res: Response, next: NextFunction) => {
     const { authType, email, password } = res.locals.input
 
     const { user, code } = await this.authService.register({
@@ -103,7 +103,7 @@ export class AuthController {
     return this.respondWithTokens(req, res, next, user, tokens)
   }
 
-  public async refreshToken(req: Request, res: Response, next: NextFunction) {
+  public refreshToken = async (req: Request, res: Response, next: NextFunction) => {
     const refreshToken =
       (req.cookies?.refreshToken as string) ||
       (req.headers['refresh-token'] as string)
@@ -133,7 +133,7 @@ export class AuthController {
     }
   }
 
-  public async logout(req: Request, res: Response, next: NextFunction) {
+  public logout = async (req: Request, res: Response, next: NextFunction) => {
     const { user } = req
 
     const { code } = await this.authService.logout({ userId: user.id })
@@ -144,7 +144,7 @@ export class AuthController {
     return next({ code })
   }
 
-  public async forgotPassword(req: Request, res: Response, next: NextFunction) {
+  public forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
     const { email } = res.locals.input
 
     const { code } = await this.authService.sendForgotPasswordEmail({ email })
@@ -152,7 +152,7 @@ export class AuthController {
     return next({ code })
   }
 
-  public async resetPassword(req: Request, res: Response, next: NextFunction) {
+  public resetPassword = async (req: Request, res: Response, next: NextFunction) => {
     const { uid, password } = res.locals.input
 
     const parsed = this.parseUidPair(uid)
@@ -169,11 +169,11 @@ export class AuthController {
     return next({ code })
   }
 
-  public async verifyLoginCode(
+  public verifyLoginCode = async (
     req: Request,
     res: Response,
     next: NextFunction
-  ) {
+  ) => {
     const { loginCode, email, dontAskOnThisDevice } = res.locals.input
 
     let deviceToken: string | undefined
@@ -216,18 +216,18 @@ export class AuthController {
     })
   }
 
-  public async resendLoginCode(
+  public resendLoginCode = async (
     req: Request,
     res: Response,
     next: NextFunction
-  ) {
+  ) => {
     const { email } = res.locals.input
     const { code } = await this.authService.resendLoginCode({ email })
 
     return next({ code })
   }
 
-  public async setNewPassword(req: Request, res: Response, next: NextFunction) {
+  public setNewPassword = async (req: Request, res: Response, next: NextFunction) => {
     const { uid, password } = res.locals.input
 
     const parsed = this.parseUidPair(uid)
@@ -248,7 +248,7 @@ export class AuthController {
     return next({ code: ResponseCode.OK })
   }
 
-  public async verifyEmail(req: Request, res: Response, next: NextFunction) {
+  public verifyEmail = async (req: Request, res: Response, next: NextFunction) => {
     const { uid } = res.locals.input
 
     const parsed = this.parseUidPair(uid)
@@ -264,11 +264,11 @@ export class AuthController {
     return next({ code })
   }
 
-  public async resendVerificationEmail(
+  public resendVerificationEmail = async (
     req: Request,
     res: Response,
     next: NextFunction
-  ) {
+  ) => {
     const { email } = res.locals.input
 
     const { code } = await this.authService.resendVerificationEmail({ email })
@@ -276,11 +276,11 @@ export class AuthController {
     return next({ code })
   }
 
-  public async sendPhoneVerification(
+  public sendPhoneVerification = async (
     req: Request,
     res: Response,
     next: NextFunction
-  ) {
+  ) => {
     const { phoneNumber } = res.locals.input
     const { user } = req
 
@@ -292,11 +292,11 @@ export class AuthController {
     return next({ code })
   }
 
-  public async verifyPhoneCode(
+  public verifyPhoneCode = async (
     req: Request,
     res: Response,
     next: NextFunction
-  ) {
+  ) => {
     const { code: verificationCode } = res.locals.input
     const { user } = req
 

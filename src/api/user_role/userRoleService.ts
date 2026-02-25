@@ -44,7 +44,7 @@ export class UserRoleService implements IUserRoleService {
       include: { role: true },
     })
 
-    if (!userRoles) {
+    if (userRoles.length === 0) {
       return { code: ResponseCode.ROLE_NOT_FOUND }
     }
 

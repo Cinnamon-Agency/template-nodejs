@@ -1,23 +1,39 @@
-# Use an official Node.js runtime as a parent image
-FROM node:22
+# --- Build stage ---
+FROM node:22 AS builder
 
-# Set the working directory
 WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json
 COPY package.json package-lock.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install all dependencies (including devDependencies for tsc)
+RUN npm ci
 
-# Copy the rest of the application code
 COPY . .
-
-# Set the NODE_OPTIONS environment variable
-ENV NODE_OPTIONS="--max-old-space-size=3072"
 
 # Compile TypeScript to JavaScript
 RUN npm run build
+
+# --- Production stage ---
+FROM node:22-slim
+
+WORKDIR /usr/src/app
+
+COPY package.json package-lock.json ./
+
+# Install production dependencies only
+RUN npm ci --only=production
+
+# Copy compiled output from builder
+COPY --from=builder /usr/src/app/build ./build
+
+# Copy Prisma schema for runtime client
+COPY --from=builder /usr/src/app/prisma ./prisma
+
+# Generate Prisma client in production image
+RUN npx prisma generate
+
+# Set the NODE_OPTIONS environment variable
+ENV NODE_OPTIONS="--max-old-space-size=3072"
 
 # Expose the application port
 EXPOSE 3000

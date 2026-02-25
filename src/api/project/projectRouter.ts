@@ -14,19 +14,19 @@ export const projectRouter = express.Router()
 
 projectRouter.post(
   '/',
-  requireToken,
+  requireToken(),
   validate(createProjectSchema),
   projectController.createProject
 )
 projectRouter.get(
   '/',
-  requireToken,
+  requireToken(),
   validate(getProjectsSchema),
   projectController.getProjects
 )
 projectRouter.get(
   '/:id',
-  requireToken,
+  requireToken(),
   validate(getProjectByIdSchema),
   projectController.getProjectById
 )
