@@ -1,4 +1,5 @@
-import { WebSocketServer } from 'ws'
+import { WebSocketServer, WebSocket } from 'ws'
+import { Server } from 'http'
 import { IWebSocketEventData } from './interface'
 import { autoInjectable, singleton } from 'tsyringe'
 import { logger } from '@core/logger'
@@ -6,37 +7,61 @@ import { logger } from '@core/logger'
 @singleton()
 @autoInjectable()
 export class WebSocketService {
-  private websocket: WebSocketServer
+  private wss: WebSocketServer
+
   constructor() {
-    this.websocket = new WebSocketServer({ noServer: true })
+    this.wss = new WebSocketServer({ noServer: true })
   }
 
-  connect() {
-    this.websocket.on('open', event => {
-      logger.info('WebSocket connection opened:', event)
+  /**
+   * Attach upgrade handling to an HTTP server and listen for connections.
+   */
+  attach(server: Server) {
+    server.on('upgrade', (request, socket, head) => {
+      this.wss.handleUpgrade(request, socket, head, ws => {
+        this.wss.emit('connection', ws, request)
+      })
     })
 
-    this.websocket.on('error', error => {
-      logger.error('WebSocket error:', error)
+    this.wss.on('connection', ws => {
+      logger.info('WebSocket client connected')
+
+      ws.on('error', error => {
+        logger.error('WebSocket client error:', error)
+      })
+
+      ws.on('close', () => {
+        logger.info('WebSocket client disconnected')
+      })
     })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    this.websocket.on('close', (event: any) => {
-      logger.info('WebSocket connection closed:', event)
+    this.wss.on('error', error => {
+      logger.error('WebSocket server error:', error)
     })
   }
 
+  /**
+   * Broadcast an event with data to all connected clients.
+   */
   emit(event: string, data: IWebSocketEventData) {
-    if (this.websocket) {
-      this.websocket.emit(event, data)
-    } else {
-      logger.error(`WebSocket is not initialized`)
-    }
+    const message = JSON.stringify({ event, data })
+
+    this.wss.clients.forEach(client => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(message)
+      }
+    })
   }
 
-  close() {
-    if (this.websocket) {
-      this.websocket.close()
-    }
+  close(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.wss.close(err => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve()
+        }
+      })
+    })
   }
 }

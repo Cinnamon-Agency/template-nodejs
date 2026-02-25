@@ -5,6 +5,7 @@ import {
   IStoreUserSession,
   IUpdateUserSession,
   IUserSessionService,
+  UserSessionStatus as InterfaceSessionStatus,
 } from './interface'
 import config from '@core/config'
 import { compare, hashString } from '@services/bcrypt'
@@ -135,7 +136,7 @@ export class UserSessionService implements IUserSessionService {
 
     await getPrismaClient().userSession.update({
       where: { id: userSession.id },
-      data: { status: status === 'LoggedOut' ? UserSessionStatus.LOGGED_OUT : UserSessionStatus.EXPIRED },
+      data: { status: status === InterfaceSessionStatus.LOGGED_OUT ? UserSessionStatus.LOGGED_OUT : UserSessionStatus.EXPIRED },
     })
 
     return { code: ResponseCode.OK }

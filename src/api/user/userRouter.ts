@@ -9,7 +9,7 @@ const userController = container.resolve(UserController)
 export const userRouter = express.Router()
 
 userRouter.get('/', requireToken(), userController.getUser)
-userRouter.get(
+userRouter.patch(
   '/toggleNotifications',
   requireToken(),
   userController.toggleNotifications

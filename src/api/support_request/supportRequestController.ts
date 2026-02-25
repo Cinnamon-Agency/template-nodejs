@@ -1,7 +1,8 @@
-import { autoInjectable } from 'tsyringe'
+import { autoInjectable, singleton } from 'tsyringe'
 import { SupportRequestService } from './supportRequestService'
 import { NextFunction, Request, Response } from 'express'
 
+@singleton()
 @autoInjectable()
 export class SupportRequestController {
   constructor(private readonly supportRequestService: SupportRequestService) {}

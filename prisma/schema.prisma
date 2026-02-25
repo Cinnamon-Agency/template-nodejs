@@ -121,6 +121,8 @@ model Project {
   mediaFiles    Media[]
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
+
+  @@index([userId])
 }
 
 model Media {
@@ -144,6 +146,8 @@ model Notification {
   notificationType NotificationType
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
+
+  @@index([receiverId])
 }
 
 model UserSession {
@@ -185,6 +189,7 @@ model SupportRequest {
   createdAt DateTime              @default(now())
   updatedAt DateTime              @updatedAt
 
+  @@index([status])
   @@map("support_requests")
 }
 

@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
-import { ResponseCode } from '@common'
+import { ResponseCode, sanitizeUser } from '@common'
 import { autoInjectable, singleton } from 'tsyringe'
 import { UserService } from './userService'
 
@@ -19,7 +19,7 @@ export class UserController {
 
     return next({
       data: {
-        user,
+        user: sanitizeUser(user),
       },
       code: ResponseCode.OK,
     })
@@ -50,7 +50,7 @@ export class UserController {
 
     return next({
       data: {
-        user,
+        user: sanitizeUser(user),
       },
       code: ResponseCode.OK,
     })

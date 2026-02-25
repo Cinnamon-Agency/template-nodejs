@@ -21,7 +21,19 @@ export class SupportRequestService implements ISupportRequestService {
     subject,
     message,
   }: ICreateSupportRequest) {
-    const { code: emailCode } = await sendEmail(
+    // Persist the support request first to guarantee a DB record exists
+    await getPrismaClient().supportRequest.create({
+      data: {
+        firstName,
+        lastName,
+        email,
+        subject,
+        message,
+      },
+    })
+
+    // Send notification email to support team (best-effort)
+    await sendEmail(
       EmailTemplate.CONTACT_SUPPORT,
       config.SES_VERIFIED_MAIL,
       subject,
@@ -34,11 +46,8 @@ export class SupportRequestService implements ISupportRequestService {
       }
     )
 
-    if (emailCode !== ResponseCode.OK) {
-      return { code: emailCode }
-    }
-
-    const { code: emailSuccessCode } = await sendEmail(
+    // Send confirmation email to the user (best-effort)
+    await sendEmail(
       EmailTemplate.CONTACT_SUPPORT_SUCCESS,
       email,
       'Thank you for your contact',
@@ -50,20 +59,6 @@ export class SupportRequestService implements ISupportRequestService {
         contact_number: config.SMS_VERIFIED_PHONE_NUMBER,
       }
     )
-
-    if (emailSuccessCode !== ResponseCode.OK) {
-      return { code: emailSuccessCode }
-    }
-
-    await getPrismaClient().supportRequest.create({
-      data: {
-        firstName,
-        lastName,
-        email,
-        subject,
-        message,
-      },
-    })
 
     return { code: ResponseCode.OK }
   }

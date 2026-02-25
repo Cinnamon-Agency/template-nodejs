@@ -67,7 +67,7 @@ export const forgotPasswordSchema = (req: Request) => {
   return {
     schema: Joi.object()
       .keys({
-        email: Joi.string().required(),
+        email: Joi.string().email().required(),
       })
       .options({ abortEarly: false }),
     input: {

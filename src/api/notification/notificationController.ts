@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
+import { ResponseCode } from '@common'
 import { autoInjectable, singleton } from 'tsyringe'
 import { NotificationService } from './notificationService'
 import { WebSocketService } from '@services/websocket'
@@ -62,7 +63,9 @@ export class NotificationController {
       userId: id,
     })
 
-    this.webSocketService.emit(`${id}_delete_notif`, { notificationId })
+    if (code === ResponseCode.OK) {
+      this.webSocketService.emit(`${id}_delete_notif`, { notificationId })
+    }
 
     return next({ code })
   }

@@ -8,34 +8,24 @@ import {
   RateLimiterRedis,
   RateLimiterAbstract,
 } from 'rate-limiter-flexible'
-import Redis from 'ioredis'
 
 // Internal modules
 import config from '@core/config'
 import { ResponseCode } from '@common'
 import { logStructured } from '@core/logger'
+import { getRedisClient } from '@services/redis'
+
+const sharedRedisClient = getRedisClient()
 
 function createLimiter(options: IRateLimiterOptions): RateLimiterAbstract {
-  if (config.REDIS_URL) {
+  if (sharedRedisClient) {
     try {
-      const redisClient = new Redis(config.REDIS_URL, {
-        enableOfflineQueue: false,
-        maxRetriesPerRequest: 1,
-      })
-
-      redisClient.on('error', err => {
-        logStructured('error', 'Rate limiter Redis error', {
-          error: err.message,
-          stack: err.stack,
-        })
-      })
-
       return new RateLimiterRedis({
-        storeClient: redisClient,
+        storeClient: sharedRedisClient,
         ...options,
       })
     } catch (err) {
-      logStructured('warn', 'Failed to connect to Redis for rate limiting, falling back to in-memory', {
+      logStructured('warn', 'Failed to create Redis rate limiter, falling back to in-memory', {
         error: err instanceof Error ? err.message : String(err),
       })
     }

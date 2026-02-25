@@ -25,7 +25,7 @@ import { passwordResetRateLimiter, verificationRateLimiter } from '@middleware/r
 const authController = container.resolve(AuthController)
 export const authRouter = express.Router()
 
-authRouter.post('/register', validate(registerSchema), authController.register)
+authRouter.post('/register', validate(registerSchema), loginRateLimiter, authController.register)
 authRouter.post(
   '/login',
   validate(loginSchema),
@@ -44,6 +44,7 @@ authRouter.post(
 authRouter.post(
   '/password/reset',
   validate(resetPasswordSchema),
+  passwordResetRateLimiter,
   authController.resetPassword
 )
 
@@ -64,6 +65,7 @@ authRouter.post(
 authRouter.post(
   '/password/setNew',
   validate(setNewPasswordSchema),
+  passwordResetRateLimiter,
   authController.setNewPassword
 )
 

@@ -33,7 +33,12 @@ async function main() {
       )
     }
 
-    const hashedPassword = await hashString(process.env.SUPERADMIN_PASSWORD || 'Sifra123!')
+    if (!process.env.SUPERADMIN_PASSWORD) {
+      throw new Error(
+        'SUPERADMIN_PASSWORD environment variable is required. Set it before running seed.'
+      )
+    }
+    const hashedPassword = await hashString(process.env.SUPERADMIN_PASSWORD)
 
     const superAdmin = await prisma.user.create({
       data: {

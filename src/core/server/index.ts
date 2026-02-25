@@ -36,7 +36,7 @@ export class AppServer {
     })
 
     const webSocketService = container.resolve(WebSocketService)
-    webSocketService.connect()
+    webSocketService.attach(this.server)
   }
 
   private async shutdown(signal: string): Promise<void> {

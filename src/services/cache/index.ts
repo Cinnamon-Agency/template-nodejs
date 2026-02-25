@@ -1,27 +1,11 @@
-import config from '@core/config'
-import { logger } from '@core/logger'
-import Redis from 'ioredis'
+import { getRedisClient } from '@services/redis'
 
 interface CacheEntry<T> {
   value: T
   expiresAt: number
 }
 
-let redisClient: Redis | null = null
-
-if (config.REDIS_URL) {
-  try {
-    redisClient = new Redis(config.REDIS_URL, {
-      enableOfflineQueue: false,
-      maxRetriesPerRequest: 1,
-    })
-    redisClient.on('error', err => {
-      logger.error('Cache Redis error:', err)
-    })
-  } catch {
-    logger.warn('Failed to connect to Redis for caching, using in-memory')
-  }
-}
+const redisClient = getRedisClient()
 
 const memoryStore = new Map<string, CacheEntry<unknown>>()
 
