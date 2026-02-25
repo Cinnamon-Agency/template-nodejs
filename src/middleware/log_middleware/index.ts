@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
 import { sendLogEvents } from '../../services/cloudwatch'
+import config from '@core/config'
 
 /**
  * Mask sensitive information in objects
@@ -83,7 +84,7 @@ const cloudWatchMiddleware = async (
       errorDetails = {
         name: error.name,
         message: error.message,
-        stack: process.env.NODE_ENV === 'production' ? undefined : error.stack,
+        stack: config.NODE_ENV === 'production' ? undefined : error.stack,
         ...(error.code && { code: error.code }),
         ...(error.statusCode && { statusCode: error.statusCode }),
       }
@@ -133,7 +134,7 @@ const cloudWatchMiddleware = async (
       await sendLogEvents(logString)
 
       // Also log to console in development
-      if (process.env.NODE_ENV === 'development') {
+      if (config.NODE_ENV === 'development') {
         const logMethod = res.statusCode >= 400 ? 'error' : 'info'
         // eslint-disable-next-line no-console
         console[logMethod](

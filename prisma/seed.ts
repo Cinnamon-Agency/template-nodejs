@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import { hashString } from '../src/services/bcrypt'
+import 'dotenv/config'
 const prisma = new PrismaClient()
 
 
@@ -33,12 +34,13 @@ async function main() {
       )
     }
 
-    if (!process.env.SUPERADMIN_PASSWORD) {
+    const superAdminPassword = process.env.SUPERADMIN_PASSWORD
+    if (!superAdminPassword) {
       throw new Error(
         'SUPERADMIN_PASSWORD environment variable is required. Set it before running seed.'
       )
     }
-    const hashedPassword = await hashString(process.env.SUPERADMIN_PASSWORD)
+    const hashedPassword = await hashString(superAdminPassword)
 
     const superAdmin = await prisma.user.create({
       data: {

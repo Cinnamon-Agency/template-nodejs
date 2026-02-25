@@ -91,7 +91,7 @@ In-app notifications between users.
 | `senderId` | UUID | Foreign key → User (sender) |
 | `receiverId` | UUID | Foreign key → User (receiver) |
 | `message` | String | Notification message |
-| `read` | Boolean | Read status (default: true) |
+| `read` | Boolean | Read status (default: false) |
 | `notificationType` | NotificationType | Notification category |
 | `createdAt` | DateTime | Creation timestamp |
 | `updatedAt` | DateTime | Last update timestamp |
@@ -180,7 +180,7 @@ Trusted device tokens for "don't ask on this device" feature.
 | Field | Type | Description |
 |---|---|---|
 | `id` | UUID | Primary key |
-| `userId` | String | User who trusts this device |
+| `userId` | UUID | User who trusts this device |
 | `token` | String | Unique device token |
 | `expiresAt` | DateTime | Token expiration (30 days) |
 | `createdAt` | DateTime | Creation timestamp |
@@ -210,11 +210,11 @@ Trusted device tokens for "don't ask on this device" feature.
 The seed script (`prisma/seed.ts`) creates:
 
 1. **Three roles:** `SUPERADMIN`, `ADMIN`, `USER`
-2. **Superadmin user:** `superadmin@gmail.com` / `Sifra123!`
+2. **Superadmin user:** `superadmin@gmail.com` with password from `SUPERADMIN_PASSWORD` environment variable (required)
 
 Run with:
 ```bash
-npm run seed
+SUPERADMIN_PASSWORD=YourSecurePassword npm run seed
 ```
 
 ---

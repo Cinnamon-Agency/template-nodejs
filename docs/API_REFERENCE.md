@@ -2,14 +2,14 @@
 
 ## Route Mounting
 
-All routes are mounted in `src/routes/index.ts` under `/api/v1`:
+All feature routes are mounted in `src/routes/index.ts` under `/api/v1`. The docs route is mounted at the root level:
 
 ```
-/api-docs       → Swagger UI (Basic Auth protected)
-/api/v1/auth    → Authentication module
-/api/v1/user    → User management module
-/api/v1/project → Project module
-/api/v1/notification → Notification module
+/api-docs              → Swagger UI (Basic Auth protected, mounted outside /api/v1)
+/api/v1/auth           → Authentication module
+/api/v1/user           → User management module
+/api/v1/project        → Project module
+/api/v1/notification   → Notification module
 /api/v1/support_request → Support request module
 ```
 
@@ -44,7 +44,7 @@ Full authentication system with multi-provider support, email/phone verification
 - **Login codes**: 4-digit email-based verification codes (10 min expiry)
 - **Phone verification**: 6-digit SMS codes via AWS Pinpoint (10 min expiry)
 - **Device tokens**: "Don't ask on this device" stores trusted device tokens (30 days)
-- **Password requirements**: 8–24 characters
+- **Password requirements**: 8–128 characters
 
 ### Request/Response Examples
 
@@ -213,4 +213,6 @@ Each API module contributes its own documentation:
 - `src/api/user/userDocs.ts`
 - `src/api/project/projectDocs.ts`
 - `src/api/notification/notificationDocs.ts`
+- `src/api/support_request/supportRequestDocs.ts`
+- `src/api/user_role/userRoleDocs.ts`
 - `src/documentation/genericDocs.ts` (shared response definitions)

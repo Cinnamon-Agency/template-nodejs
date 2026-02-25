@@ -51,6 +51,9 @@ export interface ENV {
   GOOGLE_SERVICE_ACCOUNT_KEY_LOCATION?: string
   GOOGLE_CLOUD_STORAGE_BUCKET_NAME?: string
 
+  // Seed
+  SUPERADMIN_PASSWORD?: string
+
   // Security
   SALT_ROUNDS?: number
   ALLOWED_ORIGINS?: string

@@ -7,7 +7,7 @@ const definitions = {
     example: {
       data: null,
       code: 200000,
-      message: 'OK',
+      message: 'Success',
     },
   },
   '204_response': {

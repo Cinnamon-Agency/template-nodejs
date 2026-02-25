@@ -159,6 +159,64 @@ const matches = await compare('password123', hash) // true
 
 ---
 
+## Redis Client (`src/services/redis/`)
+
+Shared Redis client connection using `ioredis`.
+
+### Configuration
+- Connection URL configured via `REDIS_URL` environment variable
+- **Optional** — returns `null` if `REDIS_URL` is not set
+- All consumers (cache, rate limiter, etc.) share a single connection
+- Logs errors but does not crash the application if Redis is unavailable
+
+### Usage
+
+```typescript
+import { getRedisClient } from '@services/redis'
+
+const redis = getRedisClient() // Redis instance or null
+```
+
+---
+
+## Cache Service (`src/services/cache/`)
+
+Multi-tier caching with automatic Redis → in-memory fallback.
+
+### Features
+- **Redis-backed** when `REDIS_URL` is configured
+- **In-memory fallback** with TTL and automatic cleanup (every 60 seconds)
+- Supports `get`, `set`, `del`, and `delByPrefix` operations
+- All operations are async and handle Redis errors gracefully
+
+### Cache Keys & TTLs
+
+| Key Builder | Pattern | Default TTL |
+|---|---|---|
+| `CacheKeys.userById(id)` | `user:{id}` | 5 minutes |
+| `CacheKeys.userByEmail(email)` | `user:email:{email}` | 5 minutes |
+| `CacheKeys.roleByType(type)` | `role:{type}` | 1 hour |
+
+### Usage
+
+```typescript
+import { cache, CacheKeys, CacheTTL } from '@services/cache'
+
+// Set
+await cache.set(CacheKeys.userById(userId), userData, CacheTTL.USER)
+
+// Get
+const user = await cache.get<User>(CacheKeys.userById(userId))
+
+// Delete
+await cache.del(CacheKeys.userById(userId))
+
+// Delete by prefix (e.g., invalidate all user caches)
+await cache.delByPrefix('user:')
+```
+
+---
+
 ## Prisma Service (`src/services/prisma/`)
 
 Provides Prisma error detection and mapping to application response codes.

@@ -6,10 +6,12 @@ const tags = [
 ]
 
 const paths = {
-  '/api/v2/supportRequest': {
+  '/support_request': {
     post: {
       tags: ['Contact Support'],
-      summary: 'Create new support Request',
+      summary: 'Create new support request',
+      description: 'Public endpoint — no authentication required',
+
       requestBody: {
         content: {
           'application/json': {
@@ -31,10 +33,11 @@ const paths = {
       },
     },
   },
-  '/api/v2/supportRequest/updateStatus/{supportRequestId}': {
+  '/support_request/updateStatus/{supportRequestId}': {
     put: {
       tags: ['Contact Support'],
-      summary: 'Update contact Support status',
+      summary: 'Update support request status',
+      security: [{ bearerAuth: [] }],
       parameters: [
         {
           in: 'path',
@@ -73,7 +76,7 @@ const definitions = {
     example: {
       data: null,
       code: 200000,
-      message: 'OK',
+      message: 'Success',
     },
   },
   create_support_request_body: {

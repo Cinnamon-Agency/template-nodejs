@@ -4,19 +4,30 @@
 
 **File:** `Dockerfile`
 
-- **Base image:** `node:22`
-- **Build steps:** Install dependencies → Copy source → Build TypeScript → Expose port 3000
+- **Multi-stage build:** Builder stage (full deps for compilation) → Production stage (slim image, production deps only)
+- **Builder image:** `node:22` — installs all dependencies, compiles TypeScript
+- **Production image:** `node:22-slim` — production dependencies only, copies compiled output + Prisma schema
 - **Memory:** `NODE_OPTIONS="--max-old-space-size=3072"` for memory optimization
 - **Package manager:** npm with `package-lock.json`
 
 ```dockerfile
-FROM node:22
+# --- Build stage ---
+FROM node:22 AS builder
+WORKDIR /usr/src/app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+# --- Production stage ---
+FROM node:22-slim
 WORKDIR /usr/src/app
 COPY package.json package-lock.json ./
 RUN npm ci --only=production
-COPY . .
+COPY --from=builder /usr/src/app/build ./build
+COPY --from=builder /usr/src/app/prisma ./prisma
+RUN npx prisma generate
 ENV NODE_OPTIONS="--max-old-space-size=3072"
-RUN npm run build
 EXPOSE 3000
 CMD ["npm", "start"]
 ```
@@ -27,14 +38,14 @@ CMD ["npm", "start"]
 
 **File:** `docker-compose.yml`
 
-Two services for local development:
+Three services for local development:
 
 ### API Service
 - Builds from local `Dockerfile`
 - Mounts `src/` and `prisma/` volumes for hot-reload
 - Runs `npm run dev` (ts-node-dev with respawn)
 - Reads environment from `.env` file
-- Waits for database health check before starting
+- Waits for database and Redis health checks before starting
 
 ### Database Service
 - **Image:** `postgres:16-alpine`
@@ -43,6 +54,13 @@ Two services for local development:
 - **Port:** `5432`
 - **Data persistence:** `postgres_data` named volume
 - **Health check:** `pg_isready` every 5 seconds
+
+### Redis Service
+- **Image:** `redis:7-alpine`
+- **Port:** `6379`
+- **Data persistence:** `redis_data` named volume
+- **Health check:** `redis-cli ping` every 5 seconds
+- **Note:** Optional — the application falls back to in-memory caching if Redis is unavailable
 
 ### Usage
 
@@ -62,7 +80,7 @@ docker-compose exec api npm run seed
 # Stop all services
 docker-compose down
 
-# Stop and remove volumes (reset database)
+# Stop and remove volumes (reset database + Redis)
 docker-compose down -v
 ```
 
@@ -92,6 +110,7 @@ docker run -p 3000:3000 --env-file .env template-nodejs
 - [ ] Run `npm run migrate:deploy` before starting the application
 - [ ] Set `LOG_TO_CONSOLE=false` if using CloudWatch exclusively
 - [ ] Increase `SALT_ROUNDS` to 12+ for stronger password hashing
+- [ ] Configure `REDIS_URL` for production Redis instance (optional — falls back to in-memory)
 - [ ] Configure appropriate rate limiter values for production traffic
 
 ### Health Check

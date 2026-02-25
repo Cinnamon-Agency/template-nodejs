@@ -151,6 +151,7 @@ const paths = {
     post: {
       tags: ['Auth'],
       description: 'Logout user',
+      security: [{ bearerAuth: [] }],
       responses: {
         '200': {
           description: 'Successfully logged out user',
@@ -591,7 +592,7 @@ const definitions = {
     example: {
       data: null,
       code: 200000,
-      message: 'OK',
+      message: 'Success',
     },
   },
   '401_response': {
@@ -625,8 +626,8 @@ const definitions = {
   auth_login_response_404: {
     example: {
       data: null,
-      code: 400002,
-      message: 'Wrong email or password',
+      code: 404001,
+      message: 'User not found',
     },
   },
   auth_register_body: {
@@ -644,7 +645,7 @@ const definitions = {
       },
       authType: {
         type: 'string',
-        enum: ['Google', 'Facebook', 'LinkedIn', 'UserPassword'],
+        enum: ['GOOGLE', 'FACEBOOK', 'LINKED_IN', 'APPLE', 'USER_PASSWORD'],
       },
     },
     required: ['email', 'authType'],
@@ -673,7 +674,7 @@ const definitions = {
   user_already_registered_response: {
     example: {
       data: null,
-      code: 400003,
+      code: 401003,
       message: 'User already registered',
     },
   },
@@ -692,7 +693,7 @@ const definitions = {
       },
       authType: {
         type: 'string',
-        enum: ['Google', 'Facebook', 'LinkedIn', 'UserPassword'],
+        enum: ['GOOGLE', 'FACEBOOK', 'LINKED_IN', 'APPLE', 'USER_PASSWORD'],
       },
     },
     required: ['email', 'authType'],
@@ -905,9 +906,9 @@ const definitions = {
       password: {
         type: 'string',
         example: 'NewPassword123',
-        description: 'New password (8-24 characters, must contain uppercase, lowercase, and digit)',
+        description: 'New password (8-128 characters, must contain uppercase, lowercase, and digit)',
         minLength: 8,
-        maxLength: 24,
+        maxLength: 128,
       },
     },
     required: ['uid', 'password'],
@@ -924,9 +925,9 @@ const definitions = {
       password: {
         type: 'string',
         example: 'NewPassword123',
-        description: 'New password (8-24 characters, must contain uppercase, lowercase, and digit)',
+        description: 'New password (8-128 characters, must contain uppercase, lowercase, and digit)',
         minLength: 8,
-        maxLength: 24,
+        maxLength: 128,
       },
     },
     required: ['uid', 'password'],

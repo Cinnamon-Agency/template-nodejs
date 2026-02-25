@@ -88,6 +88,9 @@ const getConfig = (): Config => {
     GOOGLE_CLOUD_STORAGE_BUCKET_NAME:
       process.env.GOOGLE_CLOUD_STORAGE_BUCKET_NAME || '',
 
+    // Seed
+    SUPERADMIN_PASSWORD: process.env.SUPERADMIN_PASSWORD || '',
+
     // Security
     SALT_ROUNDS: environmentNumber(process.env.SALT_ROUNDS || '10'),
     ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS || 'http://localhost:3001',

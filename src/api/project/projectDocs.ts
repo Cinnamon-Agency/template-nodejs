@@ -10,6 +10,7 @@ const paths = {
     post: {
       tags: ['Project'],
       description: 'Create new project',
+      security: [{ bearerAuth: [] }],
       requestBody: {
         description: 'File size should be in bytes',
         content: {
@@ -33,7 +34,31 @@ const paths = {
     },
     get: {
       tags: ['Project'],
-      description: 'Get list of projects',
+      description: 'Get list of projects (paginated)',
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        {
+          in: 'query',
+          name: 'page',
+          schema: {
+            type: 'integer',
+            default: 1,
+          },
+          required: false,
+          description: 'Page number (default: 1)',
+        },
+        {
+          in: 'query',
+          name: 'perPage',
+          schema: {
+            type: 'integer',
+            default: 10,
+            maximum: 100,
+          },
+          required: false,
+          description: 'Number of projects per page (default: 10, max: 100)',
+        },
+      ],
       responses: {
         '200': {
           description: 'Successfully fetched projects',
@@ -50,6 +75,7 @@ const paths = {
     get: {
       tags: ['Project'],
       description: 'Get project by ID',
+      security: [{ bearerAuth: [] }],
       parameters: [
         {
           in: 'path',
@@ -88,7 +114,7 @@ const definitions = {
     example: {
       data: null,
       code: 200000,
-      message: 'OK',
+      message: 'Success',
     },
   },
   '401_response': {
@@ -126,41 +152,63 @@ const definitions = {
     },
   },
   create_project_body: {
-    example: {
-      name: 'Project Song',
-      description: 'Need guitar and drumms on rock song',
-      mediaFiles: [
-        {
-          mediaType: 'Project cover image',
-          mediaFileName: 'cover.jpg',
+    type: 'object',
+    properties: {
+      name: {
+        type: 'string',
+        example: 'Project Song',
+      },
+      description: {
+        type: 'string',
+        example: 'Need guitar and drums on rock song',
+      },
+      deadline: {
+        type: 'string',
+        format: 'date-time',
+        example: '2025-06-01T00:00:00.000Z',
+      },
+      mediaFiles: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            mediaType: {
+              type: 'string',
+              example: 'IMAGE',
+            },
+            mediaFileName: {
+              type: 'string',
+              example: 'cover.jpg',
+            },
+          },
+          required: ['mediaType', 'mediaFileName'],
         },
-        {
-          mediaType: 'Project track preview',
-          mediaFileName: 'preview.mp3',
-        },
-        {
-          mediaType: 'Project other',
-          mediaFileName: 'extra-file.mp3',
-        },
-      ],
+      },
     },
+    required: ['name', 'description', 'deadline', 'mediaFiles'],
   },
   get_project_response: {
     example: {
       data: {
         project: {},
-        code: 200000,
-        message: 'OK',
       },
+      code: 200000,
+      message: 'Success',
     },
   },
   get_projects_response: {
     example: {
       data: {
-        projects: [{}, {}],
+        items: [{}, {}],
+        pagination: {
+          page: 1,
+          perPage: 10,
+          total: 2,
+          totalPages: 1,
+        },
       },
       code: 200000,
-      message: 'OK',
+      message: 'Success',
     },
   },
 }

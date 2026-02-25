@@ -10,6 +10,7 @@ const paths = {
     get: {
       tags: ['Notification'],
       description: 'Get notifications for user',
+      security: [{ bearerAuth: [] }],
       parameters: [
         {
           in: 'query',
@@ -22,12 +23,24 @@ const paths = {
         },
         {
           in: 'query',
-          name: 'numberOfFetched',
+          name: 'page',
           schema: {
             type: 'integer',
+            default: 1,
           },
-          required: true,
-          description: 'Number of entities already fetched',
+          required: false,
+          description: 'Page number (default: 1)',
+        },
+        {
+          in: 'query',
+          name: 'perPage',
+          schema: {
+            type: 'integer',
+            default: 20,
+            maximum: 100,
+          },
+          required: false,
+          description: 'Number of notifications per page (default: 20, max: 100)',
         },
       ],
       responses: {
@@ -47,6 +60,7 @@ const paths = {
     put: {
       tags: ['Notification'],
       description: 'Update notification read status',
+      security: [{ bearerAuth: [] }],
       parameters: [
         {
           in: 'path',
@@ -81,6 +95,7 @@ const paths = {
     delete: {
       tags: ['Notification'],
       description: 'Delete notification',
+      security: [{ bearerAuth: [] }],
       parameters: [
         {
           in: 'path',
@@ -111,7 +126,7 @@ const definitions = {
     example: {
       data: null,
       code: 200000,
-      message: 'OK',
+      message: 'Success',
     },
   },
   '401_response': {
@@ -129,16 +144,22 @@ const definitions = {
   get_notifications_response: {
     example: {
       data: {
-        notifications: [{}],
-        code: 200000,
-        message: 'OK',
+        items: [{}],
+        pagination: {
+          page: 1,
+          perPage: 20,
+          total: 1,
+          totalPages: 1,
+        },
       },
+      code: 200000,
+      message: 'Success',
     },
   },
   notification_not_found_response: {
     example: {
       data: null,
-      code: 404003,
+      code: 404016,
       message: 'Notification not found',
     },
   },

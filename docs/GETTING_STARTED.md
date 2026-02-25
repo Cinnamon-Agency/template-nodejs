@@ -5,6 +5,7 @@
 - **Node.js** >= 22
 - **npm** package manager
 - **PostgreSQL** 16+ (or use Docker)
+- **Redis** 7+ (optional — or use Docker; falls back to in-memory caching if unavailable)
 - **AWS Account** (for SES, Pinpoint SMS, CloudWatch)
 - **Google Cloud** project (for Cloud Storage)
 
@@ -21,7 +22,7 @@ cd template-nodejs
 cp .env.template .env
 # Edit .env with your values
 
-# 3. Start services (API + PostgreSQL)
+# 3. Start services (API + PostgreSQL + Redis)
 docker-compose up -d
 
 # 4. Run database migrations and seed
@@ -42,6 +43,7 @@ npm install
 # 2. Create environment file
 cp .env.template .env
 # Edit .env - set DATABASE_URL to your local PostgreSQL
+# Optionally set REDIS_URL to your local Redis (e.g., redis://localhost:6379)
 
 # 3. Generate Prisma client
 npm run prisma:generate
@@ -62,9 +64,9 @@ npm run dev
 
 | Script | Command | Description |
 |---|---|---|
-| `npm run dev` | `ts-node-dev --respawn -r dotenv/config src/server.ts` | Development server with hot-reload |
+| `npm run dev` | `ts-node-dev --respawn -r dotenv/config src/index.ts` | Development server with hot-reload |
 | `npm run build` | `tsc` | Compile TypeScript to JavaScript |
-| `npm run start` | `node -r dotenv/config build/server.js` | Start production server |
+| `npm run start` | `node -r dotenv/config build/index.js` | Start production server |
 | `npm run lint` | `eslint src/` | Run ESLint |
 | `npm run lint:fix` | `eslint src/ --fix` | Fix ESLint issues |
 | `npm run format` | `prettier --write "src/**/*.ts"` | Format code with Prettier |

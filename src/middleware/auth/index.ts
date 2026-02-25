@@ -1,6 +1,6 @@
 import { NextFunction, Request, RequestHandler, Response } from 'express'
 import { container } from 'tsyringe'
-import config from 'core/config'
+import config from '@core/config'
 import { getResponseMessage, ResponseCode } from '@common'
 import { UserService } from '@api/user/userService'
 import { TokenType, verifyToken } from '@services/jsonwebtoken'

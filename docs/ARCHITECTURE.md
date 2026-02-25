@@ -28,12 +28,14 @@ template-nodejs/
 │   │   ├── role/                # Role lookup service
 │   │   ├── user_role/           # User-role assignment service
 │   │   ├── user_session/        # Session management (store, refresh, expire)
-│   │   ├── verification_uid/    # Verification UID generation & validation
-│   │   └── login_code/          # Login code module (placeholder)
+│   │   └── verification_uid/    # Verification UID generation & validation
 │   ├── common/                  # Shared utilities
 │   │   ├── index.ts                # Barrel export
 │   │   ├── response.ts             # StatusCode, ResponseCode, ResponseMessage enums + ResponseError class
 │   │   ├── types.ts                # Shared types (AsyncResponse, ResponseParams, Express augmentation)
+│   │   ├── constants.ts            # Time conversions, verification code config, pagination defaults
+│   │   ├── dto.ts                  # Data transfer helpers (sanitizeUser)
+│   │   ├── pagination.ts           # Pagination utilities (normalize, build paginated results)
 │   │   └── decorators/
 │   │       └── serviceMethod.ts    # @serviceMethod() decorator for error handling
 │   ├── core/                    # Application core
@@ -54,7 +56,10 @@ template-nodejs/
 │   │   ├── response/               # Unified response formatter (data/code/message)
 │   │   ├── validation/             # Joi schema validation middleware
 │   │   ├── not_found/              # 404 handler
-│   │   ├── server_error/           # 500 error handler (hides details)
+│   │   ├── error_handler/          # Global error handler (hides details in production)
+│   │   ├── csrf/                   # CSRF protection middleware
+│   │   ├── sanitize/               # Input sanitization middleware
+│   │   ├── request_id/             # Unique request ID generation middleware
 │   │   ├── shutdown/               # Graceful shutdown request rejection
 │   │   └── log_middleware/         # CloudWatch logging middleware (errors + slow requests)
 │   ├── routes/
@@ -68,6 +73,7 @@ template-nodejs/
 │   │   ├── jsonwebtoken/           # JWT token generation + verification
 │   │   ├── google_cloud_storage/   # GCS signed URL generation (read/write)
 │   │   ├── prisma/                 # Prisma error mapping to ResponseCodes
+│   │   ├── redis/                  # Redis client connection and utilities
 │   │   ├── uuid/                   # UUID v4 generation
 │   │   └── websocket/             # WebSocket server (singleton via tsyringe)
 │   └── documentation/           # Swagger/OpenAPI setup
@@ -80,7 +86,7 @@ template-nodejs/
 │   └── workflows/                  # Development workflow definitions
 ├── .env.template                # Environment variable template
 ├── Dockerfile                   # Production Docker image (Node 22)
-├── docker-compose.yml           # Dev environment (API + PostgreSQL 16)
+├── docker-compose.yml           # Dev environment (API + PostgreSQL 16 + Redis 7)
 ├── package.json                 # Dependencies and scripts
 ├── tsconfig.json                # TypeScript configuration (strict, path aliases)
 ├── eslint.config.mjs            # ESLint configuration
@@ -128,10 +134,11 @@ export class AuthController {
 ## Request Lifecycle
 
 ```
-Request → CORS → Cookie Parser → Helmet → Rate Limiter → Body Parser
-  → HTTP Logger → Shutdown Check → Router
+Request → CORS → Cookie Parser → Helmet → Request ID → Rate Limiter → Body Parser
+  → Input Sanitizer → HTTP Logger → CloudWatch Middleware → Root Redirect
+  → Health Check → CSRF Protection → Shutdown Check → Router
     → [Validation Middleware] → [Auth Middleware] → Controller → Service → Prisma
-  → Response Formatter → Client
+  → Not Found → Response Formatter → Global Error Handler → Client
 ```
 
 ---
@@ -145,19 +152,24 @@ Middleware is applied in this order in `src/core/app/index.ts`:
 | 1 | **CORS** | Built-in | Configurable allowed origins from `ALLOWED_ORIGINS` |
 | 2 | **Cookie Parser** | `cookie-parser` | Parse cookies for JWT tokens |
 | 3 | **Helmet** | `helmet` | Security headers (cross-origin resource policy) |
-| 4 | **Rate Limiter** | `src/middleware/rate_limiter/` | In-memory rate limiting (configurable points/duration) |
-| 5 | **Body Parser** | `body-parser` | JSON parsing (raw for webhook endpoint) |
-| 6 | **HTTP Logger** | `src/middleware/http/` | Morgan structured JSON logging (skips healthcheck) |
-| 7 | **Root Redirect** | Inline | Redirects `/` to `/api/v1/api-docs` |
-| 8 | **Health Check** | Inline | `GET /api/v1/healthcheck` returns `{ status: "ok" }` |
-| 9 | **Shutdown Handler** | `src/middleware/shutdown/` | Returns 503 when server is shutting down |
-| 10 | **Router** | `src/routes/` | All feature routes |
-| 11 | **Not Found** | `src/middleware/not_found/` | 404 handler for unmatched routes |
-| 12 | **Response Formatter** | `src/middleware/response/` | Standardizes all responses to `{ data, code, message }` |
+| 4 | **Request ID** | `src/middleware/request_id/` | Attaches unique request ID to each request |
+| 5 | **Rate Limiter** | `src/middleware/rate_limiter/` | In-memory rate limiting (configurable points/duration) |
+| 6 | **Body Parser** | `body-parser` | JSON parsing (raw for webhook endpoint) |
+| 7 | **Input Sanitizer** | `src/middleware/sanitize/` | Sanitizes user input to prevent injection |
+| 8 | **HTTP Logger** | `src/middleware/http/` | Morgan structured JSON logging (conditional on `LOG_REQUESTS`) |
+| 9 | **CloudWatch Middleware** | `src/middleware/log_middleware/` | Logs errors and slow requests to CloudWatch |
+| 10 | **Root Redirect** | Inline | Redirects `/` to `/api-docs` |
+| 11 | **Health Check** | Inline | `GET /api/v1/healthcheck` returns `{ status: "ok" }` |
+| 12 | **CSRF Protection** | `src/middleware/csrf/` | Cross-site request forgery protection |
+| 13 | **Shutdown Handler** | `src/middleware/shutdown/` | Returns 503 when server is shutting down |
+| 14 | **Router** | `src/routes/` | All feature routes |
+| 15 | **Not Found** | `src/middleware/not_found/` | 404 handler for unmatched routes |
+| 16 | **Response Formatter** | `src/middleware/response/` | Standardizes all responses to `{ data, code, message }` |
+| 17 | **Global Error Handler** | `src/middleware/error_handler/` | Catches unhandled errors, hides details in production |
 
 ### Per-Route Middleware
 
-- **`requireToken(allowedRoles?)`** — JWT verification from cookies; optional RBAC check. `SUPERADMIN` bypasses role checks.
+- **`requireToken(allowedRoles?)`** — JWT verification from cookies or `Authorization: Bearer` header; optional RBAC check. `SUPERADMIN` bypasses role checks.
 - **`validate(schema)`** — Joi validation; validated input stored in `res.locals.input`
 - **`loginRateLimiter`** — Stricter rate limiting for login/verification endpoints
 - **`authenticateDocs`** — Basic Auth for Swagger UI access
@@ -182,6 +194,8 @@ All errors flow through the response formatter middleware which extracts the HTT
 | P2002 | `CONFLICT` | Unique constraint violation |
 | P2003 | `FAILED_INSERT` | Foreign key constraint failure |
 | P2025 | `NOT_FOUND` | Record not found |
+| P2018 | `NOT_FOUND` | Related record not found |
+| P2015 | `NOT_FOUND` | Related record not found |
 | P2011/P2012/P2000 | `INVALID_INPUT` | Null/missing required field |
 | P1001/P1002/P1008 | `SERVICE_UNAVAILABLE` | Database connection issues |
 | P2034 | `CONFLICT` | Transaction conflict |
@@ -229,6 +243,7 @@ Defined in `tsconfig.json` for clean imports:
 | `@api/*` | `src/api/*` |
 | `@app` | `src/core/app` |
 | `@common` | `src/common` |
+| `@common/*` | `src/common/*` |
 | `@core/*` | `src/core/*` |
 | `@documentation` | `src/documentation` |
 | `@middleware/*` | `src/middleware/*` |

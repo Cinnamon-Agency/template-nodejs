@@ -89,9 +89,9 @@ src/
 ├── api/            # Feature modules (auth, user, project, notification, support_request, media, role, user_role, user_session, verification_uid)
 ├── common/         # Shared types, response codes, @serviceMethod() decorator
 ├── core/           # App init, config, logger, server + graceful shutdown
-├── middleware/      # Auth, rate limiter, validation, response formatter, logging, shutdown
+├── middleware/      # Auth, rate limiter, validation, response formatter, CSRF, sanitize, request ID, error handler, logging, shutdown
 ├── routes/         # Central router
-├── services/       # AWS SES, Pinpoint SMS, CloudWatch, GCS, JWT, bcrypt, Prisma, WebSocket, UUID
+├── services/       # AWS SES, Pinpoint SMS, CloudWatch, GCS, JWT, bcrypt, Prisma, Redis, WebSocket, UUID
 └── documentation/  # Swagger/OpenAPI setup
 ```
 

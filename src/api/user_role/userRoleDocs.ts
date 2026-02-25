@@ -6,10 +6,11 @@ const tags = [
 ]
 
 const paths = {
-  '/api/v2/userRole': {
-    get: {
+  '/user_role': {
+    put: {
       tags: ['User Role'],
       summary: 'Get all user roles for user',
+      security: [{ bearerAuth: [] }],
       responses: {
         '200': {
           description: 'Successfully fetched user roles for user',
@@ -30,13 +31,13 @@ const definitions = {
       data: {
         roles: [
           {
-            id: 1,
-            name: 'Provider',
+            id: '7b653c2b-f7ff-4ea9-afb0-0111ae15ecfc',
+            name: 'USER',
           },
         ],
       },
       code: 200000,
-      message: 'OK',
+      message: 'Success',
     },
   },
 }

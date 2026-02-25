@@ -10,11 +10,16 @@ import { getResponseMessage } from '@common'
  message - Mandatory message, a ResponseMessage message which can match the response code, or custom defined by the user
 */
 export const responseFormatter = async (
-  prev: ResponseParams,
+  prev: ResponseParams | Error,
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
+  // Pass real errors through to the globalErrorHandler
+  if (prev instanceof Error || !prev?.code) {
+    return next(prev)
+  }
+
   const { data, code, message: definedMessage } = prev
 
   const status = code ? parseInt(code.toString().substring(0, 3), 10) : 500

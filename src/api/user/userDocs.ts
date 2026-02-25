@@ -10,6 +10,7 @@ const paths = {
     get: {
       tags: ['User'],
       description: 'Get User object',
+      security: [{ bearerAuth: [] }],
       responses: {
         '200': {
           description: 'Successfully Fetched User',
@@ -26,6 +27,7 @@ const paths = {
     get: {
       tags: ['User'],
       description: 'Get User object',
+      security: [{ bearerAuth: [] }],
       parameters: [
         {
           in: 'path',
@@ -50,13 +52,13 @@ const paths = {
     },
   },
   '/user/toggleNotifications': {
-    get: {
+    patch: {
       tags: ['User'],
-      description: 'Toggle notification permission',
-
+      description: 'Toggle notification preference on/off',
+      security: [{ bearerAuth: [] }],
       responses: {
         '200': {
-          description: 'Successfully finished onboarding flow',
+          description: 'Successfully toggled notification preference',
           content: {
             schema: {
               $ref: '#/definitions/200_response',
@@ -73,7 +75,7 @@ const definitions = {
     example: {
       data: null,
       code: 200000,
-      message: 'OK',
+      message: 'Success',
     },
   },
   '401_response': {
@@ -96,6 +98,10 @@ const definitions = {
         user: {
           id: '7b653c2b-f7ff-4ea9-afb0-0111ae15ecfc',
           email: 'email@email.com',
+          emailVerified: true,
+          phoneNumber: null,
+          phoneVerified: false,
+          authType: 'USER_PASSWORD',
           notifications: true,
           profilePictureFileName: null,
           createdAt: '2024-03-25T15:20:06.410Z',
@@ -103,7 +109,7 @@ const definitions = {
         },
       },
       code: 200000,
-      message: 'OK',
+      message: 'Success',
     },
   },
 }

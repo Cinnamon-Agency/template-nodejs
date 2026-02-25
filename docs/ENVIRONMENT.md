@@ -55,6 +55,12 @@ All environment variables are defined in `.env.template`. The config system (`sr
 | `LOGIN_LIMITER_DURATION_IN_SECONDS` | `60` | Login rate limiter window duration |
 | `LOGIN_LIMITER_BLOCKING_DURATION_IN_SECONDS` | `300` | Block duration after login limit exceeded |
 
+## Redis
+
+| Variable | Default | Description |
+|---|---|---|
+| `REDIS_URL` | — (optional) | Redis connection URL (e.g., `redis://redis:6379`). If not set, the application falls back to in-memory caching. |
+
 ## AWS
 
 | Variable | Default | Description |
@@ -89,6 +95,12 @@ All environment variables are defined in `.env.template`. The config system (`sr
 |---|---|---|
 | `SALT_ROUNDS` | `10` | bcrypt salt rounds for password hashing (higher = slower + more secure) |
 | `ALLOWED_ORIGINS` | `http://localhost:3001` | Comma-separated CORS allowed origins |
+
+## Seed
+
+| Variable | Default | Description |
+|---|---|---|
+| `SUPERADMIN_PASSWORD` | — | Password for the superadmin user created during database seeding (required for `npm run seed`) |
 
 ---
 

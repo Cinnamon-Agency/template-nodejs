@@ -44,7 +44,7 @@ export const logger = createLogger({
   levels,
   transports,
   defaultMeta: { 
-    environment: process.env.NODE_ENV || 'null',
+    environment: config.NODE_ENV || 'null',
     service: 'cinnamon-template-api',
     version: process.env.npm_package_version || '1.0.0'
   },

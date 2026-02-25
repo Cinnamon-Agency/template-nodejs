@@ -18,7 +18,8 @@ export const globalErrorHandler = (
 
   // Handle ResponseError (thrown by validation middleware, etc.)
   if (err instanceof ResponseError) {
-    const status = parseInt(err.code.toString().substring(0, 3), 10)
+    const parsed = parseInt(err.code.toString().substring(0, 3), 10)
+    const status = parsed >= 100 && parsed <= 599 ? parsed : 500
     return res.status(status).send({
       data: null,
       code: err.code,
