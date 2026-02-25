@@ -3,17 +3,17 @@
 ## **Authentication & Authorization**
 
 ### **JWT Implementation**
-- Use RS256 algorithm for JWT tokens in production
-- Set appropriate token expiration times (access: 15min, refresh: 7days)
-- Implement proper token revocation mechanisms
+- Use HS256 algorithm with symmetric secrets (`ACCESS_TOKEN_SECRET`, `REFRESH_TOKEN_SECRET`)
+- Consider upgrading to RS256 with asymmetric key pairs for production environments
+- Set appropriate token expiration times (access: 15min, refresh: 7 days / 10080min)
+- Implement proper token revocation via `UserSession` model with status tracking (`ACTIVE`, `EXPIRED`, `LOGGED_OUT`)
 - Store refresh tokens securely in database with expiration
-- Use secure HTTP-only cookies for token storage when possible
+- Support both HTTP-only cookie storage (web clients) and Bearer token (mobile clients) via `x-client-type` header
 
 ### **Password Security**
-- Use bcrypt with minimum 12 salt rounds for password hashing
+- Use bcrypt with configurable salt rounds for password hashing (default: 10, configurable via `SALT_ROUNDS` env var)
 - Implement password strength requirements (min 8 chars, mixed case, numbers, symbols)
-- Use password hashing with pepper for additional security
-- Implement password reset functionality with expiration tokens
+- Implement password reset functionality with `VerificationUID` expiration tokens
 - Never store passwords in plain text or reversible encryption
 
 ### **OAuth Integration**

@@ -3,10 +3,12 @@
 ## **Naming Conventions**
 
 ### **Files and Directories**
-- Use kebab-case for file names: `user-service.ts`, `auth-middleware.ts`
-- Use kebab-case for directory names: `user-management/`, `auth-system/`
-- Test files should end with `.test.ts` or `.spec.ts`
-- Interface files should end with `.interface.ts`
+- Use camelCase for file names: `userService.ts`, `authController.ts`, `authRouter.ts`
+- Use snake_case for directory names under `src/api/`: `support_request/`, `user_role/`, `user_session/`
+- Use snake_case for middleware directory names: `error_handler/`, `rate_limiter/`, `log_middleware/`
+- Use kebab-case for service directory names: `aws-ses/`, `aws-end-user-messaging/`, `google_cloud_storage/`
+- Test files should end with `.test.ts`: `authService.test.ts`, `cache.test.ts`
+- Interface files should be named `interface.ts` within each module directory
 - Type definition files should end with `.types.ts`
 
 ### **Variables and Functions**
@@ -17,8 +19,9 @@
 - Use action verbs for function names: `createUser()`, `validateInput()`
 
 ### **Classes and Interfaces**
-- Use PascalCase for classes and interfaces: `UserService`, `IUserRepository`
-- Prefix interfaces with `I`: `IUserRepository`, `IAuthService`
+- Use PascalCase for classes and interfaces: `UserService`, `AuthController`
+- Prefix service contract interfaces and parameter interfaces with `I`: `IAuthService`, `ICreateUser`, `ILogin`
+- Internal/local interfaces (e.g., `DecodedToken`, `CacheEntry`, `AuthTokens`) do not require the `I` prefix
 - Use descriptive class names that reflect their responsibility
 - Abstract classes should be prefixed with `Abstract`: `AbstractService`
 
@@ -39,18 +42,19 @@
 ```typescript
 // Node.js modules
 import { Request, Response } from 'express';
-import path from 'path';
+import { randomBytes } from 'crypto';
 
 // External libraries
+import { autoInjectable, singleton } from 'tsyringe';
 import { PrismaClient } from '@prisma/client';
-import Joi from 'joi';
 
 // Internal modules
-import { UserService } from '@/services/user.service';
-import { IUserRepository } from '@/interfaces/user.repository.interface';
+import { ResponseCode, serviceMethod } from '@common';
+import { UserService } from '@api/user/userService';
+import { getPrismaClient } from '@services/prisma';
 
 // Relative imports
-import { validateEmail } from './utils/validation';
+import { ILogin, IAuthService } from './interface';
 ```
 
 ### **Function Organization**
@@ -123,28 +127,32 @@ type Result<T, E = Error> = {
 ## **API Conventions**
 
 ### **Controller Structure**
-- Use dependency injection for services
-- Implement proper request/response typing
-- Use middleware for common functionality
+- Use `@singleton()` and `@autoInjectable()` decorators from tsyringe for DI
+- Inject services via constructor with `private readonly`
+- Use arrow function properties for route handlers to preserve `this` context
+- Pass results to `next()` for centralized response handling — do not call `res.json()` directly
 - Keep controllers thin, delegate business logic to services
+- Apply validation and auth middleware in the **router**, not as controller decorators
 
 ```typescript
-export class UserController {
-  constructor(
-    @inject(UserService) private userService: UserService,
-    @inject(Logger) private logger: Logger
-  ) {}
+@singleton()
+@autoInjectable()
+export class ProjectController {
+  constructor(private readonly projectService: ProjectService) {}
 
-  @validateRequest(createUserSchema)
-  @authMiddleware
-  async createUser(req: Request, res: Response): Promise<void> {
-    try {
-      const user = await this.userService.createUser(req.body);
-      res.status(201).json({ success: true, data: user });
-    } catch (error) {
-      this.logger.error('Failed to create user', error);
-      res.status(500).json({ success: false, message: 'Internal server error' });
-    }
+  public createProject = async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.user
+    const { name, description, deadline, mediaFiles } = res.locals.input
+
+    const { mediaInfo, code } = await this.projectService.createProject({
+      userId: id,
+      name,
+      description,
+      deadline,
+      mediaFiles,
+    })
+
+    return next({ mediaInfo, code })
   }
 }
 ```
@@ -157,8 +165,8 @@ export class UserController {
 
 ### **Validation**
 - Use Joi schemas for request validation
-- Implement custom validation decorators
-- Validate inputs at the entry point
+- Apply validation via `validate()` middleware in routers
+- Validated input is stored in `res.locals.input`
 - Provide clear error messages for validation failures
 
 ## **Database Conventions**
@@ -170,11 +178,11 @@ export class UserController {
 - Add indexes for frequently queried fields
 - Use constraints for data integrity
 
-### **Repository Pattern**
-- Implement repository classes for data access
-- Use interfaces for repository contracts
-- Handle database errors appropriately
-- Use transactions for complex operations
+### **Data Access Pattern**
+- Services access Prisma directly via `getPrismaClient()` from `@services/prisma`
+- Use `@serviceMethod()` decorator for consistent error handling across service methods
+- Handle database errors via Prisma error mapping (`isPrismaError`, `mapPrismaErrorToResponseCode`)
+- Use `getPrismaClient().$transaction()` for multi-step operations
 
 ## **Testing Conventions**
 
@@ -185,10 +193,10 @@ export class UserController {
 - Mock external dependencies
 
 ### **Test Files**
-- Name test files after the files they test: `user.service.test.ts`
-- Keep tests close to the source files
+- Name test files after the files they test using camelCase: `authService.test.ts`, `cache.test.ts`
+- Unit tests go in `tests/unit/`, integration tests in `tests/integration/`
 - Use separate test directories for integration tests
-- Maintain test data in fixtures or factories
+- Maintain test data in fixtures or factories (`tests/helpers/testFactory.ts`)
 
 ## **Documentation Conventions**
 

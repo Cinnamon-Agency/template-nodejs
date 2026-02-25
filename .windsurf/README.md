@@ -11,21 +11,29 @@ This directory contains the configuration files for the Windsurf development env
 │   ├── coding-conventions.md    # TypeScript and code organization conventions
 │   └── security-guidelines.md   # Security implementation guidelines
 ├── skills/                   # Agent skill definitions and capabilities
-│   ├── backend-development.md   # Backend development and Node.js skills
-│   ├── database-management.md   # Database and Prisma ORM skills
-│   ├── api-documentation.md     # API documentation and testing skills
-│   ├── security-implementation.md # Security and authentication skills
-│   ├── testing-strategy.md      # Testing and quality assurance skills
-│   ├── devops-deployment.md     # DevOps and deployment skills
-│   └── specialized-services.md # Specialized service integration skills
+│   ├── backend-development/
+│   │   └── SKILL.md              # Backend development and Node.js skills
+│   ├── database-management/
+│   │   └── SKILL.md              # Database and Prisma ORM skills
+│   ├── api-documentation/
+│   │   └── SKILL.md              # API documentation and testing skills
+│   ├── security-implementation/
+│   │   └── SKILL.md              # Security and authentication skills
+│   ├── testing-strategy/
+│   │   └── SKILL.md              # Testing and quality assurance skills
+│   ├── devops-deployment/
+│   │   └── SKILL.md              # DevOps and deployment skills
+│   └── specialized-services/
+│       └── SKILL.md              # Specialized service integration skills
 └── workflows/               # Development workflows and procedures
     ├── create-api-endpoint.md   # API endpoint creation workflow
     ├── database-migration.md    # Database migration workflow
     ├── deployment.md            # Deployment process workflow
     ├── security-review.md       # Security review workflow
     ├── setup-development.md     # Development environment setup
-    ├── testing-strategy.md       # Testing strategy implementation
-    └── cache-management.md      # Cache service management and optimization
+    ├── testing-strategy.md      # Testing strategy implementation
+    ├── cache-management.md      # Cache service management and optimization
+    └── commit-message.md        # AI-powered commit message generation
 ```
 
 ## **Rules Overview**
@@ -39,11 +47,11 @@ This directory contains the configuration files for the Windsurf development env
 - Testing and documentation standards
 
 ### **Coding Conventions**
-- Naming conventions for files, variables, and functions
+- Naming conventions: camelCase files, snake_case API directories, PascalCase classes
 - Code structure and organization patterns
 - TypeScript specific conventions
-- API and service layer patterns
-- Database and repository conventions
+- API controller/service/router patterns with tsyringe DI
+- Database access via `getPrismaClient()` with `@serviceMethod()` decorator
 
 ### **Security Guidelines**
 - Authentication and authorization standards
@@ -93,6 +101,7 @@ Workflows can be activated using slash commands:
 - `/setup-development` - Setup development environment
 - `/testing-strategy` - Implement testing strategies
 - `/cache-management` - Manage and optimize cache services
+- `/commit-message` - Generate AI-powered commit messages
 
 ## **Usage Guidelines**
 
@@ -128,12 +137,15 @@ The rules and skills in this directory integrate with the agent system defined i
 
 ### **Project Structure Alignment**
 The configuration aligns with the project's structure:
-- `src/api/` - API endpoints following backend development standards
-- `src/core/` - Core services using defined patterns
-- `src/common/` - Shared utilities following conventions
-- `src/services/` - Specialized services including cache, auth, and storage
-- `prisma/` - Database operations using management skills
-- Documentation maintained using API documentation skills
+- `src/api/` - API modules (auth, user, project, notification, support_request, etc.)
+- `src/core/` - Core infrastructure (app, config, logger, server)
+- `src/common/` - Shared utilities, types, constants, decorators, response definitions
+- `src/middleware/` - Express middleware (auth, validation, rate_limiter, error_handler, sanitize, etc.)
+- `src/services/` - External service integrations (prisma, redis, cache, aws-ses, bcrypt, etc.)
+- `src/routes/` - Central route aggregation and versioning
+- `src/documentation/` - Swagger/OpenAPI documentation setup
+- `prisma/` - Database schema, migrations, and seed data
+- `tests/` - Unit tests (`tests/unit/`) and integration tests (`tests/integration/`)
 
 ## **Quality Assurance**
 

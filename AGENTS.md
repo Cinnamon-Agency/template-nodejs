@@ -192,17 +192,21 @@
 - **DevOps Agent**: Deployment issues, infrastructure configuration
 
 ### **Agent Activation Commands**
-- `/backend` - Activate Backend Development Agent
-- `/database` - Activate Database Agent
-- `/docs` - Activate API Documentation Agent
-- `/security` - Activate Security Agent
-- `/test` - Activate Testing Agent
-- `/devops` - Activate DevOps Agent
+Agents are activated via workflow slash commands defined in `.windsurf/workflows/`:
+- `/create-api-endpoint` - Backend Development Agent: Create new API endpoints
+- `/database-migration` - Database Agent: Create and manage database migrations
+- `/security-review` - Security Agent: Conduct security reviews and assessments
+- `/testing-strategy` - Testing Agent: Implement comprehensive testing strategies
+- `/deployment` - DevOps Agent: Handle deployment processes
+- `/setup-development` - DevOps Agent: Setup development environment
+- `/cache-management` - Backend Development Agent: Manage and optimize cache services
+- `/commit-message` - Generate AI-powered commit messages
 
 ### **Agent Collaboration Examples**
-- **New Feature Development**: Backend → Database → Security → Test → Docs
-- **API Update**: Backend → Security → Test → Docs
-- **Database Migration**: Database → Backend → Test
-- **Security Review**: Security → Backend → Test → Docs
+- **New Feature Development**: `/create-api-endpoint` → `/database-migration` → `/security-review` → `/testing-strategy`
+- **API Update**: `/create-api-endpoint` → `/security-review` → `/testing-strategy`
+- **Database Migration**: `/database-migration` → `/create-api-endpoint` → `/testing-strategy`
+- **Security Review**: `/security-review` → `/testing-strategy`
+- **Deployment**: `/testing-strategy` → `/deployment`
 
 This agent system ensures comprehensive coverage of all development aspects while maintaining clear responsibilities and collaboration patterns for efficient project development.

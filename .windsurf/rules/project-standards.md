@@ -10,11 +10,18 @@
 - Implement proper error handling with typed errors
 
 ### **Code Organization**
-- Follow the existing folder structure: `src/api/`, `src/core/`, `src/common/`, `src/documentation/`
-- Use dependency injection with `tsyringe`
+- Follow the existing folder structure:
+  - `src/api/` - API modules (auth, user, project, notification, etc.), each with controller, service, router, interface, input, and docs files
+  - `src/core/` - Core infrastructure (app, config, logger, server)
+  - `src/common/` - Shared utilities, types, constants, decorators, and response definitions
+  - `src/middleware/` - Express middleware (auth, validation, rate_limiter, error_handler, sanitize, etc.)
+  - `src/services/` - External service integrations (prisma, redis, cache, aws-ses, bcrypt, jsonwebtoken, etc.)
+  - `src/routes/` - Central route aggregation
+  - `src/documentation/` - Swagger/OpenAPI documentation setup
+- Use dependency injection with `tsyringe` (`@singleton()`, `@autoInjectable()`, `container.resolve()`)
 - Implement proper service layer architecture
 - Keep business logic separate from API controllers
-- Use decorators for common functionality (authentication, validation, etc.)
+- Use middleware in routers for common functionality (authentication, validation, rate limiting)
 
 ### **API Development Standards**
 - Use Express.js with proper middleware configuration
@@ -31,10 +38,10 @@
 - Use environment-specific database configurations
 
 ### **Security Standards**
-- Implement JWT-based authentication
-- Use bcrypt for password hashing
+- Implement JWT-based authentication (HS256 with symmetric secrets; consider RS256 for production)
+- Use bcrypt for password hashing (default 10 salt rounds, configurable via `SALT_ROUNDS` env var)
 - Validate and sanitize all user inputs
-- Implement rate limiting for API endpoints
+- Implement rate limiting for API endpoints using `rate-limiter-flexible`
 - Use helmet for security headers
 - Never expose sensitive data in API responses
 
