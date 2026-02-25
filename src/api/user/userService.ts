@@ -38,7 +38,6 @@ export class UserService implements IUserService {
       },
     })
 
-    await cache.set(CacheKeys.userById(created.id), created, CacheTTL.USER)
     return { user: created, code: ResponseCode.OK }
   }
 

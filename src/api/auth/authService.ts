@@ -220,11 +220,12 @@ export class AuthService implements IAuthService {
 
   @serviceMethod()
   async sendForgotPasswordEmail({ email }: ISendForgotPasswordEmail) {
-    const { user, code: userCode } = await this.userService.getUserByEmail({
+    const { user } = await this.userService.getUserByEmail({
       email,
     })
     if (!user) {
-      return { code: userCode }
+      // Return OK to prevent email enumeration
+      return { code: ResponseCode.OK }
     }
 
     const { uids, code: uidCode } =
@@ -263,7 +264,7 @@ export class AuthService implements IAuthService {
       userId: verificationUID.userId,
       password,
     })
-    if (editCode != ResponseCode.OK) {
+    if (editCode !== ResponseCode.OK) {
       return { code: editCode }
     }
 
@@ -382,11 +383,12 @@ export class AuthService implements IAuthService {
 
   @serviceMethod()
   async resendVerificationEmail({ email }: IResendVerificationEmail) {
-    const { user, code: userCode } = await this.userService.getUserByEmail({
+    const { user } = await this.userService.getUserByEmail({
       email,
     })
     if (!user) {
-      return { code: userCode }
+      // Return OK to prevent email enumeration
+      return { code: ResponseCode.OK }
     }
 
     if (user.emailVerified) {

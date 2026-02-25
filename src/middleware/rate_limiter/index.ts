@@ -84,7 +84,7 @@ export const rateLimiter = async (
   next: NextFunction
 ) => {
   try {
-    await generalLimiter.consume(req.ip!)
+    await generalLimiter.consume(req.ip || 'unknown')
     next()
   } catch (rejRes) {
     logStructured('warn', 'Rate limit exceeded', {
@@ -105,7 +105,7 @@ export const loginRateLimiter = async (
   next: NextFunction
 ) => {
   try {
-    await loginLimiter.consume(req.ip!)
+    await loginLimiter.consume(req.ip || 'unknown')
     next()
   } catch (rejRes) {
     logStructured('warn', 'Login rate limit exceeded', {
@@ -126,7 +126,7 @@ export const passwordResetRateLimiter = async (
   next: NextFunction
 ) => {
   try {
-    await passwordResetLimiter.consume(req.ip!)
+    await passwordResetLimiter.consume(req.ip || 'unknown')
     next()
   } catch (rejRes) {
     logStructured('warn', 'Password reset rate limit exceeded', {
@@ -147,7 +147,7 @@ export const verificationRateLimiter = async (
   next: NextFunction
 ) => {
   try {
-    await verificationLimiter.consume(req.ip!)
+    await verificationLimiter.consume(req.ip || 'unknown')
     next()
   } catch (rejRes) {
     logStructured('warn', 'Verification rate limit exceeded', {
@@ -168,7 +168,7 @@ export const uploadRateLimiter = async (
   next: NextFunction
 ) => {
   try {
-    await uploadLimiter.consume(req.ip!)
+    await uploadLimiter.consume(req.ip || 'unknown')
     next()
   } catch (rejRes) {
     logStructured('warn', 'Upload rate limit exceeded', {
@@ -195,7 +195,7 @@ export const createUserRateLimiter = (options: IRateLimiterOptions) => {
     const key = userId ? `user_${userId}` : req.ip
 
     try {
-      await limiter.consume(key!)
+      await limiter.consume(key || 'unknown')
       next()
     } catch (rejRes) {
       logStructured('warn', 'User rate limit exceeded', {

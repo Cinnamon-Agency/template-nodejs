@@ -80,6 +80,7 @@ export class AppServer {
       clearTimeout(timeout)
 
       logger.info('*** App has shut down ***')
+      process.exit(0)
     } catch (err) {
       logger.error('Error during shutdown:', err)
       process.exit(1)

@@ -78,6 +78,14 @@ export class NotificationService implements INotificationService {
     message,
     type: notificationType,
   }: ICreateNotification) {
+    const { user } = await this.userService.getUserById({
+      userId: receiverId,
+    })
+
+    if (!user) {
+      return { code: ResponseCode.USER_NOT_FOUND }
+    }
+
     await getPrismaClient().notification.create({
       data: {
         receiverId,
@@ -87,14 +95,6 @@ export class NotificationService implements INotificationService {
         notificationType,
       },
     })
-
-    const { user } = await this.userService.getUserById({
-      userId: receiverId,
-    })
-
-    if (!user) {
-      return { code: ResponseCode.USER_NOT_FOUND }
-    }
 
     await sendEmail(EmailTemplate.NOTIFICATION, user.email, notificationType, {
       title: notificationType,

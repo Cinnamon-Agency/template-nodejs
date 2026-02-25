@@ -34,7 +34,7 @@ export function serviceMethod<T>(config?: ErrorHandlerConfig<T>) {
           : null
 
       if (params && !params.errorContext) {
-        params.errorContext = errorContext
+        args[0] = { ...params, errorContext }
       }
 
       try {

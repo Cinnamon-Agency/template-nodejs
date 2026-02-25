@@ -18,7 +18,7 @@ export const globalErrorHandler = (
 
   // Handle ResponseError (thrown by validation middleware, etc.)
   if (err instanceof ResponseError) {
-    const status = parseFloat(err.code.toString().substring(0, 3))
+    const status = parseInt(err.code.toString().substring(0, 3), 10)
     return res.status(status).send({
       data: null,
       code: err.code,

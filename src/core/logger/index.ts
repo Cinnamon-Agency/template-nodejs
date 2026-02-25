@@ -26,20 +26,19 @@ const levels = {
   debug: 5,
 }
 
-const transports: winston.transport[] = []
-
-if (config.LOG_TO_CONSOLE) {
-  transports.push(
-    new winston.transports.Console({
-      format: combine(
-        format.colorize(),
-        timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-        errors({ stack: true }),
-        consoleLogFormat
-      ),
-    })
-  )
-}
+const transports: winston.transport[] = [
+  new winston.transports.Console({
+    format: config.LOG_TO_CONSOLE
+      ? combine(
+          format.colorize(),
+          timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+          errors({ stack: true }),
+          consoleLogFormat
+        )
+      : structuredLogFormat,
+    silent: !config.LOG_TO_CONSOLE && config.NODE_ENV === 'test',
+  }),
+]
 
 export const logger = createLogger({
   levels,
@@ -108,7 +107,7 @@ export const logPerformance = (operation: string, duration: number, context?: Re
 
 export const httpLogger = createLogger({
   levels: { http: 1 },
-  transports: process.env.LOG_REQUESTS
+  transports: config.LOG_REQUESTS
     ? [
         new winston.transports.Console({
           format: combine(

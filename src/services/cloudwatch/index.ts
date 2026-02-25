@@ -12,7 +12,7 @@ const logGroupName = `${config.NODE_ENV}-api`
 const logStreamName = `${config.NODE_ENV}-api`
 
 const cloudwatchConfig =
-  config.NODE_ENV === 'dev'
+  config.NODE_ENV === 'development'
     ? {
         credentials: {
           secretAccessKey: config.AWS_SECRET,

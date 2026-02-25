@@ -28,7 +28,7 @@ export const loginSchema = (req: Request) => {
           .required(),
         email: Joi.string().email().required(),
         password: Joi.alternatives().conditional('authType', {
-          is: 'UserPassword',
+          is: 'USER_PASSWORD',
           then: Joi.string().required(),
         }),
       })
@@ -50,7 +50,7 @@ export const registerSchema = (req: Request) => {
           .required(),
         email: Joi.string().email().required(),
         password: Joi.alternatives().conditional('authType', {
-          is: 'UserPassword',
+          is: 'USER_PASSWORD',
           then: passwordRule.required(),
         }),
       })
@@ -122,21 +122,6 @@ export const resendLoginCodeSchema = (req: Request) => {
       })
       .options({ abortEarly: false }),
     input: {
-      email: req.body.email,
-    },
-  }
-}
-
-export const resendVerificationMailSchema = (req: Request) => {
-  return {
-    schema: Joi.object()
-      .keys({
-        role: Joi.string().valid('provider', 'patient', 'admin').required(),
-        email: Joi.string().trim().email().required(),
-      })
-      .options({ abortEarly: false }),
-    input: {
-      role: req.params.role,
       email: req.body.email,
     },
   }

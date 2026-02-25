@@ -17,7 +17,7 @@ export const responseFormatter = async (
 ) => {
   const { data, code, message: definedMessage } = prev
 
-  const status = code ? parseFloat(code.toString().substring(0, 3)) : 500
+  const status = code ? parseInt(code.toString().substring(0, 3), 10) : 500
 
   let message = definedMessage || null
   if (!message) {
