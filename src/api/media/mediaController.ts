@@ -101,14 +101,7 @@ export class MediaController {
   // S3 Specific Endpoints
   async getS3UploadURL(req: Request, res: Response, next: NextFunction) {
     try {
-      const { mediaFileName, mediaType } = req.body
-
-      if (!mediaFileName || !mediaType) {
-        return res.status(400).json({
-          success: false,
-          message: 'mediaFileName and mediaType are required'
-        })
-      }
+      const { mediaFileName, mediaType } = res.locals.input
 
       const { url, code } = await this.s3Service.getSignedUrl(mediaFileName, 'write')
 
@@ -129,7 +122,7 @@ export class MediaController {
 
   async getS3DownloadURL(req: Request, res: Response, next: NextFunction) {
     try {
-      const { mediaFileName } = req.params
+      const { mediaFileName } = res.locals.input
 
       const { url, code } = await this.s3Service.getSignedUrl(mediaFileName, 'read')
 
@@ -145,15 +138,7 @@ export class MediaController {
 
   async completeS3Upload(req: Request, res: Response, next: NextFunction) {
     try {
-      const { projectId } = req.params
-      const { mediaFileName, mediaType } = req.body
-
-      if (!mediaFileName || !mediaType || !projectId) {
-        return res.status(400).json({
-          success: false,
-          message: 'projectId, mediaFileName, and mediaType are required'
-        })
-      }
+      const { projectId, mediaFileName, mediaType } = res.locals.input
 
       const dbClient = getPrismaClient()
 
@@ -195,7 +180,7 @@ export class MediaController {
 
   async deleteS3File(req: Request, res: Response, next: NextFunction) {
     try {
-      const { mediaId } = req.params
+      const { mediaId } = res.locals.input
 
       const dbClient = getPrismaClient()
 
@@ -236,7 +221,7 @@ export class MediaController {
 
   async getS3FileMetadata(req: Request, res: Response, next: NextFunction) {
     try {
-      const { mediaFileName } = req.params
+      const { mediaFileName } = res.locals.input
 
       const { code, metadata } = await this.s3Service.getFileMetadata(mediaFileName)
 
@@ -252,12 +237,11 @@ export class MediaController {
 
   async listS3Files(req: Request, res: Response, next: NextFunction) {
     try {
-      const { prefix } = req.query
-      const { maxKeys } = req.query
+      const { prefix, maxKeys } = res.locals.input
 
       const { code, files } = await this.s3Service.listFiles(
         prefix as string,
-        maxKeys ? parseInt(maxKeys as string) : undefined
+        maxKeys
       )
 
       res.status(200).json({
@@ -273,14 +257,7 @@ export class MediaController {
   // Google Cloud Storage Specific Endpoints
   async getGCSUploadURL(req: Request, res: Response, next: NextFunction) {
     try {
-      const { mediaFileName, mediaType } = req.body
-
-      if (!mediaFileName || !mediaType) {
-        return res.status(400).json({
-          success: false,
-          message: 'mediaFileName and mediaType are required'
-        })
-      }
+      const { mediaFileName, mediaType } = res.locals.input
 
       const { url, code } = await getSignedURL(mediaFileName, 'write')
 
@@ -301,7 +278,7 @@ export class MediaController {
 
   async getGCSDownloadURL(req: Request, res: Response, next: NextFunction) {
     try {
-      const { mediaFileName } = req.params
+      const { mediaFileName } = res.locals.input
 
       const { url, code } = await getSignedURL(mediaFileName, 'read')
 
@@ -317,15 +294,7 @@ export class MediaController {
 
   async completeGCSUpload(req: Request, res: Response, next: NextFunction) {
     try {
-      const { projectId } = req.params
-      const { mediaFileName, mediaType } = req.body
-
-      if (!mediaFileName || !mediaType || !projectId) {
-        return res.status(400).json({
-          success: false,
-          message: 'projectId, mediaFileName, and mediaType are required'
-        })
-      }
+      const { projectId, mediaFileName, mediaType } = res.locals.input
 
       const dbClient = getPrismaClient()
 
@@ -366,7 +335,7 @@ export class MediaController {
 
   async deleteGCSFile(req: Request, res: Response, next: NextFunction) {
     try {
-      const { mediaId } = req.params
+      const { mediaId } = res.locals.input
 
       const dbClient = getPrismaClient()
 
@@ -403,14 +372,7 @@ export class MediaController {
   // Generic getUploadURL endpoint (storage provider agnostic)
   async getUploadURL(req: Request, res: Response, next: NextFunction) {
     try {
-      const { mediaFileName, mediaType, storageProvider } = req.body
-
-      if (!mediaFileName || !mediaType) {
-        return res.status(400).json({
-          success: false,
-          message: 'mediaFileName and mediaType are required'
-        })
-      }
+      const { mediaFileName, mediaType, storageProvider } = res.locals.input
 
       const provider = storageProvider as StorageProvider || StorageProvider.GOOGLE_CLOUD
       let url: string | undefined
