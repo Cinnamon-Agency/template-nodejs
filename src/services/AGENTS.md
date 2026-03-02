@@ -9,7 +9,7 @@ This directory (`src/services/`) contains business logic services, including aut
 ## Key Responsibilities in This Directory
 
 ### 1. Authentication Services
-- Implement multi-provider OAuth integration (Google, LinkedIn, Apple, Facebook)
+- Implement multi-provider OAuth integration (Google, Apple)
 - Handle JWT token generation and validation
 - Manage password hashing and verification
 - Implement token refresh mechanisms
@@ -436,22 +436,6 @@ async googleAuth(code: string) {
 }
 ```
 
-### LinkedIn OAuth
-```typescript
-async linkedinAuth(code: string) {
-  const tokens = await this.getLinkedInTokens(code);
-  const linkedinUser = await this.getLinkedInUser(tokens.access_token);
-  
-  return this.handleOAuthUser({
-    email: linkedinUser.email,
-    name: `${linkedinUser.firstName} ${linkedinUser.lastName}`,
-    avatar: linkedinUser.profilePicture,
-    provider: 'LINKEDIN',
-    providerId: linkedinUser.id,
-  });
-}
-```
-
 ### Apple OAuth
 ```typescript
 async appleAuth(code: string, idToken: string) {
@@ -462,22 +446,6 @@ async appleAuth(code: string, idToken: string) {
     name: appleUser.name,
     provider: 'APPLE',
     providerId: appleUser.sub,
-  });
-}
-```
-
-### Facebook OAuth
-```typescript
-async facebookAuth(code: string) {
-  const tokens = await this.getFacebookTokens(code);
-  const facebookUser = await this.getFacebookUser(tokens.access_token);
-  
-  return this.handleOAuthUser({
-    email: facebookUser.email,
-    name: facebookUser.name,
-    avatar: facebookUser.picture?.data?.url,
-    provider: 'FACEBOOK',
-    providerId: facebookUser.id,
   });
 }
 ```

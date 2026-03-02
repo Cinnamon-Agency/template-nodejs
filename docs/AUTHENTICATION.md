@@ -73,9 +73,7 @@ Tokens are returned in the **response body** for bearer token usage:
 |---|---|
 | `USER_PASSWORD` | Email + password authentication |
 | `GOOGLE` | Google OAuth |
-| `LINKED_IN` | LinkedIn OAuth |
 | `APPLE` | Apple Sign-In |
-| `FACEBOOK` | Facebook Login |
 
 For `USER_PASSWORD`, the password is hashed with bcrypt (configurable salt rounds via `SALT_ROUNDS`). OAuth providers do not require a password.
 

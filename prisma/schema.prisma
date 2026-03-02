@@ -192,9 +192,7 @@ enum ProjectStatus {
 
 enum AuthType {
   GOOGLE
-  LINKED_IN
   APPLE
-  FACEBOOK
   USER_PASSWORD
 }
 
