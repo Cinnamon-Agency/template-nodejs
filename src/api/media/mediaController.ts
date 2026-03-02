@@ -234,4 +234,22 @@ export class MediaController {
       }
     })
   }
+
+  // Update media endpoint (for overwriting existing files)
+  async updateMedia(req: Request, res: Response, next: NextFunction) {
+    const { mediaId } = req.params
+    const { mediaFileName, mediaType, storageProvider } = res.locals.input
+
+    const result = await this.mediaService.updateMedia(
+      mediaId,
+      mediaFileName,
+      mediaType as MediaType,
+      storageProvider as StorageProvider
+    )
+
+    return next({
+      code: result.code,
+      data: result.data
+    })
+  }
 }

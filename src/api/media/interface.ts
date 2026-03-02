@@ -30,4 +30,5 @@ export interface IMediaService {
   getMediaByProject(projectId: string, mediaType?: MediaType): AsyncResponse<any[]>
   getDownloadUrl(mediaFileName: string, storageProvider?: StorageProvider): AsyncResponse<string>
   deleteMedia(mediaId: string): AsyncResponse<void>
+  updateMedia(mediaId: string, mediaFileName: string, mediaType: MediaType, storageProvider?: StorageProvider): AsyncResponse<any>
 }

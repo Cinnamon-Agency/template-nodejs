@@ -353,3 +353,23 @@ export const deleteMediaSchema = (req: Request) => {
     }
   }
 }
+
+/**
+ * Validation schema for updating media (overwriting existing files)
+ */
+export const updateMediaSchema = (req: Request) => {
+  return {
+    schema: Joi.object()
+      .keys({
+        mediaFileName: mediaFileNameRule.required(),
+        mediaType: mediaTypeRule,
+        storageProvider: storageProviderRule
+      })
+      .options({ abortEarly: false }),
+    input: {
+      mediaFileName: req.body.mediaFileName,
+      mediaType: req.body.mediaType,
+      storageProvider: req.body.storageProvider
+    }
+  }
+}

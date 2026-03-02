@@ -235,4 +235,80 @@ export class MediaService implements IMediaService {
 
     return { code: ResponseCode.OK, message: 'GCS file deleted successfully' }
   }
+
+  @serviceMethod()
+  async updateMedia(mediaId: string, mediaFileName: string, mediaType: MediaType, storageProvider: StorageProvider = StorageProvider.GOOGLE_CLOUD) {
+    const dbClient = getPrismaClient()
+
+    // Get existing media record
+    const existingMedia = await dbClient.media.findUnique({
+      where: { id: mediaId }
+    })
+
+    if (!existingMedia) {
+      return { code: ResponseCode.NOT_FOUND, message: 'Media not found' }
+    }
+
+    // Check if the new file name is the same as the existing one (overwrite scenario)
+    const isOverwrite = mediaFileName === existingMedia.mediaFileName
+
+    if (!isOverwrite) {
+      // Check if new file name already exists in database (prevent duplicates)
+      const duplicateMedia = await dbClient.media.findUnique({
+        where: { mediaFileName }
+      })
+
+      if (duplicateMedia) {
+        return { code: ResponseCode.CONFLICT, message: 'File with this name already exists' }
+      }
+    }
+
+    // Generate upload URL for the new/updated file
+    let url: string
+    let code: ResponseCode
+
+    if (storageProvider === StorageProvider.AWS_S3) {
+      const s3Response = await this.s3Service.getSignedUrl(mediaFileName, 'write')
+      url = s3Response.url
+      code = s3Response.code
+    } else {
+      // Default to Google Cloud Storage
+      const gcsResponse = await getSignedURL(mediaFileName, 'write')
+      if (!gcsResponse.url) {
+        return { code: gcsResponse.code, message: 'Failed to generate upload URL' }
+      }
+      url = gcsResponse.url
+      code = gcsResponse.code
+    }
+
+    if (code !== ResponseCode.OK) {
+      return { code, message: 'Failed to generate upload URL' }
+    }
+
+    // Update media record in database
+    const updatedMedia = await dbClient.media.update({
+      where: { id: mediaId },
+      data: {
+        mediaFileName,
+        mediaType,
+        updatedAt: new Date()
+      }
+    })
+
+    return {
+      code: ResponseCode.OK,
+      data: {
+        id: updatedMedia.id,
+        mediaFileName: updatedMedia.mediaFileName,
+        mediaType: updatedMedia.mediaType,
+        projectId: updatedMedia.projectId,
+        createdAt: updatedMedia.createdAt,
+        updatedAt: updatedMedia.updatedAt,
+        storageProvider,
+        uploadUrl: url,
+        isOverwrite
+      },
+      message: isOverwrite ? 'File overwrite URL generated successfully' : 'File update URL generated successfully'
+    }
+  }
 }

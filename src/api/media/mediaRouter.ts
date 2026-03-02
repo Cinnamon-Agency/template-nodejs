@@ -14,7 +14,8 @@ import {
   getGCSUploadURLSchema,
   completeGCSUploadSchema,
   getGCSDownloadURLSchema,
-  deleteGCSFileSchema
+  deleteGCSFileSchema,
+  updateMediaSchema
 } from './mediaInput'
 
 const mediaController = container.resolve(MediaController)
@@ -98,4 +99,12 @@ mediaRouter.delete(
   requireToken(),
   validate(deleteGCSFileSchema),
   mediaController.deleteGCSFile
+)
+
+// Update media endpoint (for overwriting existing files)
+mediaRouter.put(
+  '/:mediaId',
+  requireToken(),
+  validate(updateMediaSchema),
+  mediaController.updateMedia
 )
