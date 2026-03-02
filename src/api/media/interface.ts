@@ -1,9 +1,15 @@
 import { AsyncResponse } from '@common'
 import { Prisma, MediaType } from '@prisma/client'
 
+export enum StorageProvider {
+  GOOGLE_CLOUD = 'GOOGLE_CLOUD',
+  AWS_S3 = 'AWS_S3'
+}
+
 export interface IMediaData {
   mediaType: MediaType
   mediaFileName: string
+  storageProvider?: StorageProvider
 }
 
 export interface ICreateMediaEntries {
@@ -16,11 +22,12 @@ export interface MediaInfo {
   url: string | undefined
   mediaFileName: string
   googleStorageCode: number
+  storageProvider: StorageProvider
 }
 
 export interface IMediaService {
   createMediaEntries(params: ICreateMediaEntries): AsyncResponse<MediaInfo[]>
   getMediaByProject(projectId: string, mediaType?: MediaType): AsyncResponse<any[]>
-  getDownloadUrl(mediaFileName: string): AsyncResponse<string>
+  getDownloadUrl(mediaFileName: string, storageProvider?: StorageProvider): AsyncResponse<string>
   deleteMedia(mediaId: string): AsyncResponse<void>
 }
