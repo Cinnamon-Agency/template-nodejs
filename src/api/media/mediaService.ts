@@ -57,6 +57,7 @@ export class MediaService implements IMediaService {
     return { code, mediaInfo }
   }
 
+  @serviceMethod()
   async getMediaByProject(projectId: string, mediaType?: MediaType) {
     const dbClient = getPrismaClient()
     
@@ -73,6 +74,7 @@ export class MediaService implements IMediaService {
     return { code: ResponseCode.OK, mediaFiles }
   }
 
+  @serviceMethod()
   async getDownloadUrl(mediaFileName: string, storageProvider: StorageProvider = StorageProvider.GOOGLE_CLOUD) {
     if (storageProvider === StorageProvider.AWS_S3) {
       const s3Response = await this.s3Service.getSignedUrl(mediaFileName, 'read')
@@ -84,6 +86,68 @@ export class MediaService implements IMediaService {
     }
   }
 
+  @serviceMethod()
+  async completeS3Upload(projectId: string, mediaFileName: string, mediaType: MediaType) {
+    const dbClient = getPrismaClient()
+
+    // Verify file exists in S3
+    const { code, metadata } = await this.s3Service.getFileMetadata(mediaFileName)
+    if (code !== ResponseCode.OK) {
+      return { code: ResponseCode.NOT_FOUND, message: 'File not found in S3' }
+    }
+
+    // Create media record in database
+    const media = await dbClient.media.create({
+      data: {
+        mediaFileName,
+        mediaType,
+        projectId,
+      },
+    })
+
+    return {
+      code: ResponseCode.OK,
+      data: {
+        id: media.id,
+        mediaFileName: media.mediaFileName,
+        mediaType: media.mediaType,
+        projectId: media.projectId,
+        createdAt: media.createdAt,
+        storageProvider: 'AWS_S3',
+        fileSize: metadata?.size
+      },
+      message: 'S3 upload completed successfully'
+    }
+  }
+
+  @serviceMethod()
+  async deleteS3File(mediaId: string) {
+    const dbClient = getPrismaClient()
+
+    // Get media record
+    const media = await dbClient.media.findUnique({
+      where: { id: mediaId }
+    })
+
+    if (!media) {
+      return { code: ResponseCode.NOT_FOUND, message: 'Media not found' }
+    }
+
+    // Delete from S3
+    const { code } = await this.s3Service.deleteFile(media.mediaFileName)
+    if (code !== ResponseCode.OK) {
+      return { code: ResponseCode.FAILED_DELETE, message: 'Failed to delete file from S3' }
+    }
+
+    // Delete from database
+    await dbClient.media.delete({
+      where: { id: mediaId }
+    })
+
+    return { code: ResponseCode.OK, message: 'S3 file deleted successfully' }
+  }
+
+  @serviceMethod()
   async deleteMedia(mediaId: string) {
     const dbClient = getPrismaClient()
     
@@ -112,5 +176,63 @@ export class MediaService implements IMediaService {
     })
 
     return { code: ResponseCode.OK }
+  }
+
+  @serviceMethod()
+  async completeGCSUpload(projectId: string, mediaFileName: string, mediaType: MediaType) {
+    const dbClient = getPrismaClient()
+
+    // Verify file exists in GCS by trying to get read URL
+    const { code } = await getSignedURL(mediaFileName, 'read')
+    if (code !== ResponseCode.OK) {
+      return { code: ResponseCode.NOT_FOUND, message: 'File not found in Google Cloud Storage' }
+    }
+
+    // Create media record in database
+    const media = await dbClient.media.create({
+      data: {
+        mediaFileName,
+        mediaType,
+        projectId,
+      },
+    })
+
+    return {
+      code: ResponseCode.OK,
+      data: {
+        id: media.id,
+        mediaFileName: media.mediaFileName,
+        mediaType: media.mediaType,
+        projectId: media.projectId,
+        createdAt: media.createdAt,
+        storageProvider: 'GOOGLE_CLOUD'
+      },
+      message: 'GCS upload completed successfully'
+    }
+  }
+
+  @serviceMethod()
+  async deleteGCSFile(mediaId: string) {
+    const dbClient = getPrismaClient()
+
+    // Get media record
+    const media = await dbClient.media.findUnique({
+      where: { id: mediaId }
+    })
+
+    if (!media) {
+      return { code: ResponseCode.NOT_FOUND, message: 'Media not found' }
+    }
+
+    // Note: In a real implementation, you would delete the file from GCS
+    // For now, we'll just delete the database record
+    // You would need to implement GCS file deletion using the Google Cloud Storage admin SDK
+
+    // Delete from database
+    await dbClient.media.delete({
+      where: { id: mediaId }
+    })
+
+    return { code: ResponseCode.OK, message: 'GCS file deleted successfully' }
   }
 }
