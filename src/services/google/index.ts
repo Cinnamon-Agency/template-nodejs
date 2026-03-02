@@ -1,5 +1,5 @@
-import { OAuth2Client } from 'google-auth-library'
-import config from '../../config'
+import { OAuth2Client } from 'google-auth-library'  
+import config from '@core/config'
 import { sendLogEvents } from '../cloudwatch'
 
 export class GoogleAuthService {

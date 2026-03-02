@@ -205,3 +205,33 @@ export const verifyPhoneCodeSchema = (req: Request) => {
     },
   }
 }
+
+export const googleLoginSchema = (req: Request) => {
+  return {
+    schema: Joi.object()
+      .keys({
+        idToken: Joi.string().required(),
+      })
+      .options({ abortEarly: false }),
+    input: {
+      idToken: req.body.idToken,
+    },
+  }
+}
+
+export const appleLoginSchema = (req: Request) => {
+  return {
+    schema: Joi.object()
+      .keys({
+        identityToken: Joi.string().required(),
+        firstName: Joi.string().optional(),
+        lastName: Joi.string().optional(),
+      })
+      .options({ abortEarly: false }),
+    input: {
+      identityToken: req.body.identityToken,
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+    },
+  }
+}

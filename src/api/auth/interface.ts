@@ -93,6 +93,16 @@ export interface IVerifyLoginCodeResponse {
   }
 }
 
+export interface IGoogleLogin {
+  idToken: string
+}
+
+export interface IAppleLogin {
+  identityToken: string
+  firstName?: string
+  lastName?: string
+}
+
 export interface IAuthService {
   login(params: ILogin): AsyncResponse<User>
   register(params: ILogin): AsyncResponse<User>
@@ -112,4 +122,6 @@ export interface IAuthService {
   verifyLoginCode(
     params: IVerifyLoginCode
   ): AsyncResponse<IVerifyLoginCodeResponse>
+  googleLogin(params: IGoogleLogin): AsyncResponse<User>
+  appleLogin(params: IAppleLogin): AsyncResponse<User>
 }

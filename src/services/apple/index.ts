@@ -1,5 +1,5 @@
 import appleSignin from 'apple-signin-auth'
-import { logger } from '../../logger'
+import { logger } from '@core/logger'
 
 export class AppleAuthService {
   /**

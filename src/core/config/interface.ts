@@ -52,6 +52,10 @@ export interface ENV {
   GOOGLE_SERVICE_ACCOUNT_KEY_LOCATION?: string
   GOOGLE_CLOUD_STORAGE_BUCKET_NAME?: string
 
+  // OAuth
+  GOOGLE_CLIENT_ID?: string
+  APPLE_BUNDLE_ID?: string
+
   // Seed
   SUPERADMIN_PASSWORD?: string
 

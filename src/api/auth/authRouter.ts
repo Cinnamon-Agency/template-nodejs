@@ -18,6 +18,8 @@ import {
   resendVerificationEmailSchema,
   sendPhoneVerificationSchema,
   verifyPhoneCodeSchema,
+  googleLoginSchema,
+  appleLoginSchema,
 } from './authInput'
 import { requireToken } from '@middleware/auth'
 import { passwordResetRateLimiter, verificationRateLimiter } from '@middleware/rate_limiter'
@@ -97,4 +99,18 @@ authRouter.post(
   validate(verifyPhoneCodeSchema),
   verificationRateLimiter,
   authController.verifyPhoneCode
+)
+
+authRouter.post(
+  '/google',
+  validate(googleLoginSchema),
+  loginRateLimiter,
+  authController.googleLogin
+)
+
+authRouter.post(
+  '/apple',
+  validate(appleLoginSchema),
+  loginRateLimiter,
+  authController.appleLogin
 )

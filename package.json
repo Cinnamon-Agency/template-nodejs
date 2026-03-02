@@ -34,6 +34,7 @@
     "@aws-sdk/s3-request-presigner": "^3.1000.0",
     "@google-cloud/storage": "^7.16.0",
     "@prisma/client": "^6.18.0",
+    "apple-signin-auth": "^2.0.0",
     "axios": "^1.11.0",
     "bcrypt": "^6.0.0",
     "body-parser": "^2.2.0",

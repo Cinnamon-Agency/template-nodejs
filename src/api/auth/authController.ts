@@ -307,4 +307,44 @@ export class AuthController {
 
     return next({ code })
   }
+
+  public googleLogin = async (req: Request, res: Response, next: NextFunction) => {
+    const { idToken } = res.locals.input
+
+    const { user, code } = await this.authService.googleLogin({ idToken })
+    if (!user) {
+      return next({ code })
+    }
+
+    const { tokens, code: tokenCode } = await this.authService.signToken({
+      user,
+    })
+    if (!tokens) {
+      return next({ code: tokenCode })
+    }
+
+    return this.respondWithTokens(req, res, next, user, tokens)
+  }
+
+  public appleLogin = async (req: Request, res: Response, next: NextFunction) => {
+    const { identityToken, firstName, lastName } = res.locals.input
+
+    const { user, code } = await this.authService.appleLogin({
+      identityToken,
+      firstName,
+      lastName,
+    })
+    if (!user) {
+      return next({ code })
+    }
+
+    const { tokens, code: tokenCode } = await this.authService.signToken({
+      user,
+    })
+    if (!tokens) {
+      return next({ code: tokenCode })
+    }
+
+    return this.respondWithTokens(req, res, next, user, tokens)
+  }
 }

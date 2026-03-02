@@ -30,6 +30,8 @@ import {
   ISetNewPassword,
   IResendLoginCode,
   IVerifyLoginCode,
+  IGoogleLogin,
+  IAppleLogin,
 } from './interface'
 import { randomInt } from 'crypto'
 import { TokenType, generateToken, verifyToken } from '@services/jsonwebtoken'
@@ -46,6 +48,8 @@ import { compare } from '@services/bcrypt'
 import { sendSMS } from '@services/aws-end-user-messaging'
 import { getPrismaClient } from '@services/prisma'
 import { AuthType } from '@prisma/client'
+import { googleAuthService } from '@services/google'
+import { appleAuthService } from '@services/apple'
 
 const isProduction = config.NODE_ENV === 'production'
 
@@ -650,5 +654,109 @@ export class AuthService implements IAuthService {
       },
       code: ResponseCode.OK,
     }
+  }
+
+  @serviceMethod()
+  async googleLogin({ idToken }: IGoogleLogin) {
+    const googleUser = await googleAuthService.verifyIdToken(idToken)
+
+    if (!googleUser) {
+      return { code: ResponseCode.INVALID_TOKEN }
+    }
+
+    let user = await getPrismaClient().user.findUnique({
+      where: { googleId: googleUser.googleId },
+    })
+
+    if (!user && googleUser.email) {
+      user = await getPrismaClient().user.findUnique({
+        where: { email: googleUser.email },
+      })
+
+      if (user) {
+        user = await getPrismaClient().user.update({
+          where: { id: user.id },
+          data: {
+            googleId: googleUser.googleId,
+            authType: AuthType.GOOGLE,
+            emailVerified: googleUser.emailVerified || user.emailVerified,
+            firstName: googleUser.firstName || user.firstName,
+            lastName: googleUser.lastName || user.lastName,
+            profilePictureUrl: googleUser.picture || user.profilePictureUrl,
+          },
+        })
+      }
+    }
+
+    if (!user && googleUser.email) {
+      user = await getPrismaClient().user.create({
+        data: {
+          email: googleUser.email,
+          googleId: googleUser.googleId,
+          authType: AuthType.GOOGLE,
+          emailVerified: googleUser.emailVerified || false,
+          firstName: googleUser.firstName,
+          lastName: googleUser.lastName,
+          profilePictureUrl: googleUser.picture,
+        },
+      })
+    }
+
+    if (!user) {
+      return { code: ResponseCode.INVALID_INPUT }
+    }
+
+    return { user, code: ResponseCode.OK }
+  }
+
+  @serviceMethod()
+  async appleLogin({ identityToken, firstName, lastName }: IAppleLogin) {
+    const appleUser = await appleAuthService.verifyIdentityToken(identityToken)
+
+    if (!appleUser) {
+      return { code: ResponseCode.INVALID_TOKEN }
+    }
+
+    let user = await getPrismaClient().user.findUnique({
+      where: { appleId: appleUser.appleId },
+    })
+
+    if (!user && appleUser.email) {
+      user = await getPrismaClient().user.findUnique({
+        where: { email: appleUser.email },
+      })
+
+      if (user) {
+        user = await getPrismaClient().user.update({
+          where: { id: user.id },
+          data: {
+            appleId: appleUser.appleId,
+            authType: AuthType.APPLE,
+            emailVerified: appleUser.emailVerified || user.emailVerified,
+            firstName: firstName || user.firstName,
+            lastName: lastName || user.lastName,
+          },
+        })
+      }
+    }
+
+    if (!user && appleUser.email) {
+      user = await getPrismaClient().user.create({
+        data: {
+          email: appleUser.email,
+          appleId: appleUser.appleId,
+          authType: AuthType.APPLE,
+          emailVerified: appleUser.emailVerified || false,
+          firstName: firstName,
+          lastName: lastName,
+        },
+      })
+    }
+
+    if (!user) {
+      return { code: ResponseCode.INVALID_INPUT }
+    }
+
+    return { user, code: ResponseCode.OK }
   }
 }

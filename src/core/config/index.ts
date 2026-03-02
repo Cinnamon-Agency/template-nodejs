@@ -89,6 +89,10 @@ const getConfig = (): Config => {
     GOOGLE_CLOUD_STORAGE_BUCKET_NAME:
       process.env.GOOGLE_CLOUD_STORAGE_BUCKET_NAME || '',
 
+    // OAuth
+    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || '',
+    APPLE_BUNDLE_ID: process.env.APPLE_BUNDLE_ID || '',
+
     // Seed
     SUPERADMIN_PASSWORD: process.env.SUPERADMIN_PASSWORD || '',
 

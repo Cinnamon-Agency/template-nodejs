@@ -36,6 +36,11 @@ model User {
   phoneVerified          Boolean           @default(false)
   password               String?
   authType               AuthType
+  googleId               String?           @unique
+  appleId                String?           @unique
+  firstName              String?
+  lastName               String?
+  profilePictureUrl      String?
   notifications          Boolean?          @default(false)
   profilePictureFileName String?
   createdAt              DateTime          @default(now())
