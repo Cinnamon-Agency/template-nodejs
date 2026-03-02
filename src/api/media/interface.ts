@@ -9,7 +9,7 @@ export interface IMediaData {
 export interface ICreateMediaEntries {
   mediaFiles: IMediaData[]
   projectId: string
-  prisma: Prisma.TransactionClient // Use the Prisma transaction client for transactional inserts
+  prisma?: Prisma.TransactionClient // Use the Prisma transaction client for transactional inserts
 }
 
 export interface MediaInfo {
@@ -20,4 +20,7 @@ export interface MediaInfo {
 
 export interface IMediaService {
   createMediaEntries(params: ICreateMediaEntries): AsyncResponse<MediaInfo[]>
+  getMediaByProject(projectId: string, mediaType?: MediaType): AsyncResponse<any[]>
+  getDownloadUrl(mediaFileName: string): AsyncResponse<string>
+  deleteMedia(mediaId: string): AsyncResponse<void>
 }

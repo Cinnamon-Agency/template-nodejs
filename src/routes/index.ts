@@ -6,6 +6,7 @@ import { projectRouter } from '@api/project/projectRouter'
 import { userRouter } from '@api/user/userRouter'
 import { notificationRouter } from '@api/notification/notificationRouter'
 import { supportRequestRouter } from '@api/support_request/supportRequestRouter'
+import { mediaRouter } from '@api/media/mediaRouter'
 
 export const router = express.Router()
 
@@ -16,6 +17,7 @@ v1.use('/user', userRouter)
 v1.use('/project', projectRouter)
 v1.use('/notification', notificationRouter)
 v1.use('/support_request', supportRequestRouter)
+v1.use('/media', mediaRouter)
 
 router.use('/api/v1', v1)
 router.use('/api-docs', docsRouter)

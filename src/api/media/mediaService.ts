@@ -1,6 +1,7 @@
 import { autoInjectable, singleton } from 'tsyringe'
 import { getPrismaClient } from '@services/prisma'
-import { ICreateMediaEntries, IMediaService } from './interface'
+import { ICreateMediaEntries, IMediaService, IMediaData } from './interface'
+import { MediaType } from '@prisma/client'
 
 import { ResponseCode, serviceMethod } from '@common'
 import { getSignedURL } from '@services/google_cloud_storage'
@@ -41,5 +42,44 @@ export class MediaService implements IMediaService {
     }
 
     return { code, mediaInfo }
+  }
+
+  async getMediaByProject(projectId: string, mediaType?: MediaType) {
+    const dbClient = getPrismaClient()
+    
+    const whereClause: any = { projectId }
+    if (mediaType) {
+      whereClause.mediaType = mediaType
+    }
+
+    const mediaFiles = await dbClient.media.findMany({
+      where: whereClause,
+      orderBy: { createdAt: 'desc' }
+    })
+
+    return { code: ResponseCode.OK, mediaFiles }
+  }
+
+  async getDownloadUrl(mediaFileName: string) {
+    const { url, code } = await getSignedURL(mediaFileName, 'read')
+    return { code, url }
+  }
+
+  async deleteMedia(mediaId: string) {
+    const dbClient = getPrismaClient()
+    
+    const media = await dbClient.media.findUnique({
+      where: { id: mediaId }
+    })
+
+    if (!media) {
+      return { code: ResponseCode.NOT_FOUND }
+    }
+
+    await dbClient.media.delete({
+      where: { id: mediaId }
+    })
+
+    return { code: ResponseCode.OK }
   }
 }

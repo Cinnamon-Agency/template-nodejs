@@ -52,6 +52,129 @@ describe('Media Management Integration Tests', () => {
     await prisma.$disconnect()
   })
 
+  describe('Media Upload and Download API Tests', () => {
+    it('should upload video files via API', async () => {
+      const mediaData = {
+        mediaFiles: [
+          {
+            mediaFileName: 'test-video.mp4',
+            mediaType: 'VIDEO'
+          },
+          {
+            mediaFileName: 'test-image.jpg',
+            mediaType: 'IMAGE'
+          }
+        ]
+      }
+
+      const response = await request(app)
+        .post(`/api/v1/projects/${testProject.id}/media`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(mediaData)
+        .expect(201)
+
+      expect(response.body.success).toBe(true)
+      expect(response.body.data).toHaveLength(2)
+      expect(response.body.data[0].mediaFileName).toBe('test-video.mp4')
+      expect(response.body.data[1].mediaFileName).toBe('test-image.jpg')
+    })
+
+    it('should retrieve media files for a project', async () => {
+      // Create test media
+      await testFactory.createMedia(testProject.id, {
+        mediaFileName: 'video1.mp4',
+        mediaType: 'VIDEO'
+      })
+      await testFactory.createMedia(testProject.id, {
+        mediaFileName: 'image1.jpg',
+        mediaType: 'IMAGE'
+      })
+
+      const response = await request(app)
+        .get(`/api/v1/projects/${testProject.id}/media`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .expect(200)
+
+      expect(response.body.success).toBe(true)
+      expect(response.body.data).toHaveLength(2)
+    })
+
+    it('should filter media by type', async () => {
+      // Create test media
+      await testFactory.createMedia(testProject.id, {
+        mediaFileName: 'video1.mp4',
+        mediaType: 'VIDEO'
+      })
+      await testFactory.createMedia(testProject.id, {
+        mediaFileName: 'image1.jpg',
+        mediaType: 'IMAGE'
+      })
+
+      // Test video filter
+      const videoResponse = await request(app)
+        .get(`/api/v1/projects/${testProject.id}/media?mediaType=VIDEO`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .expect(200)
+
+      expect(videoResponse.body.success).toBe(true)
+      expect(videoResponse.body.data).toHaveLength(1)
+      expect(videoResponse.body.data[0].mediaType).toBe('VIDEO')
+
+      // Test image filter
+      const imageResponse = await request(app)
+        .get(`/api/v1/projects/${testProject.id}/media?mediaType=IMAGE`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .expect(200)
+
+      expect(imageResponse.body.success).toBe(true)
+      expect(imageResponse.body.data).toHaveLength(1)
+      expect(imageResponse.body.data[0].mediaType).toBe('IMAGE')
+    })
+
+    it('should generate download URL for media file', async () => {
+      const media = await testFactory.createMedia(testProject.id, {
+        mediaFileName: 'download-test-video.mp4',
+        mediaType: 'VIDEO'
+      })
+
+      const response = await request(app)
+        .get(`/api/v1/media/${media.mediaFileName}/download`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .expect(200)
+
+      expect(response.body.success).toBe(true)
+      expect(response.body.data.downloadUrl).toBeDefined()
+      expect(response.body.data.downloadUrl).toContain(media.mediaFileName)
+    })
+
+    it('should delete media file', async () => {
+      const media = await testFactory.createMedia(testProject.id, {
+        mediaFileName: 'delete-test-video.mp4',
+        mediaType: 'VIDEO'
+      })
+
+      // Verify media exists
+      let mediaCount = await prisma.media.count({
+        where: { projectId: testProject.id }
+      })
+      expect(mediaCount).toBe(1)
+
+      // Delete media
+      const response = await request(app)
+        .delete(`/api/v1/media/${media.id}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .expect(200)
+
+      expect(response.body.success).toBe(true)
+
+      // Verify media is deleted
+      mediaCount = await prisma.media.count({
+        where: { projectId: testProject.id }
+      })
+      expect(mediaCount).toBe(0)
+    })
+  })
+
   describe('Media Upload and Management', () => {
     // Note: These tests assume there's a media upload endpoint
     // Adjust the endpoint and payload based on your actual implementation
