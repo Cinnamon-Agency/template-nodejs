@@ -22,7 +22,6 @@ export class MediaController {
     const { mediaFiles } = req.body
 
     const mediaData: IMediaData[] = mediaFiles.map((file: any) => ({
-      mediaFileName: file.mediaFileName,
       mediaType: file.mediaType as MediaType,
       storageProvider: file.storageProvider as StorageProvider || StorageProvider.GOOGLE_CLOUD
     }))
@@ -84,15 +83,19 @@ export class MediaController {
 
   // S3 Specific Endpoints
   async getS3UploadURL(req: Request, res: Response, next: NextFunction) {
-    const { mediaFileName, mediaType } = res.locals.input
+    const { mediaType } = res.locals.input
 
-    const { url, code } = await this.s3Service.getSignedUrl(mediaFileName, 'write')
+    // Generate storage path for the file
+    const { projectId } = req.params
+    const storagePath = `projects/${projectId}/${mediaType.toLowerCase()}/temp-${Date.now()}`
+
+    const { url, code } = await this.s3Service.getSignedUrl(storagePath, 'write')
 
     return next({
       code,
       data: {
         uploadUrl: url,
-        mediaFileName,
+        storagePath,
         mediaType,
         storageProvider: 'AWS_S3'
       }
@@ -113,9 +116,9 @@ export class MediaController {
   }
 
   async completeS3Upload(req: Request, res: Response, next: NextFunction) {
-    const { projectId, mediaFileName, mediaType } = res.locals.input
+    const { projectId, mediaType } = res.locals.input
 
-    const result = await this.mediaService.completeS3Upload(projectId, mediaFileName, mediaType as MediaType)
+    const result = await this.mediaService.completeS3Upload(projectId, mediaType as MediaType)
 
     return next({
       code: result.code,
@@ -158,15 +161,19 @@ export class MediaController {
 
   // Google Cloud Storage Specific Endpoints
   async getGCSUploadURL(req: Request, res: Response, next: NextFunction) {
-    const { mediaFileName, mediaType } = res.locals.input
+    const { mediaType } = res.locals.input
 
-    const { url, code } = await getSignedURL(mediaFileName, 'write')
+    // Generate storage path for the file
+    const { projectId } = req.params
+    const storagePath = `projects/${projectId}/${mediaType.toLowerCase()}/temp-${Date.now()}`
+
+    const { url, code } = await getSignedURL(storagePath, 'write')
 
     return next({
       code,
       data: {
         uploadUrl: url,
-        mediaFileName,
+        storagePath,
         mediaType,
         storageProvider: 'GOOGLE_CLOUD'
       }
@@ -187,9 +194,9 @@ export class MediaController {
   }
 
   async completeGCSUpload(req: Request, res: Response, next: NextFunction) {
-    const { projectId, mediaFileName, mediaType } = res.locals.input
+    const { projectId, mediaType } = res.locals.input
 
-    const result = await this.mediaService.completeGCSUpload(projectId, mediaFileName, mediaType as MediaType)
+    const result = await this.mediaService.completeGCSUpload(projectId, mediaType as MediaType)
 
     return next({
       code: result.code,
@@ -207,19 +214,24 @@ export class MediaController {
 
   // Generic getUploadURL endpoint (storage provider agnostic)
   async getUploadURL(req: Request, res: Response, next: NextFunction) {
-    const { mediaFileName, mediaType, storageProvider } = res.locals.input
+    const { mediaType, storageProvider } = res.locals.input
 
     const provider = storageProvider as StorageProvider || StorageProvider.GOOGLE_CLOUD
     let url: string | undefined
     let code: ResponseCode
+    let storagePath: string
+
+    // Generate storage path for the file
+    const { projectId } = req.params
+    storagePath = `projects/${projectId}/${mediaType.toLowerCase()}/temp-${Date.now()}`
 
     if (provider === StorageProvider.AWS_S3) {
-      const s3Response = await this.s3Service.getSignedUrl(mediaFileName, 'write')
+      const s3Response = await this.s3Service.getSignedUrl(storagePath, 'write')
       url = s3Response.url
       code = s3Response.code
     } else {
       // Default to Google Cloud Storage
-      const gcsResponse = await getSignedURL(mediaFileName, 'write')
+      const gcsResponse = await getSignedURL(storagePath, 'write')
       url = gcsResponse.url
       code = gcsResponse.code
     }
@@ -228,7 +240,7 @@ export class MediaController {
       code,
       data: {
         uploadUrl: url,
-        mediaFileName,
+        storagePath,
         mediaType,
         storageProvider: provider
       }
@@ -238,11 +250,10 @@ export class MediaController {
   // Update media endpoint (for overwriting existing files)
   async updateMedia(req: Request, res: Response, next: NextFunction) {
     const { mediaId } = req.params
-    const { mediaFileName, mediaType, storageProvider } = res.locals.input
+    const { mediaType, storageProvider } = res.locals.input
 
     const result = await this.mediaService.updateMedia(
       mediaId,
-      mediaFileName,
       mediaType as MediaType,
       storageProvider as StorageProvider
     )

@@ -1,6 +1,8 @@
 import { autoInjectable, singleton } from 'tsyringe'
-import AWS from 'aws-sdk'
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, HeadObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3'
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { ResponseCode } from '@common/response'
+import config  from '@core/config'
 
 export interface S3Config {
   accessKeyId: string
@@ -17,45 +19,41 @@ export interface S3SignedUrlResponse {
 @singleton()
 @autoInjectable()
 export class S3Service {
-  private s3: AWS.S3
+  private s3Client: S3Client
   private bucket: string
 
   constructor() {
-    const config: S3Config = {
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
-      region: process.env.AWS_REGION || 'us-east-1',
-      bucket: process.env.AWS_S3_BUCKET || ''
-    }
-
-    this.s3 = new AWS.S3({
-      accessKeyId: config.accessKeyId,
-      secretAccessKey: config.secretAccessKey,
-      region: config.region
+    this.s3Client = new S3Client({
+      credentials: {
+        accessKeyId: config.AWS_ACCESS_KEY,
+        secretAccessKey: config.AWS_SECRET
+      },
+      region: config.AWS_REGION
     })
-    this.bucket = config.bucket
+    this.bucket = config.AWS_S3_BUCKET
   }
 
   async getSignedUrl(fileName: string, operation: 'read' | 'write'): Promise<S3SignedUrlResponse> {
     try {
-      const params = {
+      let command
+      const commonParams = {
         Bucket: this.bucket,
-        Key: fileName,
-        Expires: 3600 // URL expires in 1 hour
+        Key: fileName
       }
 
-      let url: string
-
       if (operation === 'write') {
-        // For uploading, we need a presigned POST URL
-        url = this.s3.getSignedUrl('putObject', {
-          ...params,
+        // For uploading, we use PutObjectCommand
+        command = new PutObjectCommand({
+          ...commonParams,
           ContentType: 'application/octet-stream'
         })
       } else {
-        // For downloading, we need a presigned GET URL
-        url = this.s3.getSignedUrl('getObject', params)
+        // For downloading, we use GetObjectCommand
+        command = new GetObjectCommand(commonParams)
       }
+
+      // Generate presigned URL
+      const url = await getSignedUrl(this.s3Client, command, { expiresIn: 3600 })
 
       return {
         url,
@@ -72,10 +70,12 @@ export class S3Service {
 
   async deleteFile(fileName: string): Promise<{ code: ResponseCode }> {
     try {
-      await this.s3.deleteObject({
+      const command = new DeleteObjectCommand({
         Bucket: this.bucket,
         Key: fileName
-      }).promise()
+      })
+
+      await this.s3Client.send(command)
 
       return { code: ResponseCode.OK }
     } catch (error) {
@@ -86,16 +86,18 @@ export class S3Service {
 
   async uploadFile(fileName: string, buffer: Buffer, contentType: string): Promise<{ code: ResponseCode; location?: string }> {
     try {
-      const result = await this.s3.upload({
+      const command = new PutObjectCommand({
         Bucket: this.bucket,
         Key: fileName,
         Body: buffer,
         ContentType: contentType
-      }).promise()
+      })
+
+      const result = await this.s3Client.send(command)
 
       return {
         code: ResponseCode.OK,
-        location: result.Location
+        location: `https://${this.bucket}.s3.${this.s3Client.config.region}.amazonaws.com/${fileName}`
       }
     } catch (error) {
       console.error('S3 upload error:', error)
@@ -105,10 +107,12 @@ export class S3Service {
 
   async getFileMetadata(fileName: string): Promise<{ code: ResponseCode; metadata?: any }> {
     try {
-      const result = await this.s3.headObject({
+      const command = new HeadObjectCommand({
         Bucket: this.bucket,
         Key: fileName
-      }).promise()
+      })
+
+      const result = await this.s3Client.send(command)
 
       return {
         code: ResponseCode.OK,
@@ -127,7 +131,7 @@ export class S3Service {
 
   async listFiles(prefix?: string, maxKeys = 1000): Promise<{ code: ResponseCode; files?: any[] }> {
     try {
-      const params: AWS.S3.ListObjectsV2Request = {
+      const params: any = {
         Bucket: this.bucket,
         MaxKeys: maxKeys
       }
@@ -136,9 +140,10 @@ export class S3Service {
         params.Prefix = prefix
       }
 
-      const result = await this.s3.listObjectsV2(params).promise()
+      const command = new ListObjectsV2Command(params)
+      const result = await this.s3Client.send(command)
 
-      const files = result.Contents?.map(item => ({
+      const files = result.Contents?.map((item: any) => ({
         key: item.Key,
         size: item.Size,
         lastModified: item.LastModified,
@@ -159,7 +164,7 @@ export class S3Service {
   getBucketInfo(): { bucket: string; region: string } {
     return {
       bucket: this.bucket,
-      region: this.s3.config.region || 'us-east-1'
+      region: (this.s3Client.config.region as string) || 'us-east-1'
     }
   }
 }

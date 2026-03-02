@@ -6,6 +6,7 @@ import { MediaType } from '@prisma/client'
 import { ResponseCode, serviceMethod } from '@common'
 import { getSignedURL } from '@services/google_cloud_storage'
 import { S3Service } from '@services/aws_s3'
+import { extractFileExtension, generateStoragePath } from '@common/utils/fileUtils'
 
 @singleton()
 @autoInjectable()
@@ -19,11 +20,18 @@ export class MediaService implements IMediaService {
     const dbClient = prisma || getPrismaClient()
     const mediaInfo = []
 
-    for (const { mediaFileName, mediaType, storageProvider = StorageProvider.GOOGLE_CLOUD } of mediaFiles) {
+    for (const { mediaType, storageProvider = StorageProvider.GOOGLE_CLOUD } of mediaFiles) {
+      // Generate UUID-based filename and storage path
+      const fileExtension = '' // No extension needed since we don't track original names
+      const storagePath = generateStoragePath(projectId, mediaType, fileExtension)
+      const mediaFileName = storagePath.split('/').pop() || storagePath // Extract filename from path
+
       const created = await dbClient.media.create({
         data: {
-          mediaFileName,
           mediaType,
+          mediaFileName,
+          fileExtension,
+          storagePath,
           projectId,
         },
       })
@@ -36,12 +44,12 @@ export class MediaService implements IMediaService {
       let googleStorageCode = 0
 
       if (storageProvider === StorageProvider.AWS_S3) {
-        const s3Response = await this.s3Service.getSignedUrl(mediaFileName, 'write')
+        const s3Response = await this.s3Service.getSignedUrl(storagePath, 'write')
         url = s3Response.url
         googleStorageCode = s3Response.code
       } else {
         // Default to Google Cloud Storage
-        const gcsResponse = await getSignedURL(mediaFileName, 'write')
+        const gcsResponse = await getSignedURL(storagePath, 'write')
         url = gcsResponse.url
         googleStorageCode = gcsResponse.code
       }
@@ -49,6 +57,7 @@ export class MediaService implements IMediaService {
       mediaInfo.push({
         url,
         mediaFileName,
+        storagePath,
         googleStorageCode,
         storageProvider,
       })
@@ -87,11 +96,16 @@ export class MediaService implements IMediaService {
   }
 
   @serviceMethod()
-  async completeS3Upload(projectId: string, mediaFileName: string, mediaType: MediaType) {
+  async completeS3Upload(projectId: string, mediaType: MediaType) {
     const dbClient = getPrismaClient()
 
+    // Generate the proper storage path and filename
+    const fileExtension = '' // No extension needed
+    const storagePath = generateStoragePath(projectId, mediaType, fileExtension)
+    const mediaFileName = storagePath.split('/').pop() || storagePath
+
     // Verify file exists in S3
-    const { code, metadata } = await this.s3Service.getFileMetadata(mediaFileName)
+    const { code, metadata } = await this.s3Service.getFileMetadata(storagePath)
     if (code !== ResponseCode.OK) {
       return { code: ResponseCode.NOT_FOUND, message: 'File not found in S3' }
     }
@@ -99,8 +113,10 @@ export class MediaService implements IMediaService {
     // Create media record in database
     const media = await dbClient.media.create({
       data: {
-        mediaFileName,
         mediaType,
+        mediaFileName,
+        fileExtension,
+        storagePath,
         projectId,
       },
     })
@@ -110,6 +126,7 @@ export class MediaService implements IMediaService {
       data: {
         id: media.id,
         mediaFileName: media.mediaFileName,
+        storagePath: media.storagePath,
         mediaType: media.mediaType,
         projectId: media.projectId,
         createdAt: media.createdAt,
@@ -179,11 +196,16 @@ export class MediaService implements IMediaService {
   }
 
   @serviceMethod()
-  async completeGCSUpload(projectId: string, mediaFileName: string, mediaType: MediaType) {
+  async completeGCSUpload(projectId: string, mediaType: MediaType) {
     const dbClient = getPrismaClient()
 
+    // Generate the proper storage path and filename
+    const fileExtension = '' // No extension needed
+    const storagePath = generateStoragePath(projectId, mediaType, fileExtension)
+    const mediaFileName = storagePath.split('/').pop() || storagePath
+
     // Verify file exists in GCS by trying to get read URL
-    const { code } = await getSignedURL(mediaFileName, 'read')
+    const { code } = await getSignedURL(storagePath, 'read')
     if (code !== ResponseCode.OK) {
       return { code: ResponseCode.NOT_FOUND, message: 'File not found in Google Cloud Storage' }
     }
@@ -191,8 +213,10 @@ export class MediaService implements IMediaService {
     // Create media record in database
     const media = await dbClient.media.create({
       data: {
-        mediaFileName,
         mediaType,
+        mediaFileName,
+        fileExtension,
+        storagePath,
         projectId,
       },
     })
@@ -202,6 +226,7 @@ export class MediaService implements IMediaService {
       data: {
         id: media.id,
         mediaFileName: media.mediaFileName,
+        storagePath: media.storagePath,
         mediaType: media.mediaType,
         projectId: media.projectId,
         createdAt: media.createdAt,
@@ -237,7 +262,7 @@ export class MediaService implements IMediaService {
   }
 
   @serviceMethod()
-  async updateMedia(mediaId: string, mediaFileName: string, mediaType: MediaType, storageProvider: StorageProvider = StorageProvider.GOOGLE_CLOUD) {
+  async updateMedia(mediaId: string, mediaType: MediaType, storageProvider: StorageProvider = StorageProvider.GOOGLE_CLOUD) {
     const dbClient = getPrismaClient()
 
     // Get existing media record
@@ -249,31 +274,21 @@ export class MediaService implements IMediaService {
       return { code: ResponseCode.NOT_FOUND, message: 'Media not found' }
     }
 
-    // Check if the new file name is the same as the existing one (overwrite scenario)
-    const isOverwrite = mediaFileName === existingMedia.mediaFileName
+    // For updates, we overwrite the existing file
+    // Keep the same storage path and filename
+    const storagePath = existingMedia.storagePath
 
-    if (!isOverwrite) {
-      // Check if new file name already exists in database (prevent duplicates)
-      const duplicateMedia = await dbClient.media.findUnique({
-        where: { mediaFileName }
-      })
-
-      if (duplicateMedia) {
-        return { code: ResponseCode.CONFLICT, message: 'File with this name already exists' }
-      }
-    }
-
-    // Generate upload URL for the new/updated file
+    // Generate upload URL for overwriting the existing file
     let url: string
     let code: ResponseCode
 
     if (storageProvider === StorageProvider.AWS_S3) {
-      const s3Response = await this.s3Service.getSignedUrl(mediaFileName, 'write')
+      const s3Response = await this.s3Service.getSignedUrl(storagePath, 'write')
       url = s3Response.url
       code = s3Response.code
     } else {
       // Default to Google Cloud Storage
-      const gcsResponse = await getSignedURL(mediaFileName, 'write')
+      const gcsResponse = await getSignedURL(storagePath, 'write')
       if (!gcsResponse.url) {
         return { code: gcsResponse.code, message: 'Failed to generate upload URL' }
       }
@@ -289,7 +304,6 @@ export class MediaService implements IMediaService {
     const updatedMedia = await dbClient.media.update({
       where: { id: mediaId },
       data: {
-        mediaFileName,
         mediaType,
         updatedAt: new Date()
       }
@@ -300,15 +314,16 @@ export class MediaService implements IMediaService {
       data: {
         id: updatedMedia.id,
         mediaFileName: updatedMedia.mediaFileName,
+        storagePath: updatedMedia.storagePath,
         mediaType: updatedMedia.mediaType,
         projectId: updatedMedia.projectId,
         createdAt: updatedMedia.createdAt,
         updatedAt: updatedMedia.updatedAt,
         storageProvider,
         uploadUrl: url,
-        isOverwrite
+        isOverwrite: true
       },
-      message: isOverwrite ? 'File overwrite URL generated successfully' : 'File update URL generated successfully'
+      message: 'File overwrite URL generated successfully'
     }
   }
 }

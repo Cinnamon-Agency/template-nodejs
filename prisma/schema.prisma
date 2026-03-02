@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,7 +7,174 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Enums
+model Role {
+  id    String     @id @default(uuid()) @db.Uuid
+  name  RoleType   @unique @default(USER)
+  users UserRole[]
+
+  @@map("roles")
+}
+
+model UserRole {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  roleId    String   @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@map("user_roles")
+}
+
+model User {
+  id                     String            @id @default(uuid()) @db.Uuid
+  email                  String            @unique
+  emailVerified          Boolean           @default(false)
+  phoneNumber            String?
+  phoneVerified          Boolean           @default(false)
+  password               String?
+  authType               AuthType
+  notifications          Boolean?          @default(false)
+  profilePictureFileName String?
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+  notificationsReceived  Notification[]    @relation("NotificationReceiver")
+  notificationsSent      Notification[]    @relation("NotificationSender")
+  projects               Project[]
+  sessions               UserSession[]
+  verificationUIDs       VerificationUID[]
+  roles                  UserRole[]
+
+  @@index([email, authType])
+  @@map("users")
+}
+
+model Project {
+  id            String        @id @default(uuid()) @db.Uuid
+  name          String
+  description   String
+  deadline      DateTime
+  userId        String        @db.Uuid
+  projectStatus ProjectStatus @default(ACTIVE)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  mediaFiles    Media[]
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Media {
+  id            String    @id @default(uuid()) @db.Uuid
+  mediaType     MediaType
+  mediaFileName String    @unique
+  fileExtension String
+  storagePath   String
+  projectId     String    @db.Uuid
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([mediaType])
+}
+
+model Notification {
+  id               String           @id @default(uuid()) @db.Uuid
+  senderId         String           @db.Uuid
+  receiverId       String           @db.Uuid
+  message          String
+  read             Boolean          @default(false)
+  notificationType NotificationType
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  receiver         User             @relation("NotificationReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  sender           User             @relation("NotificationSender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([receiverId])
+}
+
+model UserSession {
+  id           String            @id @default(uuid()) @db.Uuid
+  userId       String            @db.Uuid
+  refreshToken String            @db.VarChar(500)
+  expiresAt    DateTime
+  status       UserSessionStatus @default(ACTIVE)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([refreshToken], map: "refresh_token_idx")
+}
+
+model VerificationUID {
+  id        String              @id @default(uuid()) @db.Uuid
+  userId    String              @db.Uuid
+  uid       String              @db.Uuid
+  hash      String              @db.VarChar(255)
+  type      VerificationUIDType
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([uid], map: "verification_uid_idx")
+  @@index([userId])
+}
+
+model SupportRequest {
+  id        String               @id @default(uuid()) @db.Uuid
+  firstName String
+  lastName  String
+  email     String
+  subject   String
+  message   String
+  status    SupportRequestStatus @default(OPEN)
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+
+  @@index([status])
+  @@map("support_requests")
+}
+
+model PhoneVerificationCode {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @db.Uuid
+  phoneNumber String
+  code        String
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("phone_verification_codes")
+}
+
+model LoginCode {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@map("login_codes")
+}
+
+model DeviceToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([token])
+  @@map("device_tokens")
+}
 
 enum MediaType {
   IMAGE
@@ -62,170 +223,4 @@ enum SupportRequestStatus {
   IN_PROGRESS
   RESOLVED
   CLOSED
-}
-
-model Role {
-  id    String      @id @default(uuid()) @db.Uuid
-  name  RoleType    @unique @default(USER)
-  users UserRole[]
-
-  @@map("roles")
-}
-
-model UserRole {
-  id        String   @id @default(uuid()) @db.Uuid
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String   @db.Uuid
-  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  roleId    String   @db.Uuid
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([userId, roleId])
-  @@map("user_roles")
-}
-
-
-// Models
-model User {
-  id                      String          @id @default(uuid()) @db.Uuid
-  email                   String          @unique
-  emailVerified           Boolean         @default(false)
-  phoneNumber             String?
-  phoneVerified           Boolean         @default(false)
-  password                String?         // nullable
-  authType                AuthType
-  roles                 UserRole[]
-  notifications           Boolean?        @default(false)
-  profilePictureFileName  String?
-  projects                Project[]
-  notificationsSent       Notification[]  @relation("NotificationSender")
-  notificationsReceived   Notification[]  @relation("NotificationReceiver")
-  sessions                UserSession[]
-  verificationUIDs        VerificationUID[]
-  createdAt               DateTime        @default(now())
-  updatedAt               DateTime        @updatedAt
-
-  @@index([email, authType])
-  @@map("users")
-}
-
-model Project {
-  id            String     @id @default(uuid()) @db.Uuid
-  name          String
-  description   String
-  deadline      DateTime
-  userId        String     @db.Uuid
-  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  projectStatus ProjectStatus @default(ACTIVE)
-  mediaFiles    Media[]
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-
-  @@index([userId])
-}
-
-model Media {
-  id            String     @id @default(uuid()) @db.Uuid
-  mediaType     MediaType
-  mediaFileName String     @unique
-  projectId     String     @db.Uuid
-  project       Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-}
-
-model Notification {
-  id               String           @id @default(uuid()) @db.Uuid
-  senderId         String           @db.Uuid
-  sender           User             @relation("NotificationSender", fields: [senderId], references: [id], onDelete: Cascade)
-  receiverId       String           @db.Uuid
-  receiver         User             @relation("NotificationReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
-  message          String
-  read             Boolean          @default(false)
-  notificationType NotificationType
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-
-  @@index([receiverId])
-}
-
-model UserSession {
-  id            String            @id @default(uuid()) @db.Uuid
-  userId        String            @db.Uuid
-  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  refreshToken  String            @db.VarChar(500)
-  expiresAt     DateTime
-  status        UserSessionStatus @default(ACTIVE)
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
-  
-  @@index([userId])
-  @@index([refreshToken], name: "refresh_token_idx")
-}
-
-model VerificationUID {
-  id        String              @id @default(uuid()) @db.Uuid
-  userId    String              @db.Uuid
-  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  uid       String              @db.Uuid
-  hash      String              @db.VarChar(255)
-  type      VerificationUIDType
-  createdAt DateTime            @default(now())
-  updatedAt DateTime            @updatedAt
-  
-  @@index([uid], name: "verification_uid_idx")
-  @@index([userId])
-}
-
-model SupportRequest {
-  id        String                @id @default(uuid()) @db.Uuid
-  firstName String
-  lastName  String
-  email     String
-  subject   String
-  message   String                @db.Text
-  status    SupportRequestStatus  @default(OPEN)
-  createdAt DateTime              @default(now())
-  updatedAt DateTime              @updatedAt
-
-  @@index([status])
-  @@map("support_requests")
-}
-
-model PhoneVerificationCode {
-  id            String   @id @default(uuid()) @db.Uuid
-  userId        String   @db.Uuid
-  phoneNumber   String
-  code          String
-  expiresAt     DateTime
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  @@map("phone_verification_codes")
-}
-
-model LoginCode {
-  id        String   @id @default(uuid()) @db.Uuid
-  email     String
-  code      String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([email])
-  @@map("login_codes")
-}
-
-model DeviceToken {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @db.Uuid
-  token     String   @unique
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
-  @@index([token])
-  @@map("device_tokens")
 }

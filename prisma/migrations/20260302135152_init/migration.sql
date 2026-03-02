@@ -1,6 +1,3 @@
--- CreateSchema
-CREATE SCHEMA IF NOT EXISTS "public";
-
 -- CreateEnum
 CREATE TYPE "public"."MediaType" AS ENUM ('IMAGE', 'VIDEO');
 
@@ -80,6 +77,8 @@ CREATE TABLE "public"."Media" (
     "id" UUID NOT NULL,
     "mediaType" "public"."MediaType" NOT NULL,
     "mediaFileName" TEXT NOT NULL,
+    "fileExtension" TEXT NOT NULL,
+    "storagePath" TEXT NOT NULL,
     "projectId" UUID NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -192,7 +191,19 @@ CREATE UNIQUE INDEX "users_email_key" ON "public"."users"("email");
 CREATE INDEX "users_email_authType_idx" ON "public"."users"("email", "authType");
 
 -- CreateIndex
+CREATE INDEX "Project_userId_idx" ON "public"."Project"("userId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Media_mediaFileName_key" ON "public"."Media"("mediaFileName");
+
+-- CreateIndex
+CREATE INDEX "Media_projectId_idx" ON "public"."Media"("projectId");
+
+-- CreateIndex
+CREATE INDEX "Media_mediaType_idx" ON "public"."Media"("mediaType");
+
+-- CreateIndex
+CREATE INDEX "Notification_receiverId_idx" ON "public"."Notification"("receiverId");
 
 -- CreateIndex
 CREATE INDEX "UserSession_userId_idx" ON "public"."UserSession"("userId");
@@ -207,6 +218,9 @@ CREATE INDEX "verification_uid_idx" ON "public"."VerificationUID"("uid");
 CREATE INDEX "VerificationUID_userId_idx" ON "public"."VerificationUID"("userId");
 
 -- CreateIndex
+CREATE INDEX "support_requests_status_idx" ON "public"."support_requests"("status");
+
+-- CreateIndex
 CREATE INDEX "login_codes_email_idx" ON "public"."login_codes"("email");
 
 -- CreateIndex
@@ -219,10 +233,10 @@ CREATE INDEX "device_tokens_userId_idx" ON "public"."device_tokens"("userId");
 CREATE INDEX "device_tokens_token_idx" ON "public"."device_tokens"("token");
 
 -- AddForeignKey
-ALTER TABLE "public"."user_roles" ADD CONSTRAINT "user_roles_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."user_roles" ADD CONSTRAINT "user_roles_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "public"."roles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."user_roles" ADD CONSTRAINT "user_roles_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "public"."roles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."user_roles" ADD CONSTRAINT "user_roles_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."Project" ADD CONSTRAINT "Project_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -231,14 +245,13 @@ ALTER TABLE "public"."Project" ADD CONSTRAINT "Project_userId_fkey" FOREIGN KEY 
 ALTER TABLE "public"."Media" ADD CONSTRAINT "Media_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."Notification" ADD CONSTRAINT "Notification_senderId_fkey" FOREIGN KEY ("senderId") REFERENCES "public"."users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."Notification" ADD CONSTRAINT "Notification_receiverId_fkey" FOREIGN KEY ("receiverId") REFERENCES "public"."users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."Notification" ADD CONSTRAINT "Notification_receiverId_fkey" FOREIGN KEY ("receiverId") REFERENCES "public"."users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."Notification" ADD CONSTRAINT "Notification_senderId_fkey" FOREIGN KEY ("senderId") REFERENCES "public"."users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."UserSession" ADD CONSTRAINT "UserSession_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."VerificationUID" ADD CONSTRAINT "VerificationUID_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-

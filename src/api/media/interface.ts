@@ -8,7 +8,6 @@ export enum StorageProvider {
 
 export interface IMediaData {
   mediaType: MediaType
-  mediaFileName: string
   storageProvider?: StorageProvider
 }
 
@@ -20,7 +19,8 @@ export interface ICreateMediaEntries {
 
 export interface MediaInfo {
   url: string | undefined
-  mediaFileName: string
+  mediaFileName: string // Generated UUID filename
+  storagePath: string // Full storage path
   googleStorageCode: number
   storageProvider: StorageProvider
 }
@@ -30,5 +30,5 @@ export interface IMediaService {
   getMediaByProject(projectId: string, mediaType?: MediaType): AsyncResponse<any[]>
   getDownloadUrl(mediaFileName: string, storageProvider?: StorageProvider): AsyncResponse<string>
   deleteMedia(mediaId: string): AsyncResponse<void>
-  updateMedia(mediaId: string, mediaFileName: string, mediaType: MediaType, storageProvider?: StorageProvider): AsyncResponse<any>
+  updateMedia(mediaId: string, mediaType: MediaType, storageProvider?: StorageProvider): AsyncResponse<any>
 }

@@ -39,6 +39,7 @@ export interface ENV {
   AWS_ACCESS_KEY?: string
   AWS_SECRET?: string
   AWS_REGION?: string
+  AWS_S3_BUCKET?: string
 
   // Email
   SES_VERIFIED_MAIL?: string

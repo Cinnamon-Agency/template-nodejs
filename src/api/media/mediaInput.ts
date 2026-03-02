@@ -4,7 +4,7 @@ import { MediaType } from '@prisma/client'
 import { StorageProvider } from './interface'
 
 /**
- * Media file name validation rule
+ * Media file name validation rule (for backward compatibility)
  */
 const mediaFileNameRule = Joi.string()
   .min(1)
@@ -15,6 +15,18 @@ const mediaFileNameRule = Joi.string()
     'string.min': 'Media file name is required',
     'string.max': 'Media file name must be at most 255 characters',
     'string.pattern.base': 'Media file name can only contain letters, numbers, dots, hyphens, and underscores'
+  })
+
+/**
+ * Original filename validation rule
+ */
+const originalNameRule = Joi.string()
+  .min(1)
+  .max(255)
+  .trim()
+  .messages({
+    'string.min': 'Original filename is required',
+    'string.max': 'Original filename must be at most 255 characters'
   })
 
 /**
@@ -72,7 +84,6 @@ const prefixRule = Joi.string()
  * Media file array validation rule
  */
 const mediaFileRule = Joi.object({
-  mediaFileName: mediaFileNameRule.required(),
   mediaType: mediaTypeRule,
   storageProvider: storageProviderRule
 })
@@ -84,13 +95,11 @@ export const getUploadURLSchema = (req: Request) => {
   return {
     schema: Joi.object()
       .keys({
-        mediaFileName: mediaFileNameRule.required(),
         mediaType: mediaTypeRule,
         storageProvider: storageProviderRule
       })
       .options({ abortEarly: false }),
     input: {
-      mediaFileName: req.body.mediaFileName,
       mediaType: req.body.mediaType,
       storageProvider: req.body.storageProvider
     }
@@ -104,12 +113,10 @@ export const getS3UploadURLSchema = (req: Request) => {
   return {
     schema: Joi.object()
       .keys({
-        mediaFileName: mediaFileNameRule.required(),
         mediaType: mediaTypeRule
       })
       .options({ abortEarly: false }),
     input: {
-      mediaFileName: req.body.mediaFileName,
       mediaType: req.body.mediaType
     }
   }
@@ -123,13 +130,11 @@ export const completeS3UploadSchema = (req: Request) => {
     schema: Joi.object()
       .keys({
         projectId: projectIdRule,
-        mediaFileName: mediaFileNameRule.required(),
         mediaType: mediaTypeRule
       })
       .options({ abortEarly: false }),
     input: {
       projectId: req.params.projectId,
-      mediaFileName: req.body.mediaFileName,
       mediaType: req.body.mediaType
     }
   }
@@ -208,12 +213,10 @@ export const getGCSUploadURLSchema = (req: Request) => {
   return {
     schema: Joi.object()
       .keys({
-        mediaFileName: mediaFileNameRule.required(),
         mediaType: mediaTypeRule
       })
       .options({ abortEarly: false }),
     input: {
-      mediaFileName: req.body.mediaFileName,
       mediaType: req.body.mediaType
     }
   }
@@ -227,13 +230,11 @@ export const completeGCSUploadSchema = (req: Request) => {
     schema: Joi.object()
       .keys({
         projectId: projectIdRule,
-        mediaFileName: mediaFileNameRule.required(),
         mediaType: mediaTypeRule
       })
       .options({ abortEarly: false }),
     input: {
       projectId: req.params.projectId,
-      mediaFileName: req.body.mediaFileName,
       mediaType: req.body.mediaType
     }
   }
@@ -361,13 +362,11 @@ export const updateMediaSchema = (req: Request) => {
   return {
     schema: Joi.object()
       .keys({
-        mediaFileName: mediaFileNameRule.required(),
         mediaType: mediaTypeRule,
         storageProvider: storageProviderRule
       })
       .options({ abortEarly: false }),
     input: {
-      mediaFileName: req.body.mediaFileName,
       mediaType: req.body.mediaType,
       storageProvider: req.body.storageProvider
     }
