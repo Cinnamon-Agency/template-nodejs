@@ -29,6 +29,12 @@
 - Use Joi for request/response validation
 - Follow RESTful API design principles
 - Implement proper authentication and authorization middleware
+- **CRITICAL**: Use `return next({ code, data })` pattern in controllers - NEVER `res.json()`
+- **CRITICAL**: Use `@serviceMethod()` decorator on all service methods
+- **No try-catch in controllers** - let services handle errors
+- **Consistent response format**: Services return `{ code: ResponseCode, data?: any, message?: string }`
+- **Thin controllers**: Only orchestrate service calls, no business logic
+- **Service layer**: All database operations and business logic in services
 
 ### **Database Standards**
 - Use Prisma ORM for all database operations
@@ -106,6 +112,15 @@
 - Use efficient data structures
 
 ## **Error Handling Standards**
+
+### **Error Handling**
+- **Controllers**: Use `return next({ code, data })` - NEVER try-catch or `res.json()`
+- **Services**: Use `@serviceMethod()` decorator for consistent error handling
+- **Response Format**: Standardized `{ code: ResponseCode, data?: any, message?: string }`
+- **Error Propagation**: Errors handled by middleware via `next()` function
+- **No Direct HTTP**: Services never call `res.json()` - only return data
+- **Centralized Handling**: All errors processed by error middleware
+- **Typed Errors**: Use `ResponseCode` enum for consistent error codes
 
 ### **Error Types**
 - Define custom error classes for different error types

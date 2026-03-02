@@ -41,21 +41,71 @@ src/api/
 ### Controller Pattern
 ```typescript
 import { Request, Response, NextFunction } from 'express';
-import { injectable, inject } from 'tsyringe';
+import { autoInjectable, singleton } from 'tsyringe';
+import { ResponseCode } from '@common/response';
 
-@injectable()
+@singleton()
+@autoInjectable()
 export class ResourceController {
-  constructor(
-    @inject('ResourceService') private resourceService: ResourceService
-  ) {}
+  constructor(private readonly resourceService: ResourceService) {}
 
   async getAll(req: Request, res: Response, next: NextFunction) {
-    try {
-      const result = await this.resourceService.findAll();
-      res.status(200).json(result);
-    } catch (error) {
-      next(error);
-    }
+    const { filter } = req.query;
+    
+    const result = await this.resourceService.findAll(filter as string);
+    
+    return next({
+      code: result.code,
+      data: { items: result.items }
+    });
+  }
+
+  async create(req: Request, res: Response, next: NextFunction) {
+    const { name, description } = res.locals.input;
+    
+    const result = await this.resourceService.create({ name, description });
+    
+    return next({
+      code: result.code,
+      data: { item: result.item }
+    });
+  }
+}
+```
+
+### Service Pattern
+```typescript
+import { autoInjectable, singleton } from 'tsyringe';
+import { ResponseCode, serviceMethod } from '@common/response';
+
+@singleton()
+@autoInjectable()
+export class ResourceService implements IResourceService {
+  constructor(private readonly userService: UserService) {}
+
+  @serviceMethod()
+  async findAll(filter?: string) {
+    const items = await getPrismaClient().resource.findMany({
+      where: filter ? { name: { contains: filter } } : undefined
+    });
+
+    return { 
+      code: ResponseCode.OK, 
+      items 
+    };
+  }
+
+  @serviceMethod()
+  async create({ name, description }: ICreateResource) {
+    const item = await getPrismaClient().resource.create({
+      data: { name, description }
+    });
+
+    return { 
+      code: ResponseCode.OK, 
+      item,
+      message: 'Resource created successfully'
+    };
   }
 }
 ```
@@ -67,10 +117,18 @@ export class ResourceController {
 - Leverage dependency injection with tsyringe
 
 ### Error Handling
-- Always use try-catch blocks in async handlers
-- Pass errors to Express error middleware using `next(error)`
-- Use custom error classes from `src/common/errors/`
-- Log errors appropriately before passing to middleware
+- **Controllers**: NEVER use try-catch blocks - always use `return next({ code, data })`
+- **Services**: ALWAYS use `@serviceMethod()` decorator for consistent error handling
+- **Response Format**: Services return `{ code: ResponseCode, data?: any, message?: string }`
+- **Error Propagation**: Errors are handled by middleware via the `next()` function
+- **No Direct HTTP**: Services never call `res.json()` - only controllers orchestrate responses
+
+### Critical Rules
+1. **Controllers must use `return next({ code, data })`** - NEVER `res.json()`
+2. **Services must use `@serviceMethod()` decorator** on all public methods
+3. **No try-catch in controllers** - let services handle errors
+4. **Consistent response structure** across all endpoints
+5. **Business logic in services only** - controllers are thin orchestration layers
 
 ## Common Tasks
 
@@ -120,10 +178,12 @@ export class ResourceController {
 2. **Use Dependency Injection**: Never instantiate services directly
 3. **Validate Early**: Validate requests before processing
 4. **Type Everything**: Leverage TypeScript's type system
-5. **Handle Errors Properly**: Use try-catch and error middleware
-6. **Return Consistent Responses**: Use standard response formats
+5. **Handle Errors Properly**: Use `@serviceMethod()` and `next()` pattern
+6. **Return Consistent Responses**: Use `next({ code, data })` pattern
 7. **Log Appropriately**: Log errors and important operations
 8. **Test Thoroughly**: Write integration tests for all endpoints
+9. **No Direct HTTP in Services**: Services only return data, never call `res.json()`
+10. **Consistent Error Handling**: All service methods use `@serviceMethod()` decorator
 
 ## Quick Reference
 

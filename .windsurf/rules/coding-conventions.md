@@ -130,9 +130,11 @@ type Result<T, E = Error> = {
 - Use `@singleton()` and `@autoInjectable()` decorators from tsyringe for DI
 - Inject services via constructor with `private readonly`
 - Use arrow function properties for route handlers to preserve `this` context
-- Pass results to `next()` for centralized response handling — do not call `res.json()` directly
+- **CRITICAL**: Always use `return next({ code, data })` pattern - NEVER call `res.json()` directly
 - Keep controllers thin, delegate business logic to services
 - Apply validation and auth middleware in the **router**, not as controller decorators
+- **No try-catch blocks** - let services handle errors and use `@serviceMethod()` decorator
+- **Consistent response format**: `next({ code: ResponseCode, data?: any })`
 
 ```typescript
 @singleton()
@@ -152,16 +154,41 @@ export class ProjectController {
       mediaFiles,
     })
 
-    return next({ mediaInfo, code })
+    return next({ code, data: { mediaInfo } })
   }
 }
 ```
 
 ### **Service Layer**
 - Implement business logic in service classes
-- Use repositories for data access
-- Implement proper error handling
+- **Always use `@serviceMethod()` decorator** on all public methods for consistent error handling
+- Return structured responses: `{ code: ResponseCode, data?: any, message?: string }`
+- Handle all database operations and external service calls
+- **No direct HTTP responses** - services only return data/response codes
+- Use repositories for data access patterns
 - Use transactions for multi-step operations
+
+```typescript
+@singleton()
+@autoInjectable()
+export class ProjectService implements IProjectService {
+  constructor(private readonly userService: UserService) {}
+
+  @serviceMethod()
+  async createProject({ userId, name, description, deadline, mediaFiles }: ICreateProject) {
+    // Business logic here
+    const project = await getPrismaClient().project.create({
+      data: { userId, name, description, deadline }
+    })
+
+    return { 
+      code: ResponseCode.OK, 
+      data: { project },
+      message: 'Project created successfully'
+    }
+  }
+}
+```
 
 ### **Validation**
 - Use Joi schemas for request validation
