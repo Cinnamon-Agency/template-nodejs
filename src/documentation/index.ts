@@ -7,6 +7,7 @@ import { notificationDocs } from '@api/notification/notificationDocs'
 import { supportRequestDocs } from '@api/support_request/supportRequestDocs'
 import { userRoleDocs } from '@api/user_role/userRoleDocs'
 import { mediaDocs } from '@api/media/mediaDocs'
+import { productDocs } from '@api/product/productDocs'
 import { genericDocs } from './genericDocs'
 
 export const APIDocumentation = {
@@ -45,6 +46,7 @@ export const APIDocumentation = {
     supportRequestDocs,
     userRoleDocs,
     mediaDocs,
+    productDocs,
     (a: object, b: object) => {
       if (_.isArray(a)) {
         return a.concat(b)

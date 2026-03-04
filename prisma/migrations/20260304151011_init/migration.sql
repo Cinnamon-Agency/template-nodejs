@@ -8,7 +8,7 @@ CREATE TYPE "public"."NotificationType" AS ENUM ('EXAMPLE_NOTIFICATION');
 CREATE TYPE "public"."ProjectStatus" AS ENUM ('ACTIVE', 'FINISHED');
 
 -- CreateEnum
-CREATE TYPE "public"."AuthType" AS ENUM ('GOOGLE', 'LINKED_IN', 'APPLE', 'FACEBOOK', 'USER_PASSWORD');
+CREATE TYPE "public"."AuthType" AS ENUM ('GOOGLE', 'APPLE', 'USER_PASSWORD');
 
 -- CreateEnum
 CREATE TYPE "public"."UserSessionStatus" AS ENUM ('ACTIVE', 'EXPIRED', 'LOGGED_OUT');
@@ -21,6 +21,12 @@ CREATE TYPE "public"."RoleType" AS ENUM ('USER', 'ADMIN', 'SUPERADMIN');
 
 -- CreateEnum
 CREATE TYPE "public"."SupportRequestStatus" AS ENUM ('OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED');
+
+-- CreateEnum
+CREATE TYPE "public"."ProductStatus" AS ENUM ('ACTIVE', 'INACTIVE', 'DRAFT', 'ARCHIVED');
+
+-- CreateEnum
+CREATE TYPE "public"."ProductCharacteristicType" AS ENUM ('TEXT', 'NUMBER', 'BOOLEAN', 'SELECT', 'COLOR', 'SIZE', 'WEIGHT', 'MATERIAL', 'BRAND', 'MODEL');
 
 -- CreateTable
 CREATE TABLE "public"."roles" (
@@ -50,6 +56,11 @@ CREATE TABLE "public"."users" (
     "phoneVerified" BOOLEAN NOT NULL DEFAULT false,
     "password" TEXT,
     "authType" "public"."AuthType" NOT NULL,
+    "googleId" TEXT,
+    "appleId" TEXT,
+    "firstName" TEXT,
+    "lastName" TEXT,
+    "profilePictureUrl" TEXT,
     "notifications" BOOLEAN DEFAULT false,
     "profilePictureFileName" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -79,7 +90,8 @@ CREATE TABLE "public"."Media" (
     "mediaFileName" TEXT NOT NULL,
     "fileExtension" TEXT NOT NULL,
     "storagePath" TEXT NOT NULL,
-    "projectId" UUID NOT NULL,
+    "projectId" UUID,
+    "productId" UUID,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -178,6 +190,55 @@ CREATE TABLE "public"."device_tokens" (
     CONSTRAINT "device_tokens_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "public"."products" (
+    "id" UUID NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "price" DECIMAL(10,2) NOT NULL,
+    "sku" TEXT NOT NULL,
+    "stock" INTEGER NOT NULL DEFAULT 0,
+    "status" "public"."ProductStatus" NOT NULL DEFAULT 'ACTIVE',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "products_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."product_characteristics" (
+    "id" UUID NOT NULL,
+    "productId" UUID NOT NULL,
+    "name" TEXT NOT NULL,
+    "value" TEXT NOT NULL,
+    "type" "public"."ProductCharacteristicType" NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "product_characteristics_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."categories" (
+    "id" UUID NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "parentId" UUID,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "categories_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."product_categories" (
+    "productId" UUID NOT NULL,
+    "categoryId" UUID NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "product_categories_pkey" PRIMARY KEY ("productId")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "roles_name_key" ON "public"."roles"("name");
 
@@ -186,6 +247,12 @@ CREATE UNIQUE INDEX "user_roles_userId_roleId_key" ON "public"."user_roles"("use
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "public"."users"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "users_googleId_key" ON "public"."users"("googleId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "users_appleId_key" ON "public"."users"("appleId");
 
 -- CreateIndex
 CREATE INDEX "users_email_authType_idx" ON "public"."users"("email", "authType");
@@ -198,6 +265,9 @@ CREATE UNIQUE INDEX "Media_mediaFileName_key" ON "public"."Media"("mediaFileName
 
 -- CreateIndex
 CREATE INDEX "Media_projectId_idx" ON "public"."Media"("projectId");
+
+-- CreateIndex
+CREATE INDEX "Media_productId_idx" ON "public"."Media"("productId");
 
 -- CreateIndex
 CREATE INDEX "Media_mediaType_idx" ON "public"."Media"("mediaType");
@@ -232,6 +302,36 @@ CREATE INDEX "device_tokens_userId_idx" ON "public"."device_tokens"("userId");
 -- CreateIndex
 CREATE INDEX "device_tokens_token_idx" ON "public"."device_tokens"("token");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "products_sku_key" ON "public"."products"("sku");
+
+-- CreateIndex
+CREATE INDEX "products_sku_idx" ON "public"."products"("sku");
+
+-- CreateIndex
+CREATE INDEX "products_status_idx" ON "public"."products"("status");
+
+-- CreateIndex
+CREATE INDEX "products_price_idx" ON "public"."products"("price");
+
+-- CreateIndex
+CREATE INDEX "product_characteristics_productId_idx" ON "public"."product_characteristics"("productId");
+
+-- CreateIndex
+CREATE INDEX "product_characteristics_type_idx" ON "public"."product_characteristics"("type");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "categories_name_key" ON "public"."categories"("name");
+
+-- CreateIndex
+CREATE INDEX "categories_parentId_idx" ON "public"."categories"("parentId");
+
+-- CreateIndex
+CREATE INDEX "product_categories_categoryId_idx" ON "public"."product_categories"("categoryId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "product_categories_productId_categoryId_key" ON "public"."product_categories"("productId", "categoryId");
+
 -- AddForeignKey
 ALTER TABLE "public"."user_roles" ADD CONSTRAINT "user_roles_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "public"."roles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -245,6 +345,9 @@ ALTER TABLE "public"."Project" ADD CONSTRAINT "Project_userId_fkey" FOREIGN KEY 
 ALTER TABLE "public"."Media" ADD CONSTRAINT "Media_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "public"."Media" ADD CONSTRAINT "Media_productId_fkey" FOREIGN KEY ("productId") REFERENCES "public"."products"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "public"."Notification" ADD CONSTRAINT "Notification_receiverId_fkey" FOREIGN KEY ("receiverId") REFERENCES "public"."users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -255,3 +358,15 @@ ALTER TABLE "public"."UserSession" ADD CONSTRAINT "UserSession_userId_fkey" FORE
 
 -- AddForeignKey
 ALTER TABLE "public"."VerificationUID" ADD CONSTRAINT "VerificationUID_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."product_characteristics" ADD CONSTRAINT "product_characteristics_productId_fkey" FOREIGN KEY ("productId") REFERENCES "public"."products"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."categories" ADD CONSTRAINT "categories_parentId_fkey" FOREIGN KEY ("parentId") REFERENCES "public"."categories"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."product_categories" ADD CONSTRAINT "product_categories_productId_fkey" FOREIGN KEY ("productId") REFERENCES "public"."products"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."product_categories" ADD CONSTRAINT "product_categories_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "public"."categories"("id") ON DELETE CASCADE ON UPDATE CASCADE;
