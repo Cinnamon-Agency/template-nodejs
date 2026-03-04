@@ -2,14 +2,14 @@ import { NextFunction, Request, Response } from 'express'
 import { ResponseCode } from '@common'
 import { autoInjectable, singleton } from 'tsyringe'
 import { NotificationService } from './notificationService'
-import { WebSocketService } from '@services/websocket'
+import { SocketIOService } from '@services/websocket'
 
 @singleton()
 @autoInjectable()
 export class NotificationController {
   constructor(
     private readonly notificationService: NotificationService,
-    private readonly webSocketService: WebSocketService
+    private readonly socketIOService: SocketIOService
   ) {}
 
   public getNotifications = async (
@@ -64,7 +64,7 @@ export class NotificationController {
     })
 
     if (code === ResponseCode.OK) {
-      this.webSocketService.emit(`${id}_delete_notif`, { notificationId })
+      this.socketIOService.emit(`${id}_delete_notif`, { notificationId })
     }
 
     return next({ code })

@@ -5,7 +5,7 @@ import config from '@core/config'
 import { serverState } from './state'
 import { container } from 'tsyringe'
 
-import { WebSocketService } from '@services/websocket'
+import { SocketIOService } from '@services/websocket'
 import { getPrismaClient } from '@services/prisma'
 
 export class AppServer {
@@ -35,8 +35,8 @@ export class AppServer {
       )
     })
 
-    const webSocketService = container.resolve(WebSocketService)
-    webSocketService.attach(this.server)
+    const socketIOService = container.resolve(SocketIOService)
+    socketIOService.attach(this.server)
   }
 
   private async shutdown(signal: string): Promise<void> {
@@ -53,9 +53,8 @@ export class AppServer {
 
       shutdownTasks.push(getPrismaClient().$disconnect())
 
-      const webSocketService = container.resolve(WebSocketService)
-      // Properly invoke close() to get a promise
-      shutdownTasks.push(webSocketService.close())
+      const socketIOService = container.resolve(SocketIOService)
+      shutdownTasks.push(socketIOService.close())
 
       if (this.server) {
         shutdownTasks.push(
