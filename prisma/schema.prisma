@@ -79,14 +79,11 @@ model Media {
   fileExtension String
   storagePath   String
   projectId     String?   @db.Uuid
-  productId     String?   @db.Uuid
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   project       Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  product       Product?  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([projectId])
-  @@index([productId])
   @@index([mediaType])
 }
 
@@ -199,13 +196,47 @@ model Product {
   // Relations
   characteristics ProductCharacteristic[]
   categories      ProductCategory[]
-  media           Media[]
   cartItems       CartItem[]
+  variations      ProductVariation[]
   
   @@index([sku])
   @@index([status])
   @@index([price])
   @@map("products")
+}
+
+model ProductVariation {
+  id          String   @id @default(uuid()) @db.Uuid
+  productId   String   @db.Uuid
+  sku         String   @unique
+  name        String
+  price       Decimal  @db.Decimal(10, 2)
+  stock       Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  options     VariationOption[]
+  
+  @@index([productId])
+  @@index([sku])
+  @@index([isActive])
+  @@map("product_variations")
+}
+
+model VariationOption {
+  id          String           @id @default(uuid()) @db.Uuid
+  variationId String           @db.Uuid
+  name        String
+  value       String
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  
+  variation   ProductVariation @relation(fields: [variationId], references: [id], onDelete: Cascade)
+  
+  @@index([variationId])
+  @@map("variation_options")
 }
 
 model ProductCharacteristic {
@@ -286,6 +317,66 @@ model CartItem {
   @@map("cart_items")
 }
 
+model ShippingZone {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  countries ShippingZoneCountry[]
+  rates     ShippingRate[]
+  
+  @@index([isActive])
+  @@map("shipping_zones")
+}
+
+model ShippingZoneCountry {
+  id              String   @id @default(uuid()) @db.Uuid
+  shippingZoneId  String   @db.Uuid
+  countryCode     String   // ISO 3166-1 alpha-2 code (e.g., US, GB, DE)
+  countryName     String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  shippingZone    ShippingZone @relation(fields: [shippingZoneId], references: [id], onDelete: Cascade)
+  
+  @@unique([shippingZoneId, countryCode])
+  @@index([shippingZoneId])
+  @@index([countryCode])
+  @@map("shipping_zone_countries")
+}
+
+model ShippingRate {
+  id              String              @id @default(uuid()) @db.Uuid
+  shippingZoneId  String              @db.Uuid
+  name            String
+  description     String?
+  rateType        ShippingRateType    @default(FLAT_RATE)
+  baseRate        Decimal             @db.Decimal(10, 2)
+  minOrderValue   Decimal?            @db.Decimal(10, 2)
+  maxOrderValue   Decimal?            @db.Decimal(10, 2)
+  freeShippingMin Decimal?            @db.Decimal(10, 2)
+  estimatedDays   Int?
+  isActive        Boolean             @default(true)
+  priority        Int                 @default(0)
+  weightUnit      String?             @db.VarChar(10)
+  pricePerUnit    Decimal?            @db.Decimal(10, 2)
+  minWeight       Decimal?            @db.Decimal(10, 2)
+  maxWeight       Decimal?            @db.Decimal(10, 2)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  
+  shippingZone    ShippingZone        @relation(fields: [shippingZoneId], references: [id], onDelete: Cascade)
+  
+  @@index([shippingZoneId])
+  @@index([isActive])
+  @@index([priority])
+  @@map("shipping_rates")
+}
+
 enum MediaType {
   IMAGE
   VIDEO
@@ -351,4 +442,11 @@ enum ProductCharacteristicType {
   MATERIAL
   BRAND
   MODEL
+}
+
+enum ShippingRateType {
+  FLAT_RATE
+  PRICE_BASED
+  WEIGHT_BASED
+  FREE_SHIPPING
 }

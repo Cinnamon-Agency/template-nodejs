@@ -20,7 +20,7 @@ import {
 @autoInjectable()
 export class ProductService implements IProductService {
   @serviceMethod()
-  async createProduct({ name, description, price, sku, stock, status, characteristics, categoryIds }: ICreateProduct) {
+  async createProduct({ name, description, price, sku, stock, status, characteristics, categoryIds, variations }: ICreateProduct) {
     const existingProduct = await getPrismaClient().product.findUnique({
       where: { sku },
     });
@@ -53,6 +53,24 @@ export class ProductService implements IProductService {
               })),
             }
           : undefined,
+        variations: variations
+          ? {
+              create: variations.map((variation: any) => ({
+                sku: variation.sku,
+                name: variation.name,
+                price: variation.price,
+                stock: variation.stock || 0,
+                options: variation.options
+                  ? {
+                      create: variation.options.map((option: any) => ({
+                        name: option.name,
+                        value: option.value,
+                      })),
+                    }
+                  : undefined,
+              })),
+            }
+          : undefined,
       },
       include: {
         characteristics: true,
@@ -61,7 +79,11 @@ export class ProductService implements IProductService {
             category: true,
           },
         },
-        media: true,
+        variations: {
+          include: {
+            options: true,
+          },
+        },
       },
     });
 
@@ -135,7 +157,11 @@ export class ProductService implements IProductService {
               category: true,
             },
           },
-          media: true,
+          variations: {
+            include: {
+              options: true,
+            },
+          },
         },
       }),
       getPrismaClient().product.count({ where }),
@@ -164,7 +190,11 @@ export class ProductService implements IProductService {
             category: true,
           },
         },
-        media: true,
+        variations: {
+          include: {
+            options: true,
+          },
+        },
       },
     });
 
@@ -186,7 +216,11 @@ export class ProductService implements IProductService {
             category: true,
           },
         },
-        media: true,
+        variations: {
+          include: {
+            options: true,
+          },
+        },
       },
     });
 
@@ -199,7 +233,7 @@ export class ProductService implements IProductService {
 
   @serviceMethod()
   async updateProduct({ id, data }: IUpdateProduct) {
-    const { characteristics, categoryIds, ...productData } = data;
+    const { characteristics, categoryIds, variations, ...productData } = data;
 
     const existingProduct = await getPrismaClient().product.findUnique({
       where: { id },
@@ -233,6 +267,26 @@ export class ProductService implements IProductService {
       };
     }
 
+    if (variations) {
+      updateData.variations = {
+        deleteMany: {},
+        create: variations.map(variation => ({
+          sku: variation.sku,
+          name: variation.name,
+          price: variation.price,
+          stock: variation.stock || 0,
+          options: variation.options
+            ? {
+                create: variation.options.map(option => ({
+                  name: option.name,
+                  value: option.value,
+                })),
+              }
+            : undefined,
+        })),
+      };
+    }
+
     const product = await getPrismaClient().product.update({
       where: { id },
       data: updateData,
@@ -243,7 +297,11 @@ export class ProductService implements IProductService {
             category: true,
           },
         },
-        media: true,
+        variations: {
+          include: {
+            options: true,
+          },
+        },
       },
     });
 
@@ -283,7 +341,11 @@ export class ProductService implements IProductService {
             category: true,
           },
         },
-        media: true,
+        variations: {
+          include: {
+            options: true,
+          },
+        },
       },
     });
 
@@ -302,7 +364,11 @@ export class ProductService implements IProductService {
             category: true,
           },
         },
-        media: true,
+        variations: {
+          include: {
+            options: true,
+          },
+        },
       },
     });
 
@@ -379,5 +445,118 @@ export class ProductService implements IProductService {
     };
 
     return { stats, code: ResponseCode.OK };
+  }
+
+  @serviceMethod()
+  async addVariation({ productId, variation }: { productId: string; variation: any }) {
+    const product = await getPrismaClient().product.findUnique({
+      where: { id: productId },
+    });
+
+    if (!product) {
+      return { code: ResponseCode.NOT_FOUND };
+    }
+
+    const existingVariation = await getPrismaClient().productVariation.findUnique({
+      where: { sku: variation.sku },
+    });
+
+    if (existingVariation) {
+      return { code: ResponseCode.CONFLICT };
+    }
+
+    const newVariation = await getPrismaClient().productVariation.create({
+      data: {
+        productId,
+        sku: variation.sku,
+        name: variation.name,
+        price: variation.price,
+        stock: variation.stock || 0,
+        options: variation.options
+          ? {
+              create: variation.options.map((option: any) => ({
+                name: option.name,
+                value: option.value,
+              })),
+            }
+          : undefined,
+      },
+      include: {
+        options: true,
+      },
+    });
+
+    return { variation: newVariation, code: ResponseCode.OK };
+  }
+
+  @serviceMethod()
+  async updateVariation({ variationId, data }: { variationId: string; data: any }) {
+    const { options, ...variationData } = data;
+
+    const existingVariation = await getPrismaClient().productVariation.findUnique({
+      where: { id: variationId },
+    });
+
+    if (!existingVariation) {
+      return { code: ResponseCode.NOT_FOUND };
+    }
+
+    const updateData: any = {
+      ...variationData,
+    };
+
+    if (options) {
+      updateData.options = {
+        deleteMany: {},
+        create: options.map((option: any) => ({
+          name: option.name,
+          value: option.value,
+        })),
+      };
+    }
+
+    const variation = await getPrismaClient().productVariation.update({
+      where: { id: variationId },
+      data: updateData,
+      include: {
+        options: true,
+      },
+    });
+
+    return { variation, code: ResponseCode.OK };
+  }
+
+  @serviceMethod()
+  async deleteVariation({ variationId }: { variationId: string }) {
+    const existingVariation = await getPrismaClient().productVariation.findUnique({
+      where: { id: variationId },
+    });
+
+    if (!existingVariation) {
+      return { code: ResponseCode.NOT_FOUND };
+    }
+
+    await getPrismaClient().productVariation.delete({
+      where: { id: variationId },
+    });
+
+    return { code: ResponseCode.OK };
+  }
+
+  @serviceMethod()
+  async getVariationById({ variationId }: { variationId: string }) {
+    const variation = await getPrismaClient().productVariation.findUnique({
+      where: { id: variationId },
+      include: {
+        options: true,
+        product: true,
+      },
+    });
+
+    if (!variation) {
+      return { code: ResponseCode.NOT_FOUND };
+    }
+
+    return { variation, code: ResponseCode.OK };
   }
 }

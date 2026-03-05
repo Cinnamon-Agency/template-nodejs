@@ -1,10 +1,31 @@
 import { AsyncResponse } from '@common'
-import { ProductStatus, ProductCharacteristicType, Product, Category, Media } from '@prisma/client';
+import { ProductStatus, ProductCharacteristicType, Product, Category, ProductVariation, VariationOption } from '@prisma/client';
 
 export interface CreateProductCharacteristic {
   name: string;
   value: string;
   type: ProductCharacteristicType;
+}
+
+export interface CreateVariationOption {
+  name: string;
+  value: string;
+}
+
+export interface CreateProductVariation {
+  sku: string;
+  name: string;
+  price: number;
+  stock?: number;
+  options?: CreateVariationOption[];
+}
+
+export interface UpdateProductVariation {
+  name?: string;
+  price?: number;
+  stock?: number;
+  isActive?: boolean;
+  options?: CreateVariationOption[];
 }
 
 export interface CreateProduct {
@@ -16,6 +37,7 @@ export interface CreateProduct {
   status?: ProductStatus;
   characteristics?: CreateProductCharacteristic[];
   categoryIds?: string[];
+  variations?: CreateProductVariation[];
 }
 
 export interface UpdateProductCharacteristic {
@@ -32,6 +54,7 @@ export interface UpdateProduct {
   status?: ProductStatus;
   characteristics?: CreateProductCharacteristic[];
   categoryIds?: string[];
+  variations?: CreateProductVariation[];
 }
 
 export interface ProductFilter {
@@ -83,7 +106,9 @@ export interface ProductWithRelations extends Product {
     productId: string;
     category: Category;
   }>;
-  media: Media[];
+  variations: Array<ProductVariation & {
+    options: VariationOption[];
+  }>;
 }
 
 export interface PaginatedProducts {
@@ -119,6 +144,7 @@ export interface ICreateProduct {
   status?: ProductStatus;
   characteristics?: CreateProductCharacteristic[];
   categoryIds?: string[];
+  variations?: CreateProductVariation[];
 }
 
 export interface IGetProducts {
@@ -162,4 +188,22 @@ export interface IGetProductStats {
   outOfStockProducts: number;
   totalInventoryValue: string;
   averagePrice: string;
+}
+
+export interface IAddVariation {
+  productId: string;
+  variation: CreateProductVariation;
+}
+
+export interface IUpdateVariation {
+  variationId: string;
+  data: UpdateProductVariation;
+}
+
+export interface IDeleteVariation {
+  variationId: string;
+}
+
+export interface IGetVariationById {
+  variationId: string;
 }
