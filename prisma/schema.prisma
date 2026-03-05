@@ -450,3 +450,107 @@ enum ShippingRateType {
   WEIGHT_BASED
   FREE_SHIPPING
 }
+
+model Order {
+  id                String        @id @default(uuid()) @db.Uuid
+  userId            String        @db.Uuid
+  orderNumber       String        @unique
+  status            OrderStatus   @default(PENDING)
+  subtotal          Decimal       @db.Decimal(10, 2)
+  shippingCost      Decimal       @db.Decimal(10, 2)
+  tax               Decimal       @db.Decimal(10, 2)
+  total             Decimal       @db.Decimal(10, 2)
+  currency          String        @default("usd") @db.VarChar(3)
+  
+  // Shipping information
+  shippingAddress   Json?
+  shippingZoneId    String?       @db.Uuid
+  shippingRateId    String?       @db.Uuid
+  
+  // Customer information
+  customerEmail     String
+  customerPhone     String?
+  
+  // Metadata
+  notes             String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  completedAt       DateTime?
+  cancelledAt       DateTime?
+  
+  // Relations
+  items             OrderItem[]
+  payment           Payment?
+  
+  @@index([userId])
+  @@index([orderNumber])
+  @@index([status])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String   @id @default(uuid()) @db.Uuid
+  orderId     String   @db.Uuid
+  productId   String   @db.Uuid
+  productName String
+  productSku  String
+  quantity    Int
+  unitPrice   Decimal  @db.Decimal(10, 2)
+  totalPrice  Decimal  @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+model Payment {
+  id                    String        @id @default(uuid()) @db.Uuid
+  orderId               String        @unique @db.Uuid
+  stripePaymentIntentId String?       @unique
+  stripeCustomerId      String?
+  status                PaymentStatus @default(PENDING)
+  amount                Decimal       @db.Decimal(10, 2)
+  currency              String        @default("usd") @db.VarChar(3)
+  paymentMethod         String?
+  
+  // Client secrets for web and mobile flows
+  clientSecret          String?
+  
+  // Metadata
+  metadata              Json?
+  errorMessage          String?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  paidAt                DateTime?
+  
+  order                 Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  @@index([orderId])
+  @@index([stripePaymentIntentId])
+  @@index([status])
+  @@map("payments")
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+  REFUNDED
+}

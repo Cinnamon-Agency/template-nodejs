@@ -10,6 +10,7 @@ import { mediaDocs } from '@api/media/mediaDocs'
 import { productDocs } from '@api/product/productDocs'
 import { cartDocs } from '@api/cart/cartDocs'
 import { shippingDocs } from '@api/shipping/shippingDocs'
+import { paymentDocs } from '@api/payment/paymentDocs'
 import { genericDocs } from './genericDocs'
 
 export const APIDocumentation = {
@@ -51,6 +52,7 @@ export const APIDocumentation = {
     productDocs,
     cartDocs,
     shippingDocs,
+    paymentDocs,
     (a: object, b: object) => {
       if (_.isArray(a)) {
         return a.concat(b)

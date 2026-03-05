@@ -10,6 +10,7 @@ import { mediaRouter } from '@api/media/mediaRouter'
 import { productRouter } from '@api/product/productRouter'
 import { cartRouter } from '@api/cart/cartRouter'
 import { shippingRouter } from '@api/shipping/shippingRouter'
+import { paymentRouter } from '@api/payment/paymentRouter'
 
 export const router = express.Router()
 
@@ -24,6 +25,7 @@ v1.use('/media', mediaRouter)
 v1.use('/products', productRouter)
 v1.use('/cart', cartRouter)
 v1.use('/shipping', shippingRouter)
+v1.use('/payment', paymentRouter)
 
 router.use('/api/v1', v1)
 router.use('/api-docs', docsRouter)

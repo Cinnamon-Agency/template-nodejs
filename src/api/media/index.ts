@@ -1,5 +1,0 @@
-export { MediaService } from './mediaService'
-export { MediaController } from './mediaController'
-export { mediaRouter } from './mediaRouter'
-export { mediaDocs } from './mediaDocs'
-export * from './interface'
