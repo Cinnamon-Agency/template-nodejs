@@ -5,4 +5,4 @@ import { UserRoleController } from './userRoleController'
 
 const userRoleController = container.resolve(UserRoleController)
 export const userRoleRouter = express.Router()
-userRoleRouter.put('/', requireToken, userRoleController.getRolesForUser)
+userRoleRouter.put('/', requireToken(), userRoleController.getRolesForUser)

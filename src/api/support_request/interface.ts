@@ -18,11 +18,20 @@ export interface IUpdateSupportRequestStatus {
   status: SupportRequestStatus
 }
 
+export interface IGetAllSupportRequests {
+  page?: number
+  limit?: number
+  status?: SupportRequestStatus
+}
+
 export interface ISupportRequestService {
   createSupportRequest(
     params: ICreateSupportRequest
   ): AsyncResponse<ResponseCode>
   updateSupportRequestStatus(
     params: IUpdateSupportRequestStatus
+  ): AsyncResponse<ResponseCode>
+  getAllSupportRequests(
+    params: IGetAllSupportRequests
   ): AsyncResponse<ResponseCode>
 }

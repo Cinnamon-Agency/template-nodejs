@@ -2,6 +2,7 @@ import express from 'express';
 import { validate } from '@middleware/validation';
 import { container } from 'tsyringe';
 import { requireToken } from '@middleware/auth';
+import { RoleType } from '@prisma/client';
 import { ProductController } from './productController';
 import { 
   createProductSchema, 
@@ -21,9 +22,9 @@ productRouter.get('/', validate(getProductsSchema), productController.getAllProd
 productRouter.get('/:id', validate(getProductByIdSchema), productController.getProductById);
 productRouter.get('/sku/:sku', validate(getProductBySkuSchema), productController.getProductBySku);
 
-// Protected routes - require authentication
-productRouter.post('/', requireToken(), validate(createProductSchema), productController.createProduct);
-productRouter.put('/:id', requireToken(), validate(updateProductSchema), productController.updateProduct);
-productRouter.delete('/:id', requireToken(), validate(getProductByIdSchema), productController.deleteProduct);
-productRouter.patch('/:id/stock', requireToken(), validate(updateProductStockSchema), productController.updateProductStock);
-productRouter.patch('/:id/status', requireToken(), validate(updateProductStatusSchema), productController.updateProductStatus);
+// Protected routes - require ADMIN role
+productRouter.post('/', requireToken([RoleType.ADMIN]), validate(createProductSchema), productController.createProduct);
+productRouter.put('/:id', requireToken([RoleType.ADMIN]), validate(updateProductSchema), productController.updateProduct);
+productRouter.delete('/:id', requireToken([RoleType.ADMIN]), validate(getProductByIdSchema), productController.deleteProduct);
+productRouter.patch('/:id/stock', requireToken([RoleType.ADMIN]), validate(updateProductStockSchema), productController.updateProductStock);
+productRouter.patch('/:id/status', requireToken([RoleType.ADMIN]), validate(updateProductStatusSchema), productController.updateProductStatus);

@@ -44,4 +44,27 @@ export class SupportRequestController {
       code,
     })
   }
+
+  public getAllSupportRequests = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    const { page, limit, status } = req.query
+
+    const { code, supportRequests, pagination } =
+      await this.supportRequestService.getAllSupportRequests({
+        page: page ? parseInt(page as string) : undefined,
+        limit: limit ? parseInt(limit as string) : undefined,
+        status: status as any,
+      })
+
+    return next({
+      code,
+      data: {
+        supportRequests,
+        pagination,
+      },
+    })
+  }
 }

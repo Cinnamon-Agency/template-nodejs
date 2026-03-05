@@ -4,6 +4,7 @@ import {
   ICreateSupportRequest,
   ISupportRequestService,
   IUpdateSupportRequestStatus,
+  IGetAllSupportRequests,
 } from './interface'
 import { ResponseCode, serviceMethod } from '@common'
 import { sendEmail } from '@services/aws-ses'
@@ -83,5 +84,37 @@ export class SupportRequestService implements ISupportRequestService {
     })
 
     return { code: ResponseCode.OK }
+  }
+
+  @serviceMethod()
+  async getAllSupportRequests({
+    page = 1,
+    limit = 20,
+    status,
+  }: IGetAllSupportRequests) {
+    const skip = (page - 1) * limit
+
+    const where = status ? { status } : {}
+
+    const [supportRequests, total] = await Promise.all([
+      getPrismaClient().supportRequest.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      }),
+      getPrismaClient().supportRequest.count({ where }),
+    ])
+
+    return {
+      code: ResponseCode.OK,
+      supportRequests,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    }
   }
 }

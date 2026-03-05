@@ -3,6 +3,7 @@ import { container } from 'tsyringe'
 import {
   createSupportRequestSchemaStatus,
   updateSupportRequestStatusSchemaStatus,
+  getAllSupportRequestsSchema,
 } from './supportRequestInput'
 import { validate } from '../../middleware/validation'
 import { SupportRequestController } from './supportRequestController'
@@ -16,6 +17,13 @@ supportRequestRouter.post(
   '/',
   validate(createSupportRequestSchemaStatus),
   supportRequestController.createSupportRequest
+)
+
+supportRequestRouter.get(
+  '/',
+  requireToken([RoleType.ADMIN]),
+  validate(getAllSupportRequestsSchema),
+  supportRequestController.getAllSupportRequests
 )
 
 supportRequestRouter.put(
