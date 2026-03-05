@@ -51,7 +51,7 @@ export class App {
     this.app.use(rateLimiter)
 
     this.app.use((req, res, next) => {
-      if (req.originalUrl === '/api/v1/webhook') {
+      if (req.originalUrl === '/api/v1/payment/webhook') {
         bodyParser.raw({ type: 'application/json' })(req, res, next)
       } else {
         bodyParser.json()(req, res, next)

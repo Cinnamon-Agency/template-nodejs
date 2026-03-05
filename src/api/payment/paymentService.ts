@@ -1,10 +1,11 @@
 import { ResponseCode, serviceMethod, normalizePagination } from '@common';
 import { getPrismaClient } from '@services/prisma';
-import { stripeClient } from '@services/stripe/stripeClient';
+import { getStripeClient } from '@services/stripe/stripeClient';
 import { autoInjectable, singleton } from 'tsyringe';
-import { OrderStatus, PaymentStatus } from '@prisma/client';
+import { OrderStatus, PaymentStatus, ProductStatus } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 import { v4 as uuidv4 } from 'uuid';
+import { logger } from '@core/logger';
 import {
   IPaymentService,
   ICreateOrder,
@@ -51,6 +52,13 @@ export class PaymentService implements IPaymentService {
     const orderItems = [];
 
     for (const item of cart.items) {
+      if (item.product.status !== ProductStatus.ACTIVE) {
+        return {
+          code: ResponseCode.BAD_REQUEST,
+          message: `Product is not available: ${item.product.name}`,
+        };
+      }
+
       if (item.product.stock < item.quantity) {
         return {
           code: ResponseCode.CONFLICT,
@@ -158,7 +166,7 @@ export class PaymentService implements IPaymentService {
 
     const amountInCents = Math.round(parseFloat(order.total.toString()) * 100);
 
-    const paymentIntent = await stripeClient.paymentIntents.create({
+    const paymentIntent = await getStripeClient().paymentIntents.create({
       amount: amountInCents,
       currency: order.currency,
       metadata: {
@@ -216,46 +224,19 @@ export class PaymentService implements IPaymentService {
       };
     }
 
-    const paymentIntent = await stripeClient.paymentIntents.retrieve(paymentIntentId);
+    if (payment.status === PaymentStatus.SUCCEEDED) {
+      return {
+        code: ResponseCode.OK,
+        message: 'Payment already processed',
+        payment,
+        order: payment.order,
+      };
+    }
+
+    const paymentIntent = await getStripeClient().paymentIntents.retrieve(paymentIntentId);
 
     if (paymentIntent.status === 'succeeded') {
-      await getPrismaClient().$transaction(async (tx) => {
-        await tx.payment.update({
-          where: { id: payment.id },
-          data: {
-            status: PaymentStatus.SUCCEEDED,
-            paidAt: new Date(),
-            paymentMethod: paymentIntent.payment_method as string,
-          },
-        });
-
-        await tx.order.update({
-          where: { id: payment.orderId },
-          data: {
-            status: OrderStatus.PROCESSING,
-            completedAt: new Date(),
-          },
-        });
-
-        for (const item of payment.order.items) {
-          await tx.product.update({
-            where: { id: item.productId },
-            data: {
-              stock: {
-                decrement: item.quantity,
-              },
-            },
-          });
-        }
-
-        await tx.cartItem.deleteMany({
-          where: {
-            cart: {
-              userId: payment.order.userId,
-            },
-          },
-        });
-      });
+      await this.fulfillPayment(payment.id, payment.orderId, payment.order.userId, payment.order.items, paymentIntent.payment_method as string);
 
       const updatedPayment = await getPrismaClient().payment.findUnique({
         where: { id: payment.id },
@@ -385,28 +366,32 @@ export class PaymentService implements IPaymentService {
 
     if (order.payment && order.payment.stripePaymentIntentId) {
       try {
-        await stripeClient.paymentIntents.cancel(order.payment.stripePaymentIntentId);
+        await getStripeClient().paymentIntents.cancel(order.payment.stripePaymentIntentId);
       } catch (error) {
-        console.error('Error cancelling Stripe payment intent:', error);
+        logger.error('Error cancelling Stripe payment intent:', error);
       }
     }
 
-    const updatedOrder = await getPrismaClient().order.update({
-      where: { id: orderId },
-      data: {
-        status: OrderStatus.CANCELLED,
-        cancelledAt: new Date(),
-      },
-    });
-
-    if (order.payment) {
-      await getPrismaClient().payment.update({
-        where: { id: order.payment.id },
+    const updatedOrder = await getPrismaClient().$transaction(async (tx) => {
+      const updated = await tx.order.update({
+        where: { id: orderId },
         data: {
-          status: PaymentStatus.CANCELLED,
+          status: OrderStatus.CANCELLED,
+          cancelledAt: new Date(),
         },
       });
-    }
+
+      if (order.payment) {
+        await tx.payment.update({
+          where: { id: order.payment.id },
+          data: {
+            status: PaymentStatus.CANCELLED,
+          },
+        });
+      }
+
+      return updated;
+    });
 
     return {
       code: ResponseCode.OK,
@@ -428,7 +413,7 @@ export class PaymentService implements IPaymentService {
     let event;
 
     try {
-      event = stripeClient.webhooks.constructEvent(payload, signature, webhookSecret);
+      event = getStripeClient().webhooks.constructEvent(payload, signature, webhookSecret);
     } catch (err: any) {
       return {
         code: ResponseCode.BAD_REQUEST,
@@ -451,43 +436,7 @@ export class PaymentService implements IPaymentService {
         });
 
         if (payment && payment.status !== PaymentStatus.SUCCEEDED) {
-          await getPrismaClient().$transaction(async (tx) => {
-            await tx.payment.update({
-              where: { id: payment.id },
-              data: {
-                status: PaymentStatus.SUCCEEDED,
-                paidAt: new Date(),
-                paymentMethod: paymentIntent.payment_method as string,
-              },
-            });
-
-            await tx.order.update({
-              where: { id: payment.orderId },
-              data: {
-                status: OrderStatus.PROCESSING,
-                completedAt: new Date(),
-              },
-            });
-
-            for (const item of payment.order.items) {
-              await tx.product.update({
-                where: { id: item.productId },
-                data: {
-                  stock: {
-                    decrement: item.quantity,
-                  },
-                },
-              });
-            }
-
-            await tx.cartItem.deleteMany({
-              where: {
-                cart: {
-                  userId: payment.order.userId,
-                },
-              },
-            });
-          });
+          await this.fulfillPayment(payment.id, payment.orderId, payment.order.userId, payment.order.items, paymentIntent.payment_method as string);
         }
         break;
       }
@@ -528,12 +477,66 @@ export class PaymentService implements IPaymentService {
       }
 
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        logger.info(`Unhandled event type: ${event.type}`);
     }
 
     return {
       code: ResponseCode.OK,
       message: 'Webhook processed successfully',
     };
+  }
+
+  private async fulfillPayment(
+    paymentId: string,
+    orderId: string,
+    userId: string,
+    orderItems: { productId: string; quantity: number }[],
+    paymentMethod: string,
+  ): Promise<void> {
+    await getPrismaClient().$transaction(async (tx) => {
+      const current = await tx.payment.findUnique({
+        where: { id: paymentId },
+        select: { status: true },
+      });
+
+      if (current?.status === PaymentStatus.SUCCEEDED) {
+        return;
+      }
+
+      await tx.payment.update({
+        where: { id: paymentId },
+        data: {
+          status: PaymentStatus.SUCCEEDED,
+          paidAt: new Date(),
+          paymentMethod,
+        },
+      });
+
+      await tx.order.update({
+        where: { id: orderId },
+        data: {
+          status: OrderStatus.PROCESSING,
+        },
+      });
+
+      for (const item of orderItems) {
+        await tx.product.update({
+          where: { id: item.productId },
+          data: {
+            stock: {
+              decrement: item.quantity,
+            },
+          },
+        });
+      }
+
+      await tx.cartItem.deleteMany({
+        where: {
+          cart: {
+            userId,
+          },
+        },
+      });
+    });
   }
 }

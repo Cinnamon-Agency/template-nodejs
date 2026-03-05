@@ -25,6 +25,7 @@ paymentRouter.post(
 
 paymentRouter.post(
   '/confirm',
+  requireToken(),
   validate(confirmPaymentSchema),
   paymentController.confirmPayment
 );
