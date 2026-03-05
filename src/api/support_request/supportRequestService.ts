@@ -5,6 +5,7 @@ import {
   ISupportRequestService,
   IUpdateSupportRequestStatus,
   IGetAllSupportRequests,
+  IGetSupportStats,
 } from './interface'
 import { ResponseCode, serviceMethod } from '@common'
 import { sendEmail } from '@services/aws-ses'
@@ -116,5 +117,40 @@ export class SupportRequestService implements ISupportRequestService {
         totalPages: Math.ceil(total / limit),
       },
     }
+  }
+
+  @serviceMethod()
+  async getSupportStats() {
+    const [
+      totalRequests,
+      openRequests,
+      inProgressRequests,
+      resolvedRequests,
+      closedRequests,
+    ] = await Promise.all([
+      getPrismaClient().supportRequest.count(),
+      getPrismaClient().supportRequest.count({
+        where: { status: 'OPEN' },
+      }),
+      getPrismaClient().supportRequest.count({
+        where: { status: 'IN_PROGRESS' },
+      }),
+      getPrismaClient().supportRequest.count({
+        where: { status: 'RESOLVED' },
+      }),
+      getPrismaClient().supportRequest.count({
+        where: { status: 'CLOSED' },
+      }),
+    ])
+
+    const stats: IGetSupportStats = {
+      totalRequests,
+      openRequests,
+      inProgressRequests,
+      resolvedRequests,
+      closedRequests,
+    }
+
+    return { stats, code: ResponseCode.OK }
   }
 }

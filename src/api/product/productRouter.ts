@@ -19,6 +19,7 @@ export const productRouter = express.Router();
 
 // Public routes - anyone can view products
 productRouter.get('/', validate(getProductsSchema), productController.getAllProducts);
+productRouter.get('/stats', requireToken([RoleType.ADMIN, RoleType.SUPERADMIN]), productController.getProductStats);
 productRouter.get('/:id', validate(getProductByIdSchema), productController.getProductById);
 productRouter.get('/sku/:sku', validate(getProductBySkuSchema), productController.getProductBySku);
 

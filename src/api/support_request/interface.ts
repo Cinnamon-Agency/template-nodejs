@@ -24,6 +24,14 @@ export interface IGetAllSupportRequests {
   status?: SupportRequestStatus
 }
 
+export interface IGetSupportStats {
+  totalRequests: number
+  openRequests: number
+  inProgressRequests: number
+  resolvedRequests: number
+  closedRequests: number
+}
+
 export interface ISupportRequestService {
   createSupportRequest(
     params: ICreateSupportRequest
@@ -34,4 +42,5 @@ export interface ISupportRequestService {
   getAllSupportRequests(
     params: IGetAllSupportRequests
   ): AsyncResponse<ResponseCode>
+  getSupportStats(): AsyncResponse<IGetSupportStats>
 }

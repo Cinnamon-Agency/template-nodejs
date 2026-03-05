@@ -33,6 +33,24 @@ const paths = {
       },
     },
   },
+  '/support_request/stats': {
+    get: {
+      tags: ['Contact Support'],
+      summary: 'Get support request statistics',
+      description: 'Get statistics for all support requests (ADMIN/SUPERADMIN only)',
+      security: [{ bearerAuth: [] }],
+      responses: {
+        '200': {
+          description: 'Successfully retrieved support request statistics',
+          content: {
+            schema: {
+              $ref: '#/definitions/support_stats_response',
+            },
+          },
+        },
+      },
+    },
+  },
   '/support_request/updateStatus/{supportRequestId}': {
     put: {
       tags: ['Contact Support'],
@@ -115,6 +133,19 @@ const definitions = {
       },
     },
     required: ['status'],
+  },
+  support_stats_response: {
+    example: {
+      data: {
+        totalRequests: 45,
+        openRequests: 8,
+        inProgressRequests: 12,
+        resolvedRequests: 20,
+        closedRequests: 5,
+      },
+      code: 200000,
+      message: 'Success',
+    },
   },
 }
 

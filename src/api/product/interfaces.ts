@@ -106,6 +106,7 @@ export interface IProductService {
   deleteProduct(data: IDeleteProduct): AsyncResponse<void>;
   updateProductStock(data: IUpdateProductStock): AsyncResponse<ProductWithRelations>;
   updateProductStatus(data: IUpdateProductStatus): AsyncResponse<ProductWithRelations>;
+  getProductStats(): AsyncResponse<IGetProductStats>;
 }
 
 // Service Method Interfaces
@@ -149,4 +150,16 @@ export interface IUpdateProductStock {
 export interface IUpdateProductStatus {
   id: string;
   status: ProductStatus;
+}
+
+export interface IGetProductStats {
+  totalProducts: number;
+  activeProducts: number;
+  inactiveProducts: number;
+  draftProducts: number;
+  archivedProducts: number;
+  lowStockProducts: number;
+  outOfStockProducts: number;
+  totalInventoryValue: string;
+  averagePrice: string;
 }

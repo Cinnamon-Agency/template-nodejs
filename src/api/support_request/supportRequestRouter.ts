@@ -26,6 +26,12 @@ supportRequestRouter.get(
   supportRequestController.getAllSupportRequests
 )
 
+supportRequestRouter.get(
+  '/stats',
+  requireToken([RoleType.ADMIN, RoleType.SUPERADMIN]),
+  supportRequestController.getSupportStats
+)
+
 supportRequestRouter.put(
   '/updateStatus/:supportRequestId',
   requireToken([RoleType.ADMIN]),

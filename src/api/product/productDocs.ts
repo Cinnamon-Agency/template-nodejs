@@ -6,6 +6,23 @@ const tags = [
 ]
 
 const paths = {
+  '/products/stats': {
+    get: {
+      tags: ['Product'],
+      description: 'Get product statistics (ADMIN/SUPERADMIN only)',
+      security: [{ bearerAuth: [] }],
+      responses: {
+        '200': {
+          description: 'Successfully retrieved product statistics',
+          content: {
+            schema: {
+              $ref: '#/definitions/product_stats_response',
+            },
+          },
+        },
+      },
+    },
+  },
   '/products': {
     get: {
       tags: ['Product'],
@@ -1006,6 +1023,23 @@ const definitions = {
     example: {
       code: 404000,
       message: 'Product not found',
+    },
+  },
+  product_stats_response: {
+    example: {
+      data: {
+        totalProducts: 75,
+        activeProducts: 60,
+        inactiveProducts: 10,
+        draftProducts: 3,
+        archivedProducts: 2,
+        lowStockProducts: 8,
+        outOfStockProducts: 5,
+        totalInventoryValue: '125000.00',
+        averagePrice: '49.99',
+      },
+      code: 200000,
+      message: 'Success',
     },
   },
 }

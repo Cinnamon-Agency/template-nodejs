@@ -43,6 +43,18 @@ export interface IUpdateUser {
   phoneVerified?: boolean
 }
 
+export interface IGetUserStats {
+  totalUsers: number
+  verifiedUsers: number
+  unverifiedUsers: number
+  usersWithNotifications: number
+  recentSignups: number
+  usersByAuthType: {
+    authType: string
+    count: number
+  }[]
+}
+
 export interface IUserService {
   createUser(params: ICreateUser): AsyncResponse<User>
   getUserById(params: IGetUserById): AsyncResponse<User>
@@ -53,4 +65,5 @@ export interface IUserService {
   toggleNotifications(params: IToggleNotifications): AsyncResponse<void>
   updatePassword(params: IUpdatePassword): AsyncResponse<void>
   updateUser(params: IUpdateUser): AsyncResponse<void>
+  getUserStats(): AsyncResponse<IGetUserStats>
 }

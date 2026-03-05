@@ -68,6 +68,23 @@ const paths = {
       },
     },
   },
+  '/user/stats': {
+    get: {
+      tags: ['User'],
+      description: 'Get user statistics (ADMIN/SUPERADMIN only)',
+      security: [{ bearerAuth: [] }],
+      responses: {
+        '200': {
+          description: 'Successfully retrieved user statistics',
+          content: {
+            schema: {
+              $ref: '#/definitions/user_stats_response',
+            },
+          },
+        },
+      },
+    },
+  },
 }
 
 const definitions = {
@@ -107,6 +124,24 @@ const definitions = {
           createdAt: '2024-03-25T15:20:06.410Z',
           updatedAt: '2024-05-23T12:53:41.000Z',
         },
+      },
+      code: 200000,
+      message: 'Success',
+    },
+  },
+  user_stats_response: {
+    example: {
+      data: {
+        totalUsers: 150,
+        verifiedUsers: 120,
+        unverifiedUsers: 30,
+        usersWithNotifications: 85,
+        recentSignups: 12,
+        usersByAuthType: [
+          { authType: 'USER_PASSWORD', count: 100 },
+          { authType: 'GOOGLE', count: 40 },
+          { authType: 'APPLE', count: 10 },
+        ],
       },
       code: 200000,
       message: 'Success',

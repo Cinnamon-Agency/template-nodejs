@@ -2,6 +2,7 @@ import { ResponseCode, serviceMethod, normalizePagination, buildPaginatedResult 
 import { getPrismaClient } from '@services/prisma';
 import { autoInjectable, singleton } from 'tsyringe';
 import { ProductStatus, ProductCharacteristicType } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
 import { 
   IProductService,
   ICreateProduct,
@@ -11,7 +12,8 @@ import {
   IUpdateProduct,
   IDeleteProduct,
   IUpdateProductStock,
-  IUpdateProductStatus
+  IUpdateProductStatus,
+  IGetProductStats
 } from './interfaces';
 
 @singleton()
@@ -305,5 +307,77 @@ export class ProductService implements IProductService {
     });
 
     return { product, code: ResponseCode.OK };
+  }
+
+  @serviceMethod()
+  async getProductStats() {
+    const [
+      totalProducts,
+      activeProducts,
+      inactiveProducts,
+      draftProducts,
+      archivedProducts,
+      lowStockProducts,
+      outOfStockProducts,
+      productAggregates,
+    ] = await Promise.all([
+      getPrismaClient().product.count(),
+      getPrismaClient().product.count({
+        where: { status: ProductStatus.ACTIVE },
+      }),
+      getPrismaClient().product.count({
+        where: { status: ProductStatus.INACTIVE },
+      }),
+      getPrismaClient().product.count({
+        where: { status: ProductStatus.DRAFT },
+      }),
+      getPrismaClient().product.count({
+        where: { status: ProductStatus.ARCHIVED },
+      }),
+      getPrismaClient().product.count({
+        where: { stock: { gt: 0, lte: 10 } },
+      }),
+      getPrismaClient().product.count({
+        where: { stock: 0 },
+      }),
+      getPrismaClient().product.aggregate({
+        _sum: {
+          stock: true,
+        },
+        _avg: {
+          price: true,
+        },
+      }),
+    ]);
+
+    const products = await getPrismaClient().product.findMany({
+      select: {
+        price: true,
+        stock: true,
+      },
+    });
+
+    const totalInventoryValue = products.reduce((sum, product) => {
+      const productValue = new Decimal(product.price.toString()).mul(product.stock);
+      return sum.add(productValue);
+    }, new Decimal(0));
+
+    const averagePrice = productAggregates._avg.price
+      ? new Decimal(productAggregates._avg.price.toString())
+      : new Decimal(0);
+
+    const stats: IGetProductStats = {
+      totalProducts,
+      activeProducts,
+      inactiveProducts,
+      draftProducts,
+      archivedProducts,
+      lowStockProducts,
+      outOfStockProducts,
+      totalInventoryValue: totalInventoryValue.toString(),
+      averagePrice: averagePrice.toString(),
+    };
+
+    return { stats, code: ResponseCode.OK };
   }
 }

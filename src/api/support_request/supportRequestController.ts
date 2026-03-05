@@ -67,4 +67,17 @@ export class SupportRequestController {
       },
     })
   }
+
+  public getSupportStats = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    const { stats, code } = await this.supportRequestService.getSupportStats()
+
+    return next({
+      data: stats,
+      code,
+    })
+  }
 }

@@ -15,6 +15,11 @@ userRouter.patch(
   userController.toggleNotifications
 )
 userRouter.get(
+  '/stats',
+  requireToken(['ADMIN', 'SUPERADMIN']),
+  userController.getUserStats
+)
+userRouter.get(
   '/:id',
   requireToken(),
   validate(getUserProfileSchema),

@@ -121,4 +121,13 @@ export class ProductController {
       code: result.code,
     });
   };
+
+  public getProductStats = async (req: Request, res: Response, next: NextFunction) => {
+    const { stats, code } = await this.productService.getProductStats();
+
+    return next({
+      data: stats,
+      code,
+    });
+  };
 }

@@ -55,4 +55,13 @@ export class UserController {
       code: ResponseCode.OK,
     })
   }
+
+  public getUserStats = async (req: Request, res: Response, next: NextFunction) => {
+    const { stats, code } = await this.userService.getUserStats()
+
+    return next({
+      data: stats,
+      code,
+    })
+  }
 }

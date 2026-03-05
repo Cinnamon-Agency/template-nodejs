@@ -9,6 +9,7 @@ import {
   IUpdatePassword,
   IGetUserByEmailAndAuthType,
   IUpdateUser,
+  IGetUserStats,
 } from './interface'
 import { getPrismaClient } from '@services/prisma'
 import { User, Prisma } from '@prisma/client'
@@ -137,5 +138,52 @@ export class UserService implements IUserService {
     })
     await cache.del(CacheKeys.userById(userId))
     return { code: ResponseCode.OK }
+  }
+
+  @serviceMethod()
+  async getUserStats() {
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+    const [
+      totalUsers,
+      verifiedUsers,
+      usersWithNotifications,
+      recentSignups,
+      usersByAuthType,
+    ] = await Promise.all([
+      getPrismaClient().user.count(),
+      getPrismaClient().user.count({
+        where: { emailVerified: true },
+      }),
+      getPrismaClient().user.count({
+        where: { notifications: true },
+      }),
+      getPrismaClient().user.count({
+        where: { createdAt: { gte: thirtyDaysAgo } },
+      }),
+      getPrismaClient().user.groupBy({
+        by: ['authType'],
+        _count: {
+          authType: true,
+        },
+      }),
+    ])
+
+    const unverifiedUsers = totalUsers - verifiedUsers
+
+    const stats: IGetUserStats = {
+      totalUsers,
+      verifiedUsers,
+      unverifiedUsers,
+      usersWithNotifications,
+      recentSignups,
+      usersByAuthType: usersByAuthType.map((item) => ({
+        authType: item.authType,
+        count: item._count.authType,
+      })),
+    }
+
+    return { stats, code: ResponseCode.OK }
   }
 }
