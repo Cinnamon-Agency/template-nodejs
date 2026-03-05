@@ -8,6 +8,7 @@ import { notificationRouter } from '@api/notification/notificationRouter'
 import { supportRequestRouter } from '@api/support_request/supportRequestRouter'
 import { mediaRouter } from '@api/media/mediaRouter'
 import { productRouter } from '@api/product/productRouter'
+import { cartRouter } from '@api/cart/cartRouter'
 
 export const router = express.Router()
 
@@ -20,6 +21,7 @@ v1.use('/notification', notificationRouter)
 v1.use('/support_request', supportRequestRouter)
 v1.use('/media', mediaRouter)
 v1.use('/products', productRouter)
+v1.use('/cart', cartRouter)
 
 router.use('/api/v1', v1)
 router.use('/api-docs', docsRouter)
