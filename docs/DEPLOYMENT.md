@@ -112,6 +112,10 @@ docker run -p 3000:3000 --env-file .env template-nodejs
 - [ ] Increase `SALT_ROUNDS` to 12+ for stronger password hashing
 - [ ] Configure `REDIS_URL` for production Redis instance (optional — falls back to in-memory)
 - [ ] Configure appropriate rate limiter values for production traffic
+- [ ] Set `STRIPE_SECRET_KEY` to your production Stripe secret key (use `sk_live_` prefix)
+- [ ] Set `STRIPE_PUBLISHABLE_KEY` to your production Stripe publishable key
+- [ ] Set `STRIPE_WEBHOOK_SECRET` to match your Stripe webhook endpoint signing secret
+- [ ] Set `AWS_S3_BUCKET` to your production S3 bucket name
 
 ### Health Check
 

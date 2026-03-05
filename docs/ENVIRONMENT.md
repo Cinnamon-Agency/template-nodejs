@@ -67,7 +67,8 @@ All environment variables are defined in `.env.template`. The config system (`sr
 |---|---|---|
 | `AWS_ACCESS_KEY` | — | AWS access key ID (dev only; use IAM roles in production) |
 | `AWS_SECRET` | — | AWS secret access key (dev only) |
-| `AWS_REGION` | `us-east-1` | AWS region for SES, Pinpoint, CloudWatch |
+| `AWS_REGION` | `us-east-1` | AWS region for SES, Pinpoint, CloudWatch, S3 |
+| `AWS_S3_BUCKET` | — | AWS S3 bucket name for media file storage |
 
 ## Email (AWS SES)
 
@@ -95,6 +96,21 @@ All environment variables are defined in `.env.template`. The config system (`sr
 |---|---|---|
 | `SALT_ROUNDS` | `10` | bcrypt salt rounds for password hashing (higher = slower + more secure) |
 | `ALLOWED_ORIGINS` | `http://localhost:3001` | Comma-separated CORS allowed origins |
+
+## OAuth
+
+| Variable | Default | Description |
+|---|---|---|
+| `GOOGLE_CLIENT_ID` | — | Google OAuth client ID for authentication |
+| `APPLE_BUNDLE_ID` | — | Apple Bundle ID for Apple Sign-In authentication |
+
+## Stripe
+
+| Variable | Default | Description |
+|---|---|---|
+| `STRIPE_SECRET_KEY` | — | Stripe secret key for server-side API calls |
+| `STRIPE_PUBLISHABLE_KEY` | — | Stripe publishable key exposed to clients for Stripe.js |
+| `STRIPE_WEBHOOK_SECRET` | — | Stripe webhook signing secret for verifying event signatures |
 
 ## Seed
 

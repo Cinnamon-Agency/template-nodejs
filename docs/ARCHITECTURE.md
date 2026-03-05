@@ -24,7 +24,11 @@ template-nodejs/
 │   │   ├── project/             # Project CRUD with media file uploads
 │   │   ├── notification/        # In-app notifications with email + WebSocket
 │   │   ├── support_request/     # Support request submission (public + admin)
-│   │   ├── media/               # Media file management (GCS signed URLs)
+│   │   ├── media/               # Media file management (S3 + GCS signed URLs)
+│   │   ├── product/             # Product catalog (CRUD, stock, categories, variations)
+│   │   ├── cart/                # Shopping cart management
+│   │   ├── shipping/            # Shipping zones, countries, and rates
+│   │   ├── payment/             # Orders and Stripe payment processing
 │   │   ├── role/                # Role lookup service
 │   │   ├── user_role/           # User-role assignment service
 │   │   ├── user_session/        # Session management (store, refresh, expire)
@@ -67,6 +71,7 @@ template-nodejs/
 │   ├── services/                # Third-party service integrations
 │   │   ├── aws-ses/                # AWS SES email sending with HTML templates
 │   │   ├── aws-end-user-messaging/ # AWS Pinpoint SMS sending
+│   │   ├── aws_s3/                 # AWS S3 file storage with presigned URLs
 │   │   ├── cache/                  # Redis/memory caching service with TTL support
 │   │   ├── cloudwatch/             # AWS CloudWatch log event sending
 │   │   ├── bcrypt/                 # Password hashing + comparison
@@ -74,6 +79,7 @@ template-nodejs/
 │   │   ├── google_cloud_storage/   # GCS signed URL generation (read/write)
 │   │   ├── prisma/                 # Prisma error mapping to ResponseCodes
 │   │   ├── redis/                  # Redis client connection and utilities
+│   │   ├── stripe/                 # Stripe Payment Intents + webhook verification
 │   │   ├── uuid/                   # UUID v4 generation
 │   │   └── websocket/             # WebSocket server (singleton via tsyringe)
 │   └── documentation/           # Swagger/OpenAPI setup

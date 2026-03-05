@@ -296,6 +296,7 @@ const paths = {
     post: {
       tags: ['Payment'],
       description: 'Confirm payment status (typically called after Stripe redirects)',
+      security: [{ bearerAuth: [] }],
       requestBody: {
         required: true,
         content: {
@@ -327,6 +328,16 @@ const paths = {
             },
           },
         },
+        '401': {
+          description: 'Unauthorized - authentication required',
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/error_response',
+              },
+            },
+          },
+        },
         '404': {
           description: 'Payment not found',
           content: {
@@ -344,13 +355,24 @@ const paths = {
     post: {
       tags: ['Payment'],
       description: 'Stripe webhook handler for payment events',
+      parameters: [
+        {
+          in: 'header',
+          name: 'stripe-signature',
+          required: true,
+          schema: {
+            type: 'string',
+          },
+          description: 'Stripe webhook signature for verifying the event',
+        },
+      ],
       requestBody: {
         required: true,
         content: {
           'application/json': {
             schema: {
               type: 'object',
-              description: 'Stripe webhook event payload',
+              description: 'Stripe webhook event payload (raw body)',
             },
           },
         },
@@ -378,6 +400,16 @@ const paths = {
         },
         '400': {
           description: 'Bad request - invalid signature or payload',
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/definitions/error_response',
+              },
+            },
+          },
+        },
+        '500': {
+          description: 'Server error - webhook secret not configured',
           content: {
             'application/json': {
               schema: {
@@ -503,6 +535,16 @@ const definitions = {
         type: 'string',
         description: 'Total price for this item',
       },
+      createdAt: {
+        type: 'string',
+        format: 'date-time',
+        description: 'Item creation timestamp',
+      },
+      updatedAt: {
+        type: 'string',
+        format: 'date-time',
+        description: 'Item last update timestamp',
+      },
     },
     example: {
       id: '123e4567-e89b-12d3-a456-426614174020',
@@ -512,6 +554,8 @@ const definitions = {
       quantity: 2,
       unitPrice: '199.99',
       totalPrice: '399.98',
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-01-01T00:00:00.000Z',
     },
   },
   payment: {
@@ -531,6 +575,10 @@ const definitions = {
         type: 'string',
         description: 'Stripe Payment Intent ID',
       },
+      stripeCustomerId: {
+        type: 'string',
+        description: 'Stripe Customer ID',
+      },
       status: {
         type: 'string',
         enum: ['PENDING', 'PROCESSING', 'SUCCEEDED', 'FAILED', 'CANCELLED', 'REFUNDED'],
@@ -548,6 +596,28 @@ const definitions = {
       paymentMethod: {
         type: 'string',
         description: 'Payment method used',
+      },
+      clientSecret: {
+        type: 'string',
+        description: 'Stripe client secret for completing payment on client side',
+      },
+      metadata: {
+        type: 'object',
+        description: 'Additional payment metadata',
+      },
+      errorMessage: {
+        type: 'string',
+        description: 'Error message if payment failed',
+      },
+      createdAt: {
+        type: 'string',
+        format: 'date-time',
+        description: 'Payment creation timestamp',
+      },
+      updatedAt: {
+        type: 'string',
+        format: 'date-time',
+        description: 'Payment last update timestamp',
       },
       paidAt: {
         type: 'string',
@@ -603,6 +673,16 @@ const definitions = {
       shippingAddress: {
         $ref: '#/definitions/shipping_address',
       },
+      shippingZoneId: {
+        type: 'string',
+        format: 'uuid',
+        description: 'Shipping zone ID',
+      },
+      shippingRateId: {
+        type: 'string',
+        format: 'uuid',
+        description: 'Shipping rate ID',
+      },
       customerEmail: {
         type: 'string',
         format: 'email',
@@ -639,6 +719,11 @@ const definitions = {
         type: 'string',
         format: 'date-time',
         description: 'Order completion timestamp',
+      },
+      cancelledAt: {
+        type: 'string',
+        format: 'date-time',
+        description: 'Order cancellation timestamp',
       },
     },
     example: {

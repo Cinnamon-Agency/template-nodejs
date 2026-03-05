@@ -188,13 +188,279 @@ Trusted device tokens for "don't ask on this device" feature.
 
 **Indexes:** `userId`, `token` (unique)
 
+### Product (`products`)
+
+Product catalog with pricing, stock, and status management.
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | UUID | Primary key |
+| `name` | String | Product name |
+| `description` | String? | Product description |
+| `price` | Decimal(10,2) | Product price |
+| `sku` | String | Unique SKU |
+| `stock` | Int | Stock quantity (default: 0) |
+| `status` | ProductStatus | Product status (default: ACTIVE) |
+| `createdAt` | DateTime | Creation timestamp |
+| `updatedAt` | DateTime | Last update timestamp |
+
+**Relations:** `characteristics` (ProductCharacteristic[]), `categories` (ProductCategory[]), `cartItems` (CartItem[]), `variations` (ProductVariation[])
+
+**Indexes:** `sku`, `status`, `price`
+
+### ProductVariation (`product_variations`)
+
+SKU-level product variations (e.g., size/color combinations).
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | UUID | Primary key |
+| `productId` | UUID | Foreign key → Product |
+| `sku` | String | Unique variation SKU |
+| `name` | String | Variation name |
+| `price` | Decimal(10,2) | Variation price |
+| `stock` | Int | Stock quantity (default: 0) |
+| `isActive` | Boolean | Active status (default: true) |
+| `createdAt` | DateTime | Creation timestamp |
+| `updatedAt` | DateTime | Last update timestamp |
+
+**Relations:** `product` (Product), `options` (VariationOption[])
+
+**Indexes:** `productId`, `sku`, `isActive`
+
+### VariationOption (`variation_options`)
+
+Key-value options for product variations (e.g., color: red).
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | UUID | Primary key |
+| `variationId` | UUID | Foreign key → ProductVariation |
+| `name` | String | Option name (e.g., "Color") |
+| `value` | String | Option value (e.g., "Red") |
+| `createdAt` | DateTime | Creation timestamp |
+| `updatedAt` | DateTime | Last update timestamp |
+
+**Indexes:** `variationId`
+
+### ProductCharacteristic (`product_characteristics`)
+
+Typed key-value attributes for products.
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | UUID | Primary key |
+| `productId` | UUID | Foreign key → Product |
+| `name` | String | Characteristic name |
+| `value` | String | Characteristic value |
+| `type` | ProductCharacteristicType | Value type |
+| `createdAt` | DateTime | Creation timestamp |
+| `updatedAt` | DateTime | Last update timestamp |
+
+**Indexes:** `productId`, `type`
+
+### Category (`categories`)
+
+Hierarchical product categories with self-referencing parent.
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | UUID | Primary key |
+| `name` | String | Unique category name |
+| `description` | String? | Category description |
+| `parentId` | UUID? | Foreign key → Category (parent, nullable for root) |
+| `createdAt` | DateTime | Creation timestamp |
+| `updatedAt` | DateTime | Last update timestamp |
+
+**Relations:** `parent` (Category?), `children` (Category[]), `products` (ProductCategory[])
+
+**Indexes:** `parentId`
+
+### ProductCategory (`product_categories`)
+
+Many-to-many junction between Products and Categories.
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | UUID | Primary key |
+| `productId` | UUID | Foreign key → Product |
+| `categoryId` | UUID | Foreign key → Category |
+| `createdAt` | DateTime | Creation timestamp |
+
+**Constraints:** Unique on `[productId, categoryId]`
+
+### Cart (`carts`)
+
+User shopping cart (one per user).
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | UUID | Primary key |
+| `userId` | UUID | Foreign key → User (unique) |
+| `createdAt` | DateTime | Creation timestamp |
+| `updatedAt` | DateTime | Last update timestamp |
+
+**Relations:** `user` (User), `items` (CartItem[])
+
+**Indexes:** `userId`
+
+### CartItem (`cart_items`)
+
+Individual items in a shopping cart.
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | UUID | Primary key |
+| `cartId` | UUID | Foreign key → Cart |
+| `productId` | UUID | Foreign key → Product |
+| `quantity` | Int | Item quantity (default: 1) |
+| `createdAt` | DateTime | Creation timestamp |
+| `updatedAt` | DateTime | Last update timestamp |
+
+**Constraints:** Unique on `[cartId, productId]`
+
+**Indexes:** `cartId`, `productId`
+
+### ShippingZone (`shipping_zones`)
+
+Geographic shipping zones for rate calculation.
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | UUID | Primary key |
+| `name` | String | Unique zone name |
+| `description` | String? | Zone description |
+| `isActive` | Boolean | Active status (default: true) |
+| `createdAt` | DateTime | Creation timestamp |
+| `updatedAt` | DateTime | Last update timestamp |
+
+**Relations:** `countries` (ShippingZoneCountry[]), `rates` (ShippingRate[])
+
+**Indexes:** `isActive`
+
+### ShippingZoneCountry (`shipping_zone_countries`)
+
+Country assignments to shipping zones (ISO 3166-1 alpha-2 codes).
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | UUID | Primary key |
+| `shippingZoneId` | UUID | Foreign key → ShippingZone |
+| `countryCode` | String | ISO 3166-1 alpha-2 code (e.g., US, GB) |
+| `countryName` | String | Country display name |
+| `createdAt` | DateTime | Creation timestamp |
+| `updatedAt` | DateTime | Last update timestamp |
+
+**Constraints:** Unique on `[shippingZoneId, countryCode]`
+
+**Indexes:** `shippingZoneId`, `countryCode`
+
+### ShippingRate (`shipping_rates`)
+
+Shipping rate definitions per zone with multiple rate types.
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | UUID | Primary key |
+| `shippingZoneId` | UUID | Foreign key → ShippingZone |
+| `name` | String | Rate name |
+| `description` | String? | Rate description |
+| `rateType` | ShippingRateType | Rate calculation type (default: FLAT_RATE) |
+| `baseRate` | Decimal(10,2) | Base shipping rate |
+| `minOrderValue` | Decimal(10,2)? | Minimum order value for this rate |
+| `maxOrderValue` | Decimal(10,2)? | Maximum order value for this rate |
+| `freeShippingMin` | Decimal(10,2)? | Minimum order value for free shipping |
+| `estimatedDays` | Int? | Estimated delivery days |
+| `isActive` | Boolean | Active status (default: true) |
+| `priority` | Int | Rate priority for sorting (default: 0) |
+| `weightUnit` | String? | Weight unit (e.g., kg, lb) |
+| `pricePerUnit` | Decimal(10,2)? | Price per weight unit |
+| `minWeight` | Decimal(10,2)? | Minimum weight for this rate |
+| `maxWeight` | Decimal(10,2)? | Maximum weight for this rate |
+| `createdAt` | DateTime | Creation timestamp |
+| `updatedAt` | DateTime | Last update timestamp |
+
+**Indexes:** `shippingZoneId`, `isActive`, `priority`
+
+### Order (`orders`)
+
+Customer orders created from cart checkout.
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | UUID | Primary key |
+| `userId` | UUID | Foreign key → User |
+| `orderNumber` | String | Unique order number (e.g., ORD-{timestamp}-{uuid}) |
+| `status` | OrderStatus | Order status (default: PENDING) |
+| `subtotal` | Decimal(10,2) | Subtotal before shipping and tax |
+| `shippingCost` | Decimal(10,2) | Shipping cost |
+| `tax` | Decimal(10,2) | Tax amount |
+| `total` | Decimal(10,2) | Total order amount |
+| `currency` | String | Currency code (default: "usd") |
+| `shippingAddress` | Json? | Shipping address (JSON object) |
+| `shippingZoneId` | UUID? | Shipping zone reference |
+| `shippingRateId` | UUID? | Shipping rate reference |
+| `customerEmail` | String | Customer email |
+| `customerPhone` | String? | Customer phone |
+| `notes` | String? | Order notes |
+| `createdAt` | DateTime | Creation timestamp |
+| `updatedAt` | DateTime | Last update timestamp |
+| `completedAt` | DateTime? | Completion timestamp |
+| `cancelledAt` | DateTime? | Cancellation timestamp |
+
+**Relations:** `items` (OrderItem[]), `payment` (Payment?)
+
+**Indexes:** `userId`, `orderNumber`, `status`, `createdAt`
+
+### OrderItem (`order_items`)
+
+Snapshot of products at time of order.
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | UUID | Primary key |
+| `orderId` | UUID | Foreign key → Order |
+| `productId` | UUID | Product reference |
+| `productName` | String | Product name (snapshot) |
+| `productSku` | String | Product SKU (snapshot) |
+| `quantity` | Int | Quantity ordered |
+| `unitPrice` | Decimal(10,2) | Unit price at time of order |
+| `totalPrice` | Decimal(10,2) | Total price for this item |
+| `createdAt` | DateTime | Creation timestamp |
+| `updatedAt` | DateTime | Last update timestamp |
+
+**Indexes:** `orderId`, `productId`
+
+### Payment (`payments`)
+
+Stripe payment records linked to orders.
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | UUID | Primary key |
+| `orderId` | UUID | Foreign key → Order (unique) |
+| `stripePaymentIntentId` | String? | Stripe Payment Intent ID (unique) |
+| `stripeCustomerId` | String? | Stripe Customer ID |
+| `status` | PaymentStatus | Payment status (default: PENDING) |
+| `amount` | Decimal(10,2) | Payment amount |
+| `currency` | String | Currency code (default: "usd") |
+| `paymentMethod` | String? | Payment method used |
+| `clientSecret` | String? | Stripe client secret for client-side flows |
+| `metadata` | Json? | Additional payment metadata |
+| `errorMessage` | String? | Error message if payment failed |
+| `createdAt` | DateTime | Creation timestamp |
+| `updatedAt` | DateTime | Last update timestamp |
+| `paidAt` | DateTime? | Payment completion timestamp |
+
+**Indexes:** `orderId`, `stripePaymentIntentId`
+
 ---
 
 ## Enums
 
 | Enum | Values |
 |---|---|
-| `AuthType` | `GOOGLE`, `LINKED_IN`, `APPLE`, `FACEBOOK`, `USER_PASSWORD` |
+| `AuthType` | `GOOGLE`, `APPLE`, `USER_PASSWORD` |
 | `RoleType` | `USER`, `ADMIN`, `SUPERADMIN` |
 | `MediaType` | `IMAGE`, `VIDEO` |
 | `ProjectStatus` | `ACTIVE`, `FINISHED` |
@@ -202,6 +468,11 @@ Trusted device tokens for "don't ask on this device" feature.
 | `VerificationUIDType` | `REGISTRATION`, `RESET_PASSWORD`, `CHANGE_EMAIL`, `EMAIL_VERIFICATION`, `PHONE_VERIFICATION` |
 | `NotificationType` | `EXAMPLE_NOTIFICATION` |
 | `SupportRequestStatus` | `OPEN`, `IN_PROGRESS`, `RESOLVED`, `CLOSED` |
+| `ProductStatus` | `ACTIVE`, `INACTIVE`, `DRAFT`, `ARCHIVED` |
+| `ProductCharacteristicType` | `TEXT`, `NUMBER`, `BOOLEAN`, `SELECT`, `COLOR`, `SIZE`, `WEIGHT`, `MATERIAL`, `BRAND`, `MODEL` |
+| `ShippingRateType` | `FLAT_RATE`, `PRICE_BASED`, `WEIGHT_BASED`, `FREE_SHIPPING` |
+| `OrderStatus` | `PENDING`, `PROCESSING`, `CONFIRMED`, `SHIPPED`, `DELIVERED`, `CANCELLED`, `REFUNDED` |
+| `PaymentStatus` | `PENDING`, `PROCESSING`, `SUCCEEDED`, `FAILED`, `CANCELLED`, `REFUNDED` |
 
 ---
 

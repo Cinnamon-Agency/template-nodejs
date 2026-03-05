@@ -86,6 +86,44 @@ Sends structured log events to AWS CloudWatch Logs.
 
 ---
 
+## AWS S3 (`src/services/aws_s3/`)
+
+File storage and management using AWS S3 with presigned URLs.
+
+### Configuration
+- Uses explicit credentials (`AWS_ACCESS_KEY`, `AWS_SECRET`) in dev; IAM roles in production
+- Bucket configured via `AWS_S3_BUCKET`
+- Region configured via `AWS_REGION`
+
+### Features
+- Generates **presigned URLs** for both `read` and `write` operations (1 hour expiry)
+- Direct file upload via `uploadFile()` with Buffer and content type
+- File deletion, metadata retrieval, and listing
+- Registered as a **tsyringe singleton** for DI
+
+### Usage
+
+```typescript
+import { S3Service } from '@services/aws_s3'
+import { container } from 'tsyringe'
+
+const s3 = container.resolve(S3Service)
+
+// Get presigned upload URL
+const { url, code } = await s3.getSignedUrl('file.jpg', 'write')
+
+// Delete file
+await s3.deleteFile('file.jpg')
+
+// Get file metadata
+const { metadata } = await s3.getFileMetadata('file.jpg')
+
+// List files
+const { files } = await s3.listFiles('uploads/', 100)
+```
+
+---
+
 ## Google Cloud Storage (`src/services/google_cloud_storage/`)
 
 Generates signed URLs for direct file upload/download from Google Cloud Storage.
@@ -294,4 +332,45 @@ export class NotificationController {
     this.webSocketService.emit(`${userId}_delete_notif`, { notificationId })
   }
 }
+```
+
+---
+
+## Stripe (`src/services/stripe/`)
+
+Payment processing via Stripe Payment Intents API.
+
+### Configuration
+- **Secret key**: `STRIPE_SECRET_KEY` — required for server-side API calls
+- **Publishable key**: `STRIPE_PUBLISHABLE_KEY` — exposed to clients for Stripe.js
+- **Webhook secret**: `STRIPE_WEBHOOK_SECRET` — for verifying webhook event signatures
+
+### Features
+- Lazy-initialized Stripe client singleton
+- Payment Intents API for creating and confirming payments
+- Webhook signature verification for secure event processing
+- Handles `payment_intent.succeeded`, `payment_intent.payment_failed`, and `payment_intent.canceled` events
+
+### Usage
+
+```typescript
+import { getStripeClient, getStripePublishableKey } from '@services/stripe/stripeClient'
+
+// Create payment intent
+const paymentIntent = await getStripeClient().paymentIntents.create({
+  amount: 4999, // in cents
+  currency: 'usd',
+  metadata: { orderId: '...' },
+  automatic_payment_methods: { enabled: true },
+})
+
+// Verify webhook signature
+const event = getStripeClient().webhooks.constructEvent(
+  payload,
+  signature,
+  webhookSecret
+)
+
+// Get publishable key for client
+const key = getStripePublishableKey()
 ```
