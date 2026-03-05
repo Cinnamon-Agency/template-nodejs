@@ -80,6 +80,11 @@ export class ProductService implements IProductService {
       sortOrder = 'desc',
     } = filter;
 
+    // Validate sortBy field to prevent invalid queries
+    const allowedSortFields = ['createdAt', 'updatedAt', 'name', 'price', 'stock', 'sku'];
+    const validSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'createdAt';
+    const validSortOrder = sortOrder === 'asc' || sortOrder === 'desc' ? sortOrder : 'desc';
+
     const pagination = normalizePagination(page, limit);
     const skip = (pagination.page - 1) * pagination.perPage;
 
@@ -119,7 +124,7 @@ export class ProductService implements IProductService {
         skip,
         take: pagination.perPage,
         orderBy: {
-          [sortBy]: sortOrder,
+          [validSortBy]: validSortOrder,
         },
         include: {
           characteristics: true,

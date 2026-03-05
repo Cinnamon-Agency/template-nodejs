@@ -74,7 +74,7 @@ export class UserService implements IUserService {
     authType,
     email,
   }: IGetUserByEmailAndAuthType) {
-    const user = await getPrismaClient().user.findUnique({ where: { email, authType } })
+    const user = await getPrismaClient().user.findFirst({ where: { email, authType } })
     if (!user) {
       return { code: ResponseCode.USER_NOT_FOUND }
     }

@@ -21,7 +21,7 @@ export interface CartWithItems extends Cart {
 export interface CartSummary {
   cart: CartWithItems;
   totalItems: number;
-  totalPrice: number;
+  totalPrice: string;
 }
 
 export interface ICartService {

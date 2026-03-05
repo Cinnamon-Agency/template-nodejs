@@ -1,4 +1,5 @@
 import { getRedisClient } from '@services/redis'
+import { logger } from '@core/logger'
 
 interface CacheEntry<T> {
   value: T
@@ -29,7 +30,8 @@ export const cache = {
         const raw = await redisClient.get(key)
         if (!raw) return null
         return JSON.parse(raw) as T
-      } catch {
+      } catch (error) {
+        logger.warn('Redis GET operation failed, falling back to memory cache', { key, error })
         // fall through to memory
       }
     }
@@ -51,7 +53,8 @@ export const cache = {
       try {
         await redisClient.set(key, JSON.stringify(value), 'EX', ttlSeconds)
         return
-      } catch {
+      } catch (error) {
+        logger.warn('Redis SET operation failed, falling back to memory cache', { key, ttlSeconds, error })
         // fall through to memory
       }
     }
@@ -69,8 +72,9 @@ export const cache = {
     if (redisClient) {
       try {
         await redisClient.del(key)
-      } catch {
-        // ignore
+      } catch (error) {
+        logger.warn('Redis DEL operation failed', { key, error })
+        // continue to delete from memory cache
       }
     }
     memoryStore.delete(key)
@@ -87,8 +91,9 @@ export const cache = {
         if (keys.length > 0) {
           await redisClient.del(...keys)
         }
-      } catch {
-        // ignore
+      } catch (error) {
+        logger.warn('Redis DELBYPREFIX operation failed', { prefix, error })
+        // continue to delete from memory cache
       }
     }
 

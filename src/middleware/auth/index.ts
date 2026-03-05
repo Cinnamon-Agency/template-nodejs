@@ -108,7 +108,7 @@ export const requireToken =
         }
       }
 
-      req.user = { ...user }
+      res.locals.user = { ...user }
 
       return next()
     } catch {

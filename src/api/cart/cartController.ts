@@ -12,10 +12,9 @@ export class CartController {
 
     const result = await this.cartService.getCart({ userId });
 
-
     return next({
       data: result.cart,
-      code: result.code,
+      code: result.code
     });
   };
 
@@ -25,10 +24,8 @@ export class CartController {
 
     const result = await this.cartService.addToCart({ userId, productId, quantity });
 
-
     return next({
-      data: result.cart,
-      code: result.code,
+      code: result.code
     });
   };
 
@@ -40,8 +37,7 @@ export class CartController {
     const result = await this.cartService.updateCartItem({ userId, productId, quantity });
 
     return next({
-      data: result.cart,
-      code: result.code,
+      code: result.code
     });
   };
 
@@ -52,8 +48,7 @@ export class CartController {
     const result = await this.cartService.removeFromCart({ userId, productId });
 
     return next({
-      data: result.cart,
-      code: result.code,
+      code: result.code
     });
   };
 
@@ -62,8 +57,8 @@ export class CartController {
 
     const result = await this.cartService.clearCart({ userId });
 
-    return next({
-      code: result.code,
+   return next({
+      code: result.code
     });
   };
 }

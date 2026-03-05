@@ -232,11 +232,34 @@ CREATE TABLE "public"."categories" (
 
 -- CreateTable
 CREATE TABLE "public"."product_categories" (
+    "id" UUID NOT NULL,
     "productId" UUID NOT NULL,
     "categoryId" UUID NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "product_categories_pkey" PRIMARY KEY ("productId")
+    CONSTRAINT "product_categories_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."carts" (
+    "id" UUID NOT NULL,
+    "userId" UUID NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "carts_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."cart_items" (
+    "id" UUID NOT NULL,
+    "cartId" UUID NOT NULL,
+    "productId" UUID NOT NULL,
+    "quantity" INTEGER NOT NULL DEFAULT 1,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "cart_items_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -330,7 +353,25 @@ CREATE INDEX "categories_parentId_idx" ON "public"."categories"("parentId");
 CREATE INDEX "product_categories_categoryId_idx" ON "public"."product_categories"("categoryId");
 
 -- CreateIndex
+CREATE INDEX "product_categories_productId_idx" ON "public"."product_categories"("productId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "product_categories_productId_categoryId_key" ON "public"."product_categories"("productId", "categoryId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "carts_userId_key" ON "public"."carts"("userId");
+
+-- CreateIndex
+CREATE INDEX "carts_userId_idx" ON "public"."carts"("userId");
+
+-- CreateIndex
+CREATE INDEX "cart_items_cartId_idx" ON "public"."cart_items"("cartId");
+
+-- CreateIndex
+CREATE INDEX "cart_items_productId_idx" ON "public"."cart_items"("productId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "cart_items_cartId_productId_key" ON "public"."cart_items"("cartId", "productId");
 
 -- AddForeignKey
 ALTER TABLE "public"."user_roles" ADD CONSTRAINT "user_roles_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "public"."roles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -370,3 +411,12 @@ ALTER TABLE "public"."product_categories" ADD CONSTRAINT "product_categories_pro
 
 -- AddForeignKey
 ALTER TABLE "public"."product_categories" ADD CONSTRAINT "product_categories_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "public"."categories"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."carts" ADD CONSTRAINT "carts_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."cart_items" ADD CONSTRAINT "cart_items_cartId_fkey" FOREIGN KEY ("cartId") REFERENCES "public"."carts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."cart_items" ADD CONSTRAINT "cart_items_productId_fkey" FOREIGN KEY ("productId") REFERENCES "public"."products"("id") ON DELETE CASCADE ON UPDATE CASCADE;

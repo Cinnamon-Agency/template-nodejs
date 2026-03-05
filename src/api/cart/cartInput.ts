@@ -6,7 +6,7 @@ export const addToCartSchema = (req: Request) => {
     schema: Joi.object()
       .keys({
         productId: Joi.string().uuid().required(),
-        quantity: Joi.number().integer().min(1).required(),
+        quantity: Joi.number().integer().min(1).max(1000).required(),
       })
       .options({ abortEarly: false }),
     input: {
@@ -21,7 +21,7 @@ export const updateCartItemSchema = (req: Request) => {
     schema: Joi.object()
       .keys({
         productId: Joi.string().uuid().required(),
-        quantity: Joi.number().integer().min(0).required(),
+        quantity: Joi.number().integer().min(0).max(1000).required(),
       })
       .options({ abortEarly: false }),
     input: {
