@@ -24,6 +24,10 @@ export const responseFormatter = async (
 
   const status = code ? parseInt(code.toString().substring(0, 3), 10) : 500
 
+  if (status === 204) {
+    return res.status(204).end()
+  }
+
   let message = definedMessage || null
   if (!message) {
     message = getResponseMessage(code)

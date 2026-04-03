@@ -110,6 +110,8 @@ const REQUIRED_IN_PRODUCTION: (keyof ENV)[] = [
   'DATABASE_URL',
   'ACCESS_TOKEN_SECRET',
   'REFRESH_TOKEN_SECRET',
+  'REDIS_URL',
+  'ALLOWED_ORIGINS',
 ]
 
 const getSanitizedConfig = (config: ENV) => {

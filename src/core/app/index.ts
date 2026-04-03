@@ -30,7 +30,7 @@ export class App {
     this.app = express()
   }
 
-  public initializeApp() {
+  public async initializeApp() {
     this.app.use(
       cors({
         credentials: true,
@@ -50,13 +50,7 @@ export class App {
 
     this.app.use(rateLimiter)
 
-    this.app.use((req, res, next) => {
-      if (req.originalUrl === '/api/v1/webhook') {
-        bodyParser.raw({ type: 'application/json' })(req, res, next)
-      } else {
-        bodyParser.json()(req, res, next)
-      }
-    })
+    this.app.use(bodyParser.json())
     this.app.use(sanitizeInput)
 
     if (config.LOG_REQUESTS) {

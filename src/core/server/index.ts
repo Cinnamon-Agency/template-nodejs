@@ -13,30 +13,33 @@ export class AppServer {
 
   constructor(private app: Express) {}
 
-  public start(): void {
-    process.on('SIGINT', () => this.shutdown('SIGINT'))
-    process.on('SIGTERM', () => this.shutdown('SIGTERM'))
+  public start(): Promise<void> {
+    return new Promise((resolve) => {
+      process.on('SIGINT', () => this.shutdown('SIGINT'))
+      process.on('SIGTERM', () => this.shutdown('SIGTERM'))
 
-    // Global error monitoring
-    process.on('unhandledRejection', (reason, promise) => {
-      logger.error('Unhandled Rejection at:', promise, 'reason:', reason)
+      // Global error monitoring
+      process.on('unhandledRejection', (reason, promise) => {
+        logger.error('Unhandled Rejection at:', promise, 'reason:', reason)
+      })
+      process.on('uncaughtException', error => {
+        logger.error('Uncaught Exception thrown:', error)
+        process.exit(1)
+      })
+
+      const port = config.PORT
+      const commitHash = config.COMMIT_HASH
+
+      this.server = this.app.listen(port, () => {
+        logger.info(
+          `Server listening at http://localhost:${port} with commit hash ${commitHash}`
+        )
+        resolve()
+      })
+
+      const socketIOService = container.resolve(SocketIOService)
+      socketIOService.attach(this.server)
     })
-    process.on('uncaughtException', error => {
-      logger.error('Uncaught Exception thrown:', error)
-      process.exit(1)
-    })
-
-    const port = config.PORT
-    const commitHash = config.COMMIT_HASH
-
-    this.server = this.app.listen(port, () => {
-      logger.info(
-        `Server listening at http://localhost:${port} with commit hash ${commitHash}`
-      )
-    })
-
-    const socketIOService = container.resolve(SocketIOService)
-    socketIOService.attach(this.server)
   }
 
   private async shutdown(signal: string): Promise<void> {

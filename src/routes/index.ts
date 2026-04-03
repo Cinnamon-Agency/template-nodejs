@@ -16,7 +16,7 @@ v1.use('/auth', authRouter)
 v1.use('/user', userRouter)
 v1.use('/project', projectRouter)
 v1.use('/notification', notificationRouter)
-v1.use('/support_request', supportRequestRouter)
+v1.use('/support-request', supportRequestRouter)
 v1.use('/media', mediaRouter)
 
 router.use('/api/v1', v1)

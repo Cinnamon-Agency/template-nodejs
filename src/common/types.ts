@@ -1,5 +1,12 @@
 import { ResponseCode, ResponseMessage } from './response'
-import { User } from '@prisma/client'
+import { Prisma } from '@prisma/client'
+
+export type AuthenticatedUser = Omit<
+  Prisma.UserGetPayload<{
+    include: { roles: { include: { role: true } } }
+  }>,
+  'password'
+>
 
 export type ResponseCodeRequired = { code: ResponseCode }
 
@@ -19,7 +26,7 @@ declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     export interface Request {
-      user: User
+      user: AuthenticatedUser
       requestId: string
     }
   }

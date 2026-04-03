@@ -6,7 +6,7 @@ const tags = [
 ]
 
 const paths = {
-  '/support_request': {
+  '/support-request': {
     post: {
       tags: ['Contact Support'],
       summary: 'Create new support request',
@@ -33,7 +33,7 @@ const paths = {
       },
     },
   },
-  '/support_request/updateStatus/{supportRequestId}': {
+  '/support-request/updateStatus/{supportRequestId}': {
     put: {
       tags: ['Contact Support'],
       summary: 'Update support request status',
